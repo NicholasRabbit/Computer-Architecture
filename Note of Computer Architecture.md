@@ -42,7 +42,7 @@ byte类型中用128\~255表示-128\~-1， 用0\~127还表示本数是2's Complem
 
 ### 四，Inaccurate double and float
 
-```java
+```txt
 /*
 * float,double在计算式损失精度的原因：
 * 1，float和double类型是为科学计算和工程计算设计的，他们执行二进制的浮点运算。
