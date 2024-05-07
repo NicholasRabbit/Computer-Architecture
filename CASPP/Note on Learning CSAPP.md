@@ -2,6 +2,8 @@
 
 [CS 15-213](https://www.cs.cmu.edu/~213/index.html)
 
+**Textbook** :  Computer Systems: A Programmer's Perspective, 3/E 
+
 ### Tips
 
 [Tips on learning CS 15-213](https://csdiy.wiki/en/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/#descriptions)
@@ -11,6 +13,24 @@ If you have trouble with Chapter 7 Linking, I recommend reading the book Program
 ```
 
 ### Chapter 1 ints and bits
+
+#### 0, Programs are translated by other programs into different forms
+
+![1715072855978](note-images/1715072855978.png)
+
+gcc commands
+
+```shell
+# commands
+# 1, hello.i
+gcc -E hello.c -o hello.i / cpp hello.c -o hello.i # preprocessing 
+# 2, hello.s
+gcc -S hello.c  # translated into hello.s which is a assembly programme
+# 3, hello.o
+gcc -c hello.c -o hello.o  # relocatable object programs
+# 4, hello  
+gcc hello.o -o hello # executable object program
+```
 
 #### 1, Shifting bits
 
