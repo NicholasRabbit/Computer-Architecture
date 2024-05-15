@@ -12,7 +12,7 @@
 If you have trouble with Chapter 7 Linking, I recommend reading the book Programmer's Self-Cultivation, subtitled link. load and library. This book can complete our understanding of program linking, and I believe after reading this book you will have a deeper comprehension of program linking, ELF files, and dynamic libraries. It is highly recommended to be read as a supplementary material after reading CSAPP and having a certain understanding of computer systems.
 ```
 
-### Chapter 1 ints and bits
+### Chapter 1. Tour of Computer Systems
 
 #### 0, Programs are translated by other programs into different forms
 
@@ -24,10 +24,19 @@ gcc commands
 # commands
 # 1, hello.i
 gcc -E hello.c -o hello.i / cpp hello.c -o hello.i # preprocessing 
+
 # 2, hello.s
-gcc -S hello.c  # translated into hello.s which is a assembly programme
+gcc -S hello.i  # translated into hello.s which is a assembly programme
+# Or
+gcc -S hello.c # skip the preprocess
+
 # 3, hello.o
-gcc -c hello.c -o hello.o  # relocatable object programs
+gcc -c hello.s -o hello.o  # relocatable object programs
+# Or
+as hello.s -o hello.o
+# Or
+gcc -c hello.c -o hello.o  # skip some steps
+
 # 4, hello  
 gcc hello.o -o hello # executable object program
 ```
@@ -53,5 +62,17 @@ Truncating a number is like a module operation.
   1101 : 11   #27 % 16 = 11
 ```
 
+#### 4, Essence
 
+1) A file is a sequence of bytes.
+
+#### 5, Important Themes
+
+Chapter 1.9
+
+1.9.1 Amdahl's Law
+$$
+S = \frac{1}{(1-a)+a/k}
+$$
+The processing speed of a system or an application won't be increased significantly if  only to improve the performance of a small part of the system. If we assumed that k is infinite the result would be $S=\frac{1}{1-a}$. In other words, if a is small the S won't be too large.
 
