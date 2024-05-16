@@ -62,11 +62,9 @@ Truncating a number is like a module operation.
   1101 : 11   #27 % 16 = 11
 ```
 
-#### 4, Essence
 
-1) A file is a sequence of bytes.
 
-#### 5, Important Themes
+#### 4, Important Themes
 
 Chapter 1.9
 
@@ -75,4 +73,34 @@ $$
 S = \frac{1}{(1-a)+a/k}
 $$
 The processing speed of a system or an application won't be increased significantly if  only to improve the performance of a small part of the system. If we assumed that k is infinite the result would be $S=\frac{1}{1-a}$. In other words, if a is small the S won't be too large.
+
+#### 5, Process and thread
+
+##### 1, Concurrency
+
+In the abstract level of thread, for **traditional thread** concurrent execution is simulated.  Whereas, **hyperthreading**, sometime called "simultaneous multi-threading", is a technique that allows a singly core of the CPU to execute multiple flows of control.
+
+#### 6, Summary
+
+Chapter 1.10  Summary
+
+1) A file is a sequence of bytes.
+
+2) Storage devices that are in higher levels serves as caches for the devices in the lower levels. Programmers can optimize their C programmes by understanding and exploiting the memory hierarchy.
+
+3) The operating system kernel serves as an intermediary between the application and the hardware. 
+
+### Part I 
+
+Programme Structure and Execution
+
+#### Binary bits and overflow
+
+Computer representations use a limited number of bits to encode a number. For example, if we use 4 bits to represent number the maximum number is  $2^4 - 1 = 31$, and the operation to represent 32 can lead to overflow. 
+
+```shell
+# The default length of the number in gdb is 4 bytes which is 32 bits.
+>gdb
+>print 200*300*400*500  # output -884,901,888
+```
 
