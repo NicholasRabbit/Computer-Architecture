@@ -104,3 +104,6 @@ Computer representations use a limited number of bits to encode a number. For ex
 >print 200*300*400*500  # output -884,901,888
 ```
 
+#### 2.1.1 Hexadecimal Notation
+
+When we say x is a power of 2, that is, $x=2^n$. We can also say that its binary representation is that 1 followed by $n$ zeros. For example, $8=2^3$ is  1000(binary). While a hexadecimal digit represents 4 digits in binary, namely 0 in hex mean 0000 in binary. So we can represent $2^{11} $ by a hexadecimal number which is `0X800`. 
