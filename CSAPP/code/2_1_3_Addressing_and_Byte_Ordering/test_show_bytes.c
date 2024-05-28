@@ -4,6 +4,10 @@
  * Though I don't completely understand the following code because of c syntax,
  * the intention of the author is clearly for me. More elaboration will be added 
  * in the near future.
+ *
+ * elaboration in P77. Here are the extracts.
+ * (byte_pointer) start means cast the start to the type of byte_pointer.
+ * &x: to the pointer of x.
  * 
  * */
 
