@@ -39,3 +39,16 @@ int main(void)
 
 	return 0;
 }
+
+
+/**
+ * Answers:
+ * A. In the above example the 5=2*k + 1 and "k" is 2.
+ *    The values of variables "first" and "last" are 2.
+ * B. According to the answers we got in A, both pointer x and pointer y point 
+ *    the same location in memory. Whereas, 2^2 is 0, then the result is always 
+ *    0.
+ * C. I think the "<=" in reverse_array should be replaced by "<" so that the 
+ *    problem will be eliminated. That's the corrct answer.  
+ *
+ * */
