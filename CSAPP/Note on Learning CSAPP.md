@@ -108,6 +108,12 @@ Computer representations use a limited number of bits to encode a number. For ex
 
 When we say x is a power of 2, that is, $x=2^n$. We can also say that its binary representation is that 1 followed by $n$ zeros. For example, $8=2^3$ is  1000(binary). While a hexadecimal digit represents 4 digits in binary, namely 0 in hex mean 0000 in binary. So we can represent $2^{11} $ by a hexadecimal number which is `0X800`.  Because `0x8`=`0b1000` and `0x00`=`0b0000,0000`.
 
+Tips:
+
+Remembering binary representations of  three keys hexadecimal numbers could help you calculate representations of rest hexadecimals effectively.
+
+A: 1010,   C: 1100,  F:1111
+
 #### 2.1.2 Data Sizes
 
 Every computer has a *word size* which indicates the nominal size of a pointer data. The size of any data type in computer is not limitless such as the sizes of an integer and long number are 4 and 8 bytes, respectively. 
@@ -136,3 +142,34 @@ like `40 06 04 bf ` so that we can read it like what we do in math class.
 **Big endian**: It is the opposite of little endian.
 
 Note: See "[Analysis of Storage]("..\C-Code\26_AssemblyLanguage_And_Storage\Analysis of Storage.md")" for more about address, little endian and big endian.
+
+
+
+#### Practice Problem 2.6
+
+Why the hexadecimal presentation of  `3510593.0` is `0x4A1F23E0` in the 3rd edition of the book and is `0x4A564504` in 2nd edition? 
+
+I also got the later result.  Why is that?
+
+#### 2.1.6  Introduction to Boolean Algebra
+
+There is a bit vector with indexes like $[a_{w-1}, a_{w-2}, ..., a_1, a_0]$.  For example,  a = [01101001]  encodes the set A = {0,3,5,6}. We should match the indexes from left to right such as 0 in $a_0$, 3 in $a_1$, 5 in $a_5$ and 6 in $a_6$, respectively.  \(P88\)
+
+#### 2.1.7 Bit-Level Operations in C
+
+#### 2.1.9 Shifting Operations in C
+
+1) What the differences between logical and arithmetic shift?
+
+We assumed that shifting *k* bits to the right like *a* >> *k*.
+
+A logical shift fills the left end with k zeros. For example, `1100,0101 >> 2`  = `0011,0001`.
+
+A arithmetic shift fills the left end with **k repetitions of the most significant bit**.  For example, 
+ `1100,0101 >> 2`  = `1111,0001`  and `0101,1101 >> 2` = `0001,0111`. Note: not always filled with `1`.
+
+2) What will happen if the shifting value is larger the the total bits of the number?
+
+In C standards the statement was carefully avoid. Normally, shifting such a large value is meaningless while for some other languages like Java the result equals k%w(k: shifting bits, w: the word's bits). 
+
+For example, `1100 >> 6` means `1100 >> (6%4)`.
