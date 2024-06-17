@@ -173,3 +173,24 @@ A arithmetic shift fills the left end with **k repetitions of the most significa
 In C standards the statement was carefully avoid. Normally, shifting such a large value is meaningless while for some other languages like Java the result equals k%w(k: shifting bits, w: the word's bits). 
 
 For example, `1100 >> 6` means `1100 >> (6%4)`.
+
+#### 2.2 Integer representations
+
+1) The "-2147483648" can't be printed directly in C.
+
+```c
+// 22_Data_Type.c (C code)
+/*
+	 * Chapter 15.1 《Linux C 一站式编程》
+	 * Althought the range of int is from -2147483648 to +2147483647，
+	 * in x86 platform it is a combination of "-" and "2147483648" in the aspect of the compiler.
+	 * Apparently, the 2147483648 is beyond the range of integer and it  the type of "long int".
+	 * */
+	// warning: format ‘%d’ expects argument of type ‘int’, 
+	// but argument 2 has type ‘long int’ [-Wformat=]: 
+	printf("%d\n", -2147483648);  
+	
+	// However, the following code is correct without any warnings.
+	printf("%d\n", -2147483647 - 1);  
+```
+
