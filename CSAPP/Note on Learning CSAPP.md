@@ -176,7 +176,7 @@ For example, `1100 >> 6` means `1100 >> (6%4)`.
 
 #### 2.2 Integer representations
 
-1) The "-2147483648" can't be printed directly in C.
+**1) The "-2147483648" can't be printed directly in C.**
 
 ```c
 // 22_Data_Type.c (C code)
@@ -193,4 +193,20 @@ For example, `1100 >> 6` means `1100 >> (6%4)`.
 	// However, the following code is correct without any warnings.
 	printf("%d\n", -2147483647 - 1);  
 ```
+
+Note: The two's-complement is asymmetric- $|T_{min}|=|T_{max} + 1|$. That could lead to subtle program bugs.
+
+**2) Conversions between signed and unsigned.  (Chapter 2.2.4)**
+
+Casting a signed value to an unsigned value in C doesn't changed the bit representation. The effect of casting is to keep the bit values identical but change how these bits are interpreted, for instance, `1111, 1111` represents 255 as an unsigned number while it represents as -1 as a signed number.
+
+**3) In C the signed value will be cast to unsigned when it is compared to an unsigned number**
+
+```c
+-1 < 0U // -1 = 2^8, the result is false.
+```
+
+See my C code about unsigned and signed value.
+
+
 
