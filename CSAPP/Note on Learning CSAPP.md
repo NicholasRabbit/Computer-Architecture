@@ -203,10 +203,37 @@ Casting a signed value to an unsigned value in C doesn't changed the bit represe
 **3) In C the signed value will be cast to unsigned when it is compared to an unsigned number**
 
 ```c
--1 < 0U // -1 = 2^8, the result is false.
+-1 < 0U // -1 = 2^8, the result is 0(false).
 ```
 
-See my C code about unsigned and signed value.
+See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
+
+#### 4) 2.2.6 Expanding the Bit Representation of a Number
+
+(1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
+
+```c
+unsigned short us = 0x3c9f;
+unsigned int ui = us;   // ui = 0x00003c9f
+```
+
+(2) Whereas, to convert an signed number to a larger data type we should add copies of the most significant bit to the leading representation.
+
+```c
+/*
+* Signed
+* =9, the length of short data type is 2 bytes. 
+* The most significant bit of "sx" is 0, not 1 because we get the bit at 
+* the head of 2 bytes. sx is a positive number.
+*/
+short sx = 0b0000,0000,0000,1010; 
+int x = 0b0000...1010;
+// If sx
+short sx = 0b1000,0000,0000,1010;  // -10   
+int x = 0b1111...1010;
+```
+
+See  my code:`CSAPP/code/code_examples/2.2.6_expanding_bits`
 
 
 
