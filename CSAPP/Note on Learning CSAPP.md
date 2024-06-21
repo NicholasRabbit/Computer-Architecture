@@ -235,5 +235,14 @@ int x = 0b1111...1010;
 
 See  my code:`CSAPP/code/code_examples/2.2.6_expanding_bits`
 
+**(3) Pay attention the order of conversion from a short data to a larger one.**
+
+When converting short to unsigned, we first change the size form 2 bytes to 4 bytes so that the result is 0xff on the leading bits and then from signed to unsigned.
+
+ **NOT:** if we first change the signed number to unsigned and then changed the size
+the result would be 0x00c7cf. But it is not the way in which C works.
+
+See: ` CSAPP/code/code_examples/2.2.6_expanding_bits/order_of_expanding_bits .c`
+
 
 
