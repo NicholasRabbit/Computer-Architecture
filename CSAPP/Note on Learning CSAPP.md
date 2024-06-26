@@ -159,7 +159,7 @@ There is a bit vector with indexes like $[a_{w-1}, a_{w-2}, ..., a_1, a_0]$.  Fo
 
 #### 2.1.9 Shifting Operations in C
 
-1) What the differences between logical and arithmetic shift?
+**1) What the differences between logical and arithmetic shift?**
 
 We assumed that shifting *k* bits to the right like *a* >> *k*.
 
@@ -168,7 +168,11 @@ A logical shift fills the left end with k zeros. For example, `1100,0101 >> 2`  
 A arithmetic shift fills the left end with **k repetitions of the most significant bit**.  For example, 
  `1100,0101 >> 2`  = `1111,0001`  and `0101,1101 >> 2` = `0001,0111`. Note: not always filled with `1`.
 
-2) What will happen if the shifting value is larger the the total bits of the number?
+**Note:** 
+
+> The most significant bit is the bit which is at the very left of the whole bits of a number. For a short number such as `0x89c(actually is 0x089c)` (a short number is 2 bytes)  the most significant bit is '0' not '1'.
+
+**2) What will happen if the shifting value is larger the the total bits of the number?**
 
 In C standards the statement was carefully avoid. Normally, shifting such a large value is meaningless while for some other languages like Java the result equals k%w(k: shifting bits, w: the word's bits). 
 
@@ -208,7 +212,7 @@ Casting a signed value to an unsigned value in C doesn't changed the bit represe
 
 See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
 
-#### 4) 2.2.6 Expanding the Bit Representation of a Number
+**4) 2.2.6 Expanding the Bit Representation of a Number**
 
 (1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
 
@@ -235,14 +239,25 @@ int x = 0b1111...1010;
 
 See  my code:`CSAPP/code/code_examples/2.2.6_expanding_bits`
 
-**(3) Pay attention the order of conversion from a short data to a larger one.**
+**4.1 Pay attention the order of conversion from a short data to a larger one.**
 
-When converting short to unsigned, we first change the size form 2 bytes to 4 bytes so that the result is 0xff on the leading bits and then from signed to unsigned.
+When converting short to unsigned, we first change the size form 2 bytes to 4 bytes so that the result is 0xff on the leading bits and then from signed to unsigned. Indeed this convention is required by C standards.
 
  **NOT:** if we first change the signed number to unsigned and then changed the size
 the result would be 0x00c7cf. But it is not the way in which C works.
 
 See: ` CSAPP/code/code_examples/2.2.6_expanding_bits/order_of_expanding_bits .c`
+
+**4.2 Negate a number** 
+
+If you want to negate a number, no matter what it is a positive number or a negative one, a tricky way is to flip it and add 1. 
+For example, for  a word such as $w_4$  contain 4 bits(-8 ~ 7),  if`a = 1010(-6)` then `~a=0101(5) and -a = ~a +1=0110(6)`.  This pattern is as same as what the author of "Code: The Hidden Language Behind..." has said but it is expressed in a different way. The author said that in basic level, to minus a number is actually by add the flipped value of its absolute value then truncate the overflowed bits.  Here is an example($w_4$):
+
+```txt
+5 - 2 = (5 + ~|-2|) - 16
+      = (5 + 14) - 16
+      = 3
+```
 
 
 
