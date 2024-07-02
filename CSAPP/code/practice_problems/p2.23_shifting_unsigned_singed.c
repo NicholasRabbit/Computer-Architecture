@@ -3,7 +3,12 @@
 // Right right shifts of signed values are performed arithmetically while
 // the right shifts of unsigned values are performed logically.
 //
-// The question is in page 74 and the answer is in page 141 of the 2nd edition of CSAPP.
+// The question is at page 74 and the answer is at page 141 of the 2nd edition of CSAPP.
+/*
+ * For example: 
+ * 0x0000,00C9 >> 24 = 0xC9, its most sigficant bit is '1', so result of arithmetical shifting 
+ * of '0xC9 >> 24' is 0xFFFF,FFC9.
+ * */
 int func1(unsigned word)
 {
 	return (int) ((word << 24) >> 24);
