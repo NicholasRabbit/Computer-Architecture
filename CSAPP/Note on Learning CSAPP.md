@@ -212,7 +212,7 @@ Casting a signed value to an unsigned value in C doesn't changed the bit represe
 
 See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
 
-**4) 2.2.6 Expanding the Bit Representation of a Number**
+#### 2.2.6 Expanding the Bit Representation of a Number
 
 (1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
 
@@ -259,5 +259,21 @@ For example, for  a word such as $w_4$  contain 4 bits(-8 ~ 7),  if`a = 1010(-6)
       = 3
 ```
 
+#### 2.2.7 Truncating Numbers
 
+For an unsigned number $x$, the result of truncating it to k bits is equivalent to computing $x$ mod $2^k$.
+
+e.g. Truncating 4 bits to 3 bits: 
+
+> 1001(9) ->001(1)  = 9 % $2^3$
+
+![1719477442832](note-images/1719477442832.png)
+
+$w_4$ : (-8 ~ 7) ,  $w_3$ : (-4 ~ 3)
+
+For signed number
+
+The result of -7(1001)  truncated by 1 bit  is 1(001). 
+
+The result of signed   `1111(-1)  `($w_4$)after truncating 1 bits is `111` which is `-1` in $w_3$
 
