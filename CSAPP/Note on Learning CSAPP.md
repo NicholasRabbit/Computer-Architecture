@@ -157,6 +157,19 @@ There is a bit vector with indexes like $[a_{w-1}, a_{w-2}, ..., a_1, a_0]$.  Fo
 
 #### 2.1.7 Bit-Level Operations in C
 
+#### 2.1.8 Logical Operation in C
+
+`||, && and !` are logical operations. Don't confused them with bit-level operations-`|, &, ^, ~`.
+
+The logical operations treat any nonzero argument as representing True and 0 as false. That means `!1 = 0 and !0b0101 = 0`.
+
+```c
+!0b0101 = 0; // false
+!0 = 1; // true
+0b0101 && 0b1001 = 1;
+0b1010 && 0b0000 = 0;
+```
+
 #### 2.1.9 Shifting Operations in C
 
 **1) What the differences between logical and arithmetic shift?**
