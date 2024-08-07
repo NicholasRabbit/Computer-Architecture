@@ -43,14 +43,16 @@ gcc hello.o -o hello # executable object program
 
 #### 1, Shifting bits
 
-In the low level of the computer system shifting bits is quite faster than multiplication. If the former costs one clock cycle, the latter will normally cost 13 to 17 clock cycles.  Nowadays the speed of multiplication has  increased dramatically but it still costs 4 clock cycles. While 4 is bigger than one anyway.
+In the low level of the computer system shifting bits is quite faster than arithmetic such as multiplication. If the former costs one clock cycle, the latter will normally costs from 13 to 17 clock cycles.  Nowadays the speed of multiplication has  increased dramatically but it still costs 4 clock cycles. While 4 is bigger than one anyway.
 
 - What will happen if shifting 8 bits for a byte ?
+
+  The result is zero no matter whether it is right shifting or left shifting. See `shifting-bits.c` in my C code.
 
 #### 2, Signed and Unsigned
 
 1. What will happened when a signed number is calculated with an unsigned number?
-   The signed number will cast to a unsigned number. 
+   First of all, the signed number will cast to a unsigned number and then calculate with the unsigned number. 
 
 #### 3, Truncate a number
 
@@ -58,7 +60,7 @@ Truncating a number is like a module operation.
 
 ```txt
 # 4 bits overflow so the most significant number is truncated.
-1 1101 : 27
+1 1101 : 27 --> 1101 (11)
   1101 : 11   #27 % 16 = 11
 ```
 
@@ -282,9 +284,11 @@ e.g. Truncating 4 bits to 3 bits:
 
 ![1719477442832](note-images/1719477442832.png)
 
+**Elaboration of the solution:**
+
 $w_4$ : (-8 ~ 7) ,  $w_3$ : (-4 ~ 3)
 
-For signed number
+For signed number:
 
 The result of -7(1001)  truncated by 1 bit  is 1(001). 
 
