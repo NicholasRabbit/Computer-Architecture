@@ -153,7 +153,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 2;
+  return 1 << 31;
 
 }
 //2
@@ -165,7 +165,9 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  int map = x + 0x01;
+  int res = ~(map + x);
+  return !res & (!!map);  
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1

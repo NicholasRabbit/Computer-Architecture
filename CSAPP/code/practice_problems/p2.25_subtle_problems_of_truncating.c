@@ -20,13 +20,13 @@ int main (void)
 
 	/*
 	 * When the length is 0, the functioin encounters a memory error.
-	 * The reason is 'length' is unsigned and is the maximun number.
-	 * So when 'i <= length - 1' the 'i' also becomes unsigned and 
+	 * The reason is that when the unsigned 'length' is '0-1' it is the maximun number.
+	 * When a signed integer 'i <= length - 1' the 'i' is cast to an unsigned number and 
 	 * it is always less than or equals to "length - 1".
 	 * That yields an endless loop.
 	 *
 	 * How to fix the bug?
-	 * We can declare the "length" to an int or change "i <= lenth - 1" to "<".
+	 * We can declare the "length" to an int or change "i <= length - 1" to "<".
 	 * */
 	float ret_value = sum_elements(a, 0);
 	printf("ret_value = %f\n", ret_value);
