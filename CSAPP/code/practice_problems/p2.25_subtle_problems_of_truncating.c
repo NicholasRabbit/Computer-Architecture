@@ -1,15 +1,17 @@
 # include<stdio.h>
 
-// Practice Problem 2.26 at page 77.
+// A practice Problem 2.26 at page 77.
 
 float sum_elements(float a[], unsigned length) 
 {
 	int i;
 	float result = 0;
-	
-	for (i = 0; i <= length - 1; i++)
+
+	for (i = 0; i < length - 1; i++)
 		result += a[i];
+
 	return result;
+
 }
 
 
@@ -27,6 +29,9 @@ int main (void)
 	 *
 	 * How to fix the bug?
 	 * We can declare the "length" to an int or change "i <= length - 1" to "<".
+	 *
+	 * While there is still a problem which is that error is not disappeared when using "<",
+	 * perhaps the long number is too large for my VM. I will figure it out later.
 	 * */
 	float ret_value = sum_elements(a, 0);
 	printf("ret_value = %f\n", ret_value);
