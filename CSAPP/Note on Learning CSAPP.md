@@ -294,3 +294,36 @@ The result of -7(1001)  truncated by 1 bit  is 1(001).
 
 The result of signed   `1111(-1)  `($w_4$)after truncating 1 bits is `111` which is `-1` in $w_3$
 
+#### 2.2.8 Advice on Signed vs. Unsigned
+
+Elaboration of "  FreeBSD-SA-02:38.signed-error".   On page 77 of "CSAPP(2rd)".
+
+```c
+/*
+ * Illustration of code vulnerability similar to that found in
+ * FreeBSD’s implementation of getpeername()
+ */
+
+/* Declaration of library function memcpy */
+void *memcpy(void *dest, void *src, size_t n);
+
+/* Kernel memory region holding user-accessible data */
+#define KSIZE 1024
+char kbuf[KSIZE];
+
+/* Copy at most maxlen bytes from kernel region to user buffer */
+int copy_from_kernel(void *user_dest, int maxlen) {
+	/* Byte count len is minimum of buffer size and maxlen */
+	int len = KSIZE < maxlen ? KSIZE : maxlen;
+	memcpy(user_dest, kbuf, len);
+}
+```
+
+If a malicious programmer writes code to call `copy_from_kernel(...)` with a negative value of `maxlen`,  then the result of `KSIZE < maxlen` is false so that `len` is assigned with the value of `maxlen`. As we know, in          function `mecpy` the data type of the last argument is `size_t` which is unsigned, the negative number will become a large positive unsigned number and more private data of other user's will be copy from the memory. That is the security vulnerability. 
+
+#### 2.3 Integer Arithmetic
+
+See the C code in `26_AssemblyLanguage_And_Storage/6_BitField/bit_field_4_bits_test.c`. 
+
+
+
