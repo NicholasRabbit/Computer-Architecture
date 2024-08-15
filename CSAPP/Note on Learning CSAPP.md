@@ -333,4 +333,4 @@ The two's-complement sum of two numbers has the exact same bit-level representat
 
 ![1723704615148](note-images/1723704615148.png)
 
-Note: -8 + (-8) = -16, the real result is 0 after the most significant bit is truncated.
+**Note:** -8 + (-8) = -16, the real result is 0 after the most significant bit is truncated.
