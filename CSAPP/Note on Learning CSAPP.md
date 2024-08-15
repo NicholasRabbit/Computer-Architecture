@@ -323,7 +323,14 @@ If a malicious programmer writes code to call `copy_from_kernel(...)` with a neg
 
 #### 2.3 Integer Arithmetic
 
+**2.3.1 Unsigned Addition**
+
 See the C code in `26_AssemblyLanguage_And_Storage/6_BitField/bit_field_4_bits_test.c`. 
 
+**2.3.2 Two's-Complement Addition**
 
+The two's-complement sum of two numbers has the exact same bit-level representation as unsigned sum. Which means same arrangement of bits represents different value in signed and unsigned numbers.  The overflowed bit will be truncated brutally.
 
+![1723704615148](note-images/1723704615148.png)
+
+Note: -8 + (-8) = -16, the real result is 0 after the most significant bit is truncated.
