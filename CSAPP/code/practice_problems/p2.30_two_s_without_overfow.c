@@ -37,7 +37,7 @@ int main (void)
 {
 	int i, j;
 	// The following numbers in 4 bytes(32 bits) are like -8 and -7 in a data type with 4 bits.
-	// I write them in order to test if there is a negative overflow.
+	// I write them to test if there is a negative overflow.
 	i = 0x80000001;	
 	j = 0x80000000;
 	int result = tadd_ok(i, j);
