@@ -334,3 +334,32 @@ The two's-complement sum of two numbers has the exact same bit-level representat
 ![1723704615148](note-images/1723704615148.png)
 
 **Note:** -8 + (-8) = -16, the real result is 0 after the most significant bit is truncated.
+
+**Practice 2.32 (page 87 2nd edition)**
+
+The range of two's complement is asymmetric by 0(-8~7 for 4 bits). The result is correct except when the `y` is `Tmin`. If y is -8 then -y is 8 so the addition overflows in the function `tdd_ok`.
+
+```c
+int tadd_ok(int x, int y) {
+    int sum = x+y;
+    int neg_over = x < 0 && y < 0 && sum >= 0;
+    int pos_over = x >= 0 && y >= 0 && sum < 0;
+    return !neg_over && !pos_over;
+}
+
+int tsub_ok(int x, int y) {
+    return tadd_ok(x, -y);
+}
+```
+
+
+
+**2.3.3 Two's-Complement Negation**
+
+The bit patterns for negation in two's-complement negation(取负数) is as same as for unsigned negation
+
+See practice 2.28 and 2.33
+
+![1724141657094](note-images/1724141657094.png)
+
+![1724141625613](note-images/1724141625613.png)
