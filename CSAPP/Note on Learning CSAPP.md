@@ -323,11 +323,13 @@ If a malicious programmer writes code to call `copy_from_kernel(...)` with a neg
 
 #### 2.3 Integer Arithmetic
 
-**2.3.1 Unsigned Addition**
+##### 2.3.1 Unsigned Addition
+
+Since the size of a particular data type is finite, if that two non-negative numbers are added leads to the result which is beyond the maximum value, there is an overflow. The most significant bit will be truncated brutally. Unsigned arithmetic can be viewed as a form of modular arithmetic. For example,  $x+y=(x+y)\%2^w$(w is the word size).
 
 See the C code in `26_AssemblyLanguage_And_Storage/6_BitField/bit_field_4_bits_test.c`. 
 
-**2.3.2 Two's-Complement Addition**
+##### 2.3.2 Two's-Complement Addition
 
 The two's-complement sum of two numbers has the exact same bit-level representation as unsigned sum. Which means same arrangement of bits represents different value in signed and unsigned numbers.  The overflowed bit will be truncated brutally.
 
@@ -354,7 +356,7 @@ int tsub_ok(int x, int y) {
 
 
 
-**2.3.3 Two's-Complement Negation**
+##### 2.3.3 Two's-Complement Negation
 
 The bit patterns for negation in two's-complement negation(取负数) is as same as for unsigned negation
 
@@ -363,3 +365,16 @@ See practice 2.28 and 2.33
 ![1724141657094](note-images/1724141657094.png)
 
 ![1724141625613](note-images/1724141625613.png)
+
+##### 2.3.5 Two's complement multiplication
+
+We claim that the bit-level presentation of the product operation is identical for both unsigned multiplication and two's-complement multiplication.  Which means that the result is same in bit level,  the difference is as same as that between singed and unsinged value. 
+
+For example, for four-bit unsigned and two's-complement multiplication  the lowest 4 bits of the both result is identical. 
+
+| Mode \($w_4$\)   | x         | y         | x*y            |
+| :--------------- | --------- | --------- | -------------- |
+| two's complement | -1 [1111] | -4 [1100] | 4[0100]        |
+| unsigned         | 15 [1111] | 12 [1100] | 180[1011 0100] |
+
+We notice that the product of unsigned multiplication is also `0100` after truncating bits over than 4. 
