@@ -1,10 +1,10 @@
+# include<stdio.h>
 
 /*
- * The following function from the boodk is a wrong answer to verify whether there is overflow when
+ * The following function from the book is a wrong answer to verify whether there is overflow when
  * two numbers are added. 
  * */
 
-# include<stdio.h>
 
 /**
  * The following code is buggy.
@@ -17,7 +17,8 @@ int tadd_ok(int x, int y)
 
 /*
  * What is wrong with the code?
- * The result of "(x + y) - y" is always x regardless of whether or not the addition overflows.
+ * "Two's-complement forms an abelian group" so that the result of "(x + y) - y" 
+ * is always x regardless of whether or not the addition overflows.
  * */
 
 

@@ -18,10 +18,10 @@ int main (void)
 
 	/*
 	 * When converting short to unsigned, we first change the size form 2 bytes to 4 bytes
-	 * so that the result is 0xff on the leading bits and then from signed to unsigned.
+	 * so that the result is that 0xff is added as the leading bits and then from signed to unsigned.
 	 *
 	 * NOT: if we first change the signed number to unsigned and then changed the size 
-	 * the resut would be 0x00c7cf. But it is not the way in which C works.
+	 * the resut would be 0x00c7cf and that doesn't comply wiht C standards.
 	 * */
 	short sx = -12345;
 	unsigned uy = sx;
