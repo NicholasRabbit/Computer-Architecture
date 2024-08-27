@@ -256,10 +256,10 @@ See  my code:`CSAPP/code/code_examples/2.2.6_expanding_bits`
 
 **4.1 Pay attention the order of conversion from a short data to a larger one.**
 
-When converting short to unsigned, we first change the size form 2 bytes to 4 bytes so that the result is 0xff on the leading bits and then from signed to unsigned. Indeed this convention is required by C standards.
+When converting short to unsigned, we first change the size from 2 bytes to 4 bytes so that the result is that 0xff added as the leading bits and then from signed to unsigned. Indeed this convention is required by C standards.
 
  **NOT:** if we first change the signed number to unsigned and then changed the size
-the result would be 0x00c7cf. But it is not the way in which C works.
+the result would be 0x00c7cf and that doesn't comply with C standards.
 
 See: ` CSAPP/code/code_examples/2.2.6_expanding_bits/order_of_expanding_bits .c`
 
@@ -368,7 +368,7 @@ See practice 2.28 and 2.33
 
 ##### 2.3.5 Two's complement multiplication
 
-We claim that the bit-level presentation of the product operation is identical for both unsigned multiplication and two's-complement multiplication.  Which means that the result is same in bit level,  the difference is as same as that between singed and unsinged value. 
+(1) We claim that the bit-level presentation of the product operation is identical for both unsigned multiplication and two's-complement multiplication.  Which means that the result is same in bit level,  the difference is as same as that between singed and unsinged value. 
 
 For example, for four-bit unsigned and two's-complement multiplication  the lowest 4 bits of the both result is identical. 
 
@@ -378,3 +378,16 @@ For example, for four-bit unsigned and two's-complement multiplication  the lowe
 | unsigned         | 15 [1111] | 12 [1100] | 180[1011 0100] |
 
 We notice that the product of unsigned multiplication is also `0100` after truncating bits over than 4. 
+
+
+
+**(2)Aside**  Security vulnerability in the XDR library  (after Practice problem 2.36, on Page 91)
+
+$(2^{20}+1)*2^{12}= 2^{20}*2^{12} + 1*2^{12}=4,294,967,296 + 4,096$
+
+##### 2.3.6 Multiplying by Constants
+
+The integer multiply instructions is very slow, requiring 10 clock cycles whereas other integer operations such as addition, subtraction, bit-level operations, and shifting are required only 1 clock cycle.
+
+So many C compilers will optimise code like `x*14` to `x<<3 + x<<2 + x<<1` recognising that $14=2^3+2^2+2^1$	.
+
