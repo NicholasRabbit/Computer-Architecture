@@ -389,5 +389,16 @@ $(2^{20}+1)*2^{12}= 2^{20}*2^{12} + 1*2^{12}=4,294,967,296 + 4,096$
 
 The integer multiply instructions is very slow, requiring 10 clock cycles whereas other integer operations such as addition, subtraction, bit-level operations, and shifting are required only 1 clock cycle.
 
-So many C compilers will optimise code like `x*14` to `x<<3 + x<<2 + x<<1` recognising that $14=2^3+2^2+2^1$	.
+So many C compilers will optimise code like `x*14` to `x<<3 + x<<2 + x<<1` recognising that $14=2^3+2^2+2^1$. It is also recognised as $14=2^4-2^1$. 
+
+The following content is quoted from "CSAPP"
+
+>  For example, 14 can be written as [(0 . . . 0)(111)(0)]. Consider a run of ones from
+> bit position n down to bit position m (n ≥ m). (For the case of 14, we have n = 3
+> and m = 1.) We can compute the effect of these bits on the product using either of
+> two different forms:  
+>
+> Form A:  (x<<n) + (x<<n-1) + . . . + (x<<m)
+>
+> Form B:  (x<<n+1) - (x<<m)
 
