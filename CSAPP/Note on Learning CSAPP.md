@@ -379,12 +379,6 @@ For example, for four-bit unsigned and two's-complement multiplication  the lowe
 
 We notice that the product of unsigned multiplication is also `0100` after truncating bits over than 4. 
 
-
-
-**(2)Aside**  Security vulnerability in the XDR library  (after Practice problem 2.36, on Page 91)
-
-$(2^{20}+1)*2^{12}= 2^{20}*2^{12} + 1*2^{12}=4,294,967,296 + 4,096$
-
 ##### 2.3.6 Multiplying by Constants
 
 The integer multiply instructions is very slow, requiring 10 clock cycles whereas other integer operations such as addition, subtraction, bit-level operations, and shifting are required only 1 clock cycle.

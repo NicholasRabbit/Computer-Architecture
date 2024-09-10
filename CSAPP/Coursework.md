@@ -18,6 +18,14 @@ It is 1.2x
 
 I don’t understand problem 2.35 and find the solution later.
 
+#### P2.37
+
+Aside  Security vulnerability in the XDR library  (after Practice problem 2.36, on Page 91)
+
+$(2^{20}+1)*2^{12}= 2^{20}*2^{12} + 1*2^{12}=4,294,967,296 + 4,096$
+
+Because $2^{20}$ is less than $2^{32}$(int: 4 bytes).
+
 #### P2.38
 
 LEA instruction: $a<<k+b$ . LEA is abbreviated to "Load Effective Address".
