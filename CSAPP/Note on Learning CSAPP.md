@@ -222,7 +222,7 @@ Casting a signed value to an unsigned value in C doesn't changed the bit represe
 **3) In C the signed value will be cast to unsigned when it is compared to an unsigned number**
 
 ```c
--1 < 0U // -1 = 2^8, the result is 0(false).
+-1 < 0U // Because -1 = 2^8 > 0, the result is 0(false).
 ```
 
 See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
