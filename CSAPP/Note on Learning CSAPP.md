@@ -396,3 +396,10 @@ The following content is quoted from "CSAPP"
 >
 > Form B:  (x<<n+1) - (x<<m)
 
+
+
+#### 2.4 Floating Point 
+
+#####   2.4.1 Fractional Binary Numbers  
+
+1. The binary representation of $\frac{1}{10}$ is `0.0001 1001 1[0011]` in which the square brackets([]) means the repetition of specific bits. 
