@@ -403,3 +403,51 @@ The following content is quoted from "CSAPP"
 #####   2.4.1 Fractional Binary Numbers  
 
 1. The binary representation of $\frac{1}{10}$ is `0.0001 1001 1[0011]` in which the square brackets([]) means the repetition of specific bits. 
+
+##### 2.4.2 IEEE Floating-Point Representation
+
+<img src="note-images/1727684912216.png" alt="1727684912216" style="zoom:80%;" />
+
+The IEEE floating-point standard represents a number in a form $V=(-1)^s* M\times2^{E}$.
+
+$E=e-bias$
+
+**Case 1: Normalised Values**
+
+1) Single precision(Float)
+
+The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=126,  254 - 127 = 127)
+
+It is the same in double precision.
+
+2) The significand in binary scientific representation is omitted, because in $M=1+f$ ,  M is represented by 1.$f_1,f_2,f_3...$. We can always adjust the exponent $E$ so that significand $M$ is in the range  $1\leq{M}<2$ . Therefore, the leading bit $1$ is not needed to be represented explicitly.
+
+3) N.B.  $0.0$ can not be represented by any normalised value.
+
+**Case 2: Denormalized Values**
+
+When the exponent field is all zeros, so $2^0=1$ and $E=2^0-bias=1-bias$.
+
+Two purposed of denormalized values:
+
+1) To represent $0$. 
+
+An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(s=0)$ are considered different in some ways and same in others.
+
+2) To represent numbers are very close to $0$.
+
+#### 2.4.3 Example Numbers
+
+Note: fields *s, exp* and *frac* are *1, k,* and *s* bits.
+
+Figure 2.33  
+
+Representable values for 6-bit floating-point format.
+
+The bits of each part are:  s: $1$, exp: $k= 3$,  frac: $2$
+
+Normalised Values:
+
+Because the exponent  1~7, bias is $2^{k-1}=2{^3-1}=3$ , we can get $-1-3=-2, 7-3=4$ so $E$ is in range  $-2\leq{E}\leq4$.
+
+For fraction part:  $1.f_1,f_2$. As aforementioned, since in IEEE regulation $1$ is not explicitly represented the maximum value of $f_1f_2$  is $0.2^{-1}2^{-2}$, namely $0.75$ which represents $1.75$. And $1.75$ x $4$ is $14$ when $s$ is 0 and is $-14$ when $s$ is $1$.
