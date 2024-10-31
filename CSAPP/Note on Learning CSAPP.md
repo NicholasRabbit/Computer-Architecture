@@ -296,7 +296,7 @@ The result of signed   `1111(-1)  `($w_4$)after truncating 1 bits is `111` which
 
 #### 2.2.8 Advice on Signed vs. Unsigned
 
-Elaboration of "  FreeBSD-SA-02:38.signed-error".   On page 77 of "CSAPP(2rd)".
+1. Elaboration of "  FreeBSD-SA-02:38.signed-error".   On page 77 of "CSAPP(2rd)".
 
 ```c
 /*
@@ -320,6 +320,10 @@ int copy_from_kernel(void *user_dest, int maxlen) {
 ```
 
 If a malicious programmer writes code to call `copy_from_kernel(...)` with a negative value of `maxlen`,  then the result of `KSIZE < maxlen` is false so that `len` is assigned with the value of `maxlen`. As we know, in          function `mecpy` the data type of the last argument is `size_t` which is unsigned, the negative number will become a large positive unsigned number and more private data of other user's will be copy from the memory. That is the security vulnerability. 
+
+2. The minimum value of unsigned numbers is 0 so when $0-1$ the result is the maximum value.
+
+   Which is $0-1->U_{max}$ 
 
 #### 2.3 Integer Arithmetic
 
@@ -358,13 +362,24 @@ int tsub_ok(int x, int y) {
 
 ##### 2.3.3 Two's-Complement Negation
 
-The bit patterns for negation in two's-complement negation(取负数) is as same as for unsigned negation
+1. The bit patterns for negation in two's-complement negation(取负数) is as same as for unsigned negation.
 
-See practice 2.28 and 2.33
+   See practice 2.28 and 2.33
 
 ![1724141657094](note-images/1724141657094.png)
 
 ![1724141625613](note-images/1724141625613.png)
+
+2. If you want negate a number in two's complement, you can do it only by flipping all the bits and adding 1 to the result.
+
+   For example, when in 4-bit representation ($w=4,-8<x<7$ ), `0111(7)`'s negation is `1001(-7)(9U)`. The flipping bits of `0111(7)` is `1000` and `1000`+`1` is `1001`.
+
+##### 2.3.4 Unsigned Multiplication
+
+1.  $U<<k$ gives $U\times2^k$.
+2. $U >>k$  gives $U\div2^k$.
+
+
 
 ##### 2.3.5 Two's complement multiplication
 
@@ -380,6 +395,8 @@ For example, for four-bit unsigned and two's-complement multiplication  the lowe
 We notice that the product of unsigned multiplication is also `0100` after truncating bits over than 4. 
 
 ##### 2.3.6 Multiplying by Constants
+
+
 
 The integer multiply instructions is very slow, requiring 10 clock cycles whereas other integer operations such as addition, subtraction, bit-level operations, and shifting are required only 1 clock cycle.
 
