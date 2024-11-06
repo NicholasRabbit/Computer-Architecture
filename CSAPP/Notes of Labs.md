@@ -35,7 +35,7 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 [Answers](https://blog.csdn.net/qq_45677541/article/details/123955438)
 
-1, tmin(void)
+1, tMin(void)
 
 ```shell
 /* 

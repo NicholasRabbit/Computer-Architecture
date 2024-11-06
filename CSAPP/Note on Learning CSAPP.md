@@ -78,7 +78,7 @@ The processing speed of a system or an application won't be increased significan
 
 #### 5, Process and thread
 
-##### 1, Concurrency
+##### 1), Concurrency
 
 In the abstract level of thread, for **traditional thread** concurrent execution is simulated.  Whereas, **hyperthreading**, sometime called "simultaneous multi-threading", is a technique that allows a singly core of the CPU to execute multiple flows of control.
 
@@ -192,6 +192,8 @@ A arithmetic shift fills the left end with **k repetitions of the most significa
 In C standards the statement was carefully avoid. Normally, shifting such a large value is meaningless while for some other languages like Java the result equals k%w(k: shifting bits, w: the word's bits). 
 
 For example, `1100 >> 6` means `1100 >> (6%4)`.
+
+3) A trick  to get a bit pattern of the form [0,0,0,0,...1,1,1...1] which consists $w-k$ zeros and $k$ ones is to generate $(1<<k)-1$. For example, the expression $1<<8-1$  yields `0xFF`.
 
 #### 2.2 Integer representations
 
@@ -370,9 +372,9 @@ int tsub_ok(int x, int y) {
 
 ![1724141625613](note-images/1724141625613.png)
 
-2. If you want negate a number in two's complement, you can do it only by flipping all the bits and adding 1 to the result.
+2. If you want negate a number in two's complement, you can do it only by flipping all the bits and adding 1 to the result. Namely `~x+1=-x`.
 
-   For example, when in 4-bit representation ($w=4,-8<x<7$ ), `0111(7)`'s negation is `1001(-7)(9U)`. The flipping bits of `0111(7)` is `1000` and `1000`+`1` is `1001`.
+   For example, in 4-bit representation ($w=4,-8<x<7$ ), `0111(7)`'s negation is `1001(-7)(9U)`. The flipping bits of `0111(7)` is `1000` and `1000`+`1` is `1001(-7)`.
 
 ##### 2.3.4 Unsigned Multiplication
 
