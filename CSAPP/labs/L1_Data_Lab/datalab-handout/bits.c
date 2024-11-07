@@ -178,10 +178,12 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  int mask = 0xAAAAAAAA;
-  int result = mask & x;
-  int odd = result ^ mask
-  return !odd;
+  int y = 0xAA + (0xAA << 8);
+  y = y + (y << 16);
+  x = x & y;
+  x = x ^ y;
+  return !x;
+
 }
 /* 
  * negate - return -x 
@@ -191,7 +193,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -204,7 +206,29 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+	/*
+	 * If x - 0x30 >= 0 and 0x39 - x >= 0, x is a ASCII digit.
+	 * Step 1:
+	 * Transfomr  x - 0x30 >= 0 to x + (-0x30), we should negate 0x30 at first.
+	 * */
+	int lowerBound = x + (~0x30 + 1);
+	/*
+	 * Step 2:
+	 * As the trick in the step one used to negate a number, we do the same to x.
+	 * 0x39 -x >= 0
+	 * 0x39 - x => 0x30 + (~x + 1)
+	 * */
+	int higherBound = 0x39 + (~x + 1);
+
+	/*
+	 * If 'x' is ASCII digit it should be bigger than '0x30' therefore 'lowerBound' is 
+	 * a positive number or 0. Then the most significant bit of it is '0'. Thus the 
+	 * result after shifting 31 bits to the right is 0, otherwise it is '1';
+	 * */
+	int r1 = lowerBound >> 31;
+	int r2 = higherBound >> 31;
+	// !(r1 & r2) is wrong because '0&1' also yields '0'. While '1' means that 'x' is not ASCII digit.
+	return !r1 & !r2; 
 }
 /* 
  * conditional - same as x ? y : z 

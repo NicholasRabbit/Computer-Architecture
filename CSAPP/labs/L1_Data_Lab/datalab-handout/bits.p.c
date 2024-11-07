@@ -13,45 +13,52 @@ int tmin(void) {
 }
 #line 167
 int isTmax(int x) {
-  return 2;
+  int map=  x + 0x01;
+  int res=  ~(map + x);
+  return !res &( !!map);
 }
-#line 178
+#line 180
 int allOddBits(int x) {
-  return 2;
+  int y=  0xAA + 0xAA << 8;
+  y = y +( y << 16);
+  x = x & y;
+  x = x ^ y;
+  return !x;
+
 }
-#line 188
+#line 195
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
-#line 201
+#line 208
 int isAsciiDigit(int x) {
   return 2;
 }
-#line 211
+#line 218
 int conditional(int x, int y, int z) {
   return 2;
 }
-#line 221
+#line 228
 int isLessOrEqual(int x, int y) {
   return 2;
 }
-#line 233
+#line 240
 int logicalNeg(int x) {
   return 2;
 }
-#line 248
+#line 255
 int howManyBits(int x) {
   return 0;
 }
-#line 263
+#line 270
 unsigned floatScale2(unsigned uf) {
   return 2;
 }
-#line 278
+#line 285
 int floatFloat2Int(unsigned uf) {
   return 2;
 }
-#line 294
+#line 301
 unsigned floatPower2(int x) {
     return 2;
 }
