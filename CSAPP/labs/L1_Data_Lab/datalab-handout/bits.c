@@ -227,7 +227,10 @@ int isAsciiDigit(int x) {
 	 * */
 	int r1 = lowerBound >> 31;
 	int r2 = higherBound >> 31;
-	// !(r1 & r2) is wrong because '0&1' also yields '0'. While '1' means that 'x' is not ASCII digit.
+	/*
+	 * "return !(r1 & r2)" is wrong when the result is '0&1' which also yields '0'. 
+	 * But '1' means that 'x' is not ASCII digit.
+	 * */ 
 	return !r1 & !r2; 
 }
 /* 
@@ -237,8 +240,19 @@ int isAsciiDigit(int x) {
  *   Max ops: 16
  *   Rating: 3
  */
+/*
+ * Elaboration of the question.
+ * In C any non-zero numbers equal 'true' or 1 so for binary expression 'x ? y : z' when x is not 
+ * zero the result is y, otherwise it is z.
+ *
+ * N.B. The answer is not from me but copy from others, I don't understand the boolean deeply. 
+ * Thus a further investigation is expected.
+ * See the solutions in the tutorials. 
+ *
+ * */
 int conditional(int x, int y, int z) {
-  return 2;
+	x = ~(!x) + 1;
+	return (~x & y) + (x & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
