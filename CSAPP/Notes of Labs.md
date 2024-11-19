@@ -35,7 +35,7 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 [Answers](https://blog.csdn.net/qq_45677541/article/details/123955438)
 
-1, tMin(void)
+##### 1, tMin(void)
 
 ```shell
 /* 
@@ -51,5 +51,10 @@ int tmin(void) {
 }
 ```
 
+### 7, conditional
 
+1, `x ? y : z`  equals $F =xy + \overline xz$. 
 
+In the equation $xy$ is  Boolean  operation yields the same result as of $x\&y$ and the plus $+$ means $OR(|)$. 
+
+​       
