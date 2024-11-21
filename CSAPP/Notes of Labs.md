@@ -35,7 +35,7 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 [Answers](https://blog.csdn.net/qq_45677541/article/details/123955438)
 
-##### 1, tMin(void)
+#### 1, tMin(void)
 
 ```shell
 /* 
@@ -51,10 +51,25 @@ int tmin(void) {
 }
 ```
 
-### 7, conditional
+#### 7, conditional
 
 1, `x ? y : z`  equals $F =xy + \overline xz$. 
 
 In the equation $xy$ is  Boolean  operation yields the same result as of $x\&y$ and the plus $+$ means $OR(|)$. 
 
-​       
+ ```c
+int conditional(int x, int y, int z) {
+	// x has been converted to ~x here. so the '~x&y' represents 'xy' in the equation 
+    // "F=xy+.."
+    x = ~(!x) + 1;  
+	return (~x & y) + (x & z);
+}
+ ```
+
+Elaboration of the solution:
+
+N.B. All the operations are dealt with bits. 
+
+To explain the logic process of the solution needs to start with the equation $F =xy + \overline xz$. If we would like to return $y$ when the original $x$ is not 0, we should convert it to a mask-$0XFFFFFFFF$- because the $AND$ result of a mask and a bits is the bits. For example,  `0xff & 0x11` is `0x11`. 
+
+Apparently, `x = ~(!x) + 1` is an approach aiming to produce the mask. When `x` is non-zero, `!x` is 0 and the operation on the right side of `=` yields `0`  which is then flipped to produce `0xFFFFFFFF` in the operation: `(~x + y)`.  By now, the first part, $xy$,  in  $F =xy + \overline xz$ is made. Note that `~x` in the code `(~x & y)` represents $x$ in the equation. If `x` is zero, it is the same process.
