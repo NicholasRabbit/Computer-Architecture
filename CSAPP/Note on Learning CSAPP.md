@@ -74,7 +74,7 @@ Chapter 1.9
 $$
 S = \frac{1}{(1-a)+a/k}
 $$
-The processing speed of a system or an application won't be increased significantly if  only to improve the performance of a small part of the system. If we assumed that k is infinite the result would be $S=\frac{1}{1-a}$. In other words, if a is small the S won't be too large.
+The processing speed of a system or an application won't be increased significantly if  only to improve the performance of a small part of the system. If we assumed that $k$ is infinite the result would be $S=\frac{1}{1-a}$. In other words, if a is small the S won't be too large.
 
 #### 5, Process and thread
 
@@ -92,11 +92,11 @@ Chapter 1.10  Summary
 
 3) The operating system kernel serves as an intermediary between the application and the hardware. 
 
-### Part I 
+## Part I 
 
 Programme Structure and Execution
 
-#### Binary bits and overflow
+### Binary bits and overflow
 
 Computer representations use a limited number of bits to encode a number. For example, if we use 4 bits to represent number the maximum number is  $2^4 - 1 = 31$, and the operation to represent 32 can lead to overflow. 
 
@@ -105,6 +105,39 @@ Computer representations use a limited number of bits to encode a number. For ex
 >gdb
 >print 200*300*400*500  # output -884,901,888
 ```
+
+#### Representing & Manipulating Sets
+
+**1) Representation**
+
+We use {0,1, ..., w-1} to represent the w-bit vector.
+
+$a_j=1$ if $j\in {A}$
+
+For example, `{0,3,5,6}`  represents `0110 1001`.
+
+```txt
+0110 1001
+x65x 3xx0 
+```
+
+**2) Operation**
+
+Mathematical terminologies for logic operations.
+
+&: Intersection  (And)
+
+|: Union (Or)
+
+^: Symmetric difference (Exclusive or)
+
+~: Complement (Flip)
+
+There is early termination in the following operations.
+
+`&&` , `||`. 
+
+Note that `&&` and `||` are different from `&` and `|` in C, respectively.
 
 #### 2.1.1 Hexadecimal Notation
 
@@ -364,7 +397,7 @@ int tsub_ok(int x, int y) {
 
 ##### 2.3.3 Two's-Complement Negation
 
-1. The bit patterns for negation in two's-complement negation(取负数) is as same as for unsigned negation.
+1. The bit patterns for negation in two's-complement negation(取负数) is as same as that for unsigned negation.
 
    See practice 2.28 and 2.33
 
@@ -372,7 +405,7 @@ int tsub_ok(int x, int y) {
 
 ![1724141625613](note-images/1724141625613.png)
 
-2. If you want negate a number in two's complement, you can do it only by flipping all the bits and adding 1 to the result. Namely `~x+1=-x`.
+2. If you want negate a number of two's complement, you can do it only by flipping all the bits and adding 1 to the result. Namely `~x+1=-x`.
 
    For example, in 4-bit representation ($w=4,-8<x<7$ ), `0111(7)`'s negation is `1001(-7)(9U)`. The flipping bits of `0111(7)` is `1000` and `1000`+`1` is `1001(-7)`.
 
