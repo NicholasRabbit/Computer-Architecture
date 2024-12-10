@@ -70,6 +70,34 @@ Elaboration of the solution:
 
 N.B. All the operations are dealt with bits. 
 
-To explain the logic process of the solution needs to start with the equation $F =xy + \overline xz$. If we would like to return $y$ when the original $x$ is not 0, we should convert it to a mask-$0XFFFFFFFF$- because the $AND$ result of a mask and a bits is the bits. For example,  `0xff & 0x11` is `0x11`. 
+To explain the logic process of the solution needs to start with the equation $F =xy + \overline xz$. If we would like to return $y$ when the original $x$ is not 0, we should convert it to a mask-$0XFFFFFFFF$- because the $AND$ result of a mask and a bit is the bit itself. For example,  `0xff & 0x11` is `0x11`. 
 
 Apparently, `x = ~(!x) + 1` is an approach aiming to produce the mask. When `x` is non-zero, `!x` is 0 and the operation on the right side of `=` yields `0`  which is then flipped to produce `0xFFFFFFFF` in the operation: `(~x + y)`.  By now, the first part, $xy$,  in  $F =xy + \overline xz$ is made. Note that `~x` in the code `(~x & y)` represents $x$ in the equation. If `x` is zero, it is the same process.
+
+#### 8, isLessOrEqual
+
+```java
+/* 
+ * isLessOrEqual - if x <= y  then return 1, else return 0 
+ *   Example: isLessOrEqual(4,5) = 1.
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 24
+ *   Rating: 3
+ */
+int isLessOrEqual(int x, int y) {
+	return 2;
+}
+```
+
+1, $x \le y$ equals $x-y \le 0$
+
+One of the facts we should know is that if $x$ and $y$ have the same sign, $x-y$ will not cause any overflow. 
+
+For instance, if $w=4$,  any 4-bit number is in the range of $-8\le{x}\le7$ . 
+
+$7-1=6$,  $-8-(-1)=-7$ and so forth. These calculations don't overflow. 
+
+Another fact is that the operation of two numbers with different sign will lead to overflow. For example, int $1-(-8) = 9$ the 9 is bigger than the maximum value(7). 
+
+
+
