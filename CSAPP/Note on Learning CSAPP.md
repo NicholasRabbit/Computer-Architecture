@@ -230,6 +230,22 @@ For example, `1100 >> 6` means `1100 >> (6%4)`.
 
 #### 2.2 Integer representations
 
+##### 2.2.2 Unsigned Encodings
+
+Explanation of a formula.
+$$
+B2U_w(\overset{\rightarrow}{x})=\sum_{i=0}^{w-1}x_i2^i
+$$
+From $w$ bits to unsigned numbers. The equation represents the convert from w-bit representation to a decimal. For instance, w=4, for `1011` the result is $1\times2^3+0\times2^2+1\times2^1+1\times2^0$.
+
+$x$ represents the value of every single bit in different position.
+
+$i=0$ : from 0
+
+$w-1$:  2 to the power of from 0 to `w-1`.
+
+
+
 **1) The "-2147483648" can't be printed directly in C.**
 
 ```c
@@ -262,7 +278,7 @@ Casting a signed value to an unsigned value in C doesn't changed the bit represe
 
 See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
 
-#### 2.2.6 Expanding the Bit Representation of a Number
+##### 2.2.6 Expanding the Bit Representation of a Number
 
 (1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
 
@@ -309,7 +325,7 @@ For example, for  a word such as $w_4$  contain 4 bits(-8 ~ 7),  if`a = 1010(-6)
       = 3
 ```
 
-#### 2.2.7 Truncating Numbers
+##### 2.2.7 Truncating Numbers
 
 For an unsigned number $x$, the result of truncating it to k bits is equivalent to computing $x$ mod $2^k$.
 
@@ -329,7 +345,7 @@ The result of -7(1001)  truncated by 1 bit  is 1(001).
 
 The result of signed   `1111(-1)  `($w_4$)after truncating 1 bits is `111` which is `-1` in $w_3$
 
-#### 2.2.8 Advice on Signed vs. Unsigned
+##### 2.2.8 Advice on Signed vs. Unsigned
 
 1. Elaboration of "  FreeBSD-SA-02:38.signed-error".   On page 77 of "CSAPP(2rd)".
 
