@@ -76,6 +76,8 @@ Apparently, `x = ~(!x) + 1` is an approach aiming to produce the mask. When `x` 
 
 #### 8, isLessOrEqual
 
+See ` CSAPP/labs/testing_code_for_labs`
+
 ```java
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
