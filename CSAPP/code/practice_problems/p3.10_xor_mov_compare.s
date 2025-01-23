@@ -20,7 +20,6 @@
 
 .globl _start
 
-# eax,ebx都是CPU中的寄存器(register)，详见17.2
 
 _start:
 
