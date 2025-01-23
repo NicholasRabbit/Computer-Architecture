@@ -83,6 +83,16 @@ Actually, some parts of the solution are incomprehensible. I will figure it out 
    The answer is approximately $0.343$ seconds, which indicates that the clock or something to count time of  the Patriot Missile is about $0.343$  slower than the real time.  If the speed of an Iraqi missile is 
    $2000km$, $2000*0.343$  is 686 which is quite a big number and is definitely has disastrous effects.
 
+### Practice Problem 2.47 
+
+<img src="note-images/1735711837679.png" alt="1735711837679" style="zoom:67%;" />
+
+### Practice Problem 2.48
+
+<img src="note-images/1735711914139.png" alt="1735711914139" style="zoom: 67%;" />
+
+
+
 ### Practice Problem 3.10
 
 ```txt
@@ -218,4 +228,22 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 ##### **Key Takeaways**
 
 - **Encoding Efficiency**: The compact encoding of `xorl %edx, %edx` results in only two bytes (`31 D2`).
-- **Optimization**: This is why compilers favor such instructions to zero out registers—it minimizes memory usage and instruction size, improving performance in tight loops or embedded systems.
+- **Optimization**: This is why compilers favour such instructions to zero out registers—it minimizes memory usage and instruction size, improving performance in tight loops or embedded systems.
+
+### Practice Problem 3.17
+
+![1735712093104](note-images/1735712093104.png)
+
+### Practice Problem 3.20
+
+<img src="note-images/1735712124725.png" alt="1735712124725" style="zoom:67%;" />![1735712199778](note-images/1735712199778.png)
+
+### Practice Problem 3.21
+
+<img src="note-images/1735712199778.png" alt="1735712199778" style="zoom:80%;" />
+
+### Practice Problem 3.22
+
+![1735712284399](note-images/1735712284399.png)
+
+![1735712304508](note-images/1735712304508.png)
