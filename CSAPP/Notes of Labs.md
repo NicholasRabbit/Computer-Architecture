@@ -166,5 +166,30 @@ In this circumstance, two requirements have to be met. First is they have the sa
  72 }
 ```
 
+#### 9, logicalNeg
 
+See `../ CSAPP/labs/testing_code_for_labs/logicalNeg.c`
 
+#### 10, howManyBits
+
+```c
+/* howManyBits - return the minimum number of bits required to represent x in
+ *             two's complement
+ *  Examples: howManyBits(12) = 5
+ *            howManyBits(298) = 10
+ *            howManyBits(-5) = 4
+ *            howManyBits(0)  = 1
+ *            howManyBits(-1) = 1
+ *            howManyBits(0x80000000) = 32
+ *  Legal ops: ! ~ & ^ | + << >>
+ *  Max ops: 90
+ *  Rating: 4
+ */
+int howManyBits(int x) {
+  return 0;
+}
+```
+
+In two's complement, for instance, a positive number with the most significant 1 at x must be represented by at least "x + 1" bits. Such as `5(101)` should be used at least 4 bits-`0101` because there should be negative numbers which has 1 in the most significant bit by the pattern of two's complement. Thus we can take advantage of this property to tackle the question. 
+
+1) The first step is how to find the most significant "1".
