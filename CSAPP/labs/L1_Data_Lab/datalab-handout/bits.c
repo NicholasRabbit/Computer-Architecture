@@ -284,7 +284,9 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+	int a = (x | ~x + 1);
+	a = a >> 31;
+	return a + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
