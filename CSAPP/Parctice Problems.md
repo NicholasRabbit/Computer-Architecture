@@ -244,6 +244,12 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 
 ### Practice Problem 3.22
 
-![1735712284399](note-images/1735712284399.png)
+<img src="note-images/1735712284399.png" alt="1735712284399" style="zoom:67%;" />
 
-![1735712304508](note-images/1735712304508.png)
+<img src="note-images/1735712304508.png" alt="1735712304508" style="zoom:67%;" />
+
+### Practice Problem 3.27
+
+<img src="note-images/1739318597317.png" alt="1739318597317" style="zoom:50%;" />
+
+<img src="note-images/1739318649755.png" alt="1739318649755" style="zoom:50%;" />
