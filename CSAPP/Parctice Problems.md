@@ -253,3 +253,7 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 <img src="note-images/1739318597317.png" alt="1739318597317" style="zoom:50%;" />
 
 <img src="note-images/1739318649755.png" alt="1739318649755" style="zoom:50%;" />
+
+Practice Problem 3.29
+
+<img src="note-images/1740721377003.png" alt="1740721377003" style="zoom:67%;" />
