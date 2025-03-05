@@ -4,21 +4,21 @@ A.  T(new) = 20h
 
 It is 1.2x
 
-### **Practice 2.29**
+### Practice Problem  2.29
 
 ![img](note-images/clip_image002.jpg)
 
  
 
-### P2.34
+### Practice Problem 2.34
 
 ![img](note-images/clip_image004.jpg)
 
-### P2.35
+### Practice Problem 2.35
 
 I don’t understand problem 2.35 and find the solution later.
 
-### P2.37
+### Practice Problem 2.37
 
 Aside  Security vulnerability in the XDR library  (after Practice problem 2.36, on Page 91)
 
@@ -26,7 +26,7 @@ $(2^{20}+1)*2^{12}= 2^{20}*2^{12} + 1*2^{12}=4,294,967,296 + 4,096$
 
 Because $2^{20}$ is less than $2^{32}$(int: 4 bytes).
 
-### P2.38
+### Practice Problem 2.38
 
 LEA instruction: $a<<k+b$ . LEA is abbreviated to "Load Effective Address".
 
@@ -254,6 +254,10 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 
 <img src="note-images/1739318649755.png" alt="1739318649755" style="zoom:50%;" />
 
-Practice Problem 3.29
+### Practice Problem 3.29
 
 <img src="note-images/1740721377003.png" alt="1740721377003" style="zoom:67%;" />
+
+### Practice Problem 3.32
+
+<img src="note-images/1741160683128.png" alt="1741160683128" style="zoom:67%;" />
