@@ -261,3 +261,46 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 ### Practice Problem 3.32
 
 <img src="note-images/1741160683128.png" alt="1741160683128" style="zoom:67%;" />
+
+### Practice Problem 3.38
+
+Page 272.
+
+Notes:
+
+> 1. "diagonal elements" are like `A[0][0],A[1][1]` and so forth. 
+> 2. In this problem the number of both rows and columns is N and thus there are $N\times N$ elements in total.
+> 3. The formula of computing diagonal elements is, for instance, `A[0][0] + (N+1) = A[1][1]`.
+
+An elaboration of assembly code.
+
+```assembly
+4 .L14
+5 movl %edx, (%ecx, %eax)
+# This instruction indicates that it moves "val" to the address in memory where 
+# (%ecx,%eax) deferences. 
+# A[0][0] = val or *ABase = val or (A + index) = val.
+6 addl $68, %eax
+# It scales an increment by the size of underlying data. Namely the size of an integer in 
+# this example. The computation is "4*(N+1)=68".
+7 cmpl $1088, %eax
+# There are N*N elements in total; N*(N+1) beyonds the end of the last elements.
+# 4*(N+1)*N=1088
+```
+
+An analysis of the solution of C code.
+
+```c
+void fix_set_diag_opt(fix_matrix A, int val) {
+    // Move the value of the address of the place somewhere in memory where the pointer 
+    // "ABase" references.
+    int *Abase = &A[0][0];
+    int index = 0;
+    do {
+        // 5 movl %edx, (%ecx, %eax). Move the "val" to the place where "Abase + index" 
+        // references.
+        Abase[index] = val;  
+    }
+}
+```
+
