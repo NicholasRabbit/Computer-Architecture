@@ -510,7 +510,7 @@ Note: fields *s, exp* and *frac* are *1, k,* and *s* bits.
 
 Figure 2.33  
 
-Representable values for 6-bit floating-point format.
+Representative values for 6-bit floating-point format.
 
 The bits of each part are:  s: $1$, exp: $k= 3$,  frac: $2$
 
@@ -519,3 +519,20 @@ Normalised Values:
 Because the exponent  1~7, bias is $2^{k-1}=2{^3-1}=3$ , we can get $-1-3=-2, 7-3=4$ so $E$ is in range  $-2\leq{E}\leq4$.
 
 For fraction part:  $1.f_1,f_2$. As aforementioned, since in IEEE regulation $1$ is not explicitly represented the maximum value of $f_1f_2$  is $0.2^{-1}2^{-2}$, namely $0.75$ which represents $1.75$. And $1.75$ x $4$ is $14$ when $s$ is 0 and is $-14$ when $s$ is $1$.
+
+
+
+
+
+#### 3.8.5 Variable-Size Arrays
+
+In C, the sizes of multidimensional arrays could be determined at compile time. 
+
+For instance, in the following code all the sizes could be local variables or arguments. The parameter `n`must precede `A[n][n]` so that a compiler can know the dimension when it encounters the variable.
+
+```c
+int var_ele (int n, int A[n][n], int i, int j) {
+    return A[i][j];
+}
+```
+
