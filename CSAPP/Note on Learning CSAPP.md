@@ -536,3 +536,11 @@ int var_ele (int n, int A[n][n], int i, int j) {
 }
 ```
 
+#### 3.9 Heterogeneous Data Structures
+
+Note that `rp` is a pointer in `rp->height`.
+
+```c
+struct rect *rp;  // NOT struct rect rp.
+```
+
