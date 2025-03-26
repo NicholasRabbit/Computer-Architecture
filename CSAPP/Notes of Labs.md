@@ -5,7 +5,7 @@ Running `make btest` on a machine of 64-bit representation of integers may cause
 Solution:
 
 ```shell
-# You need install the glibc-devle.i386 package because the labs need machine of 32-bit 
+# You need install the glibc-devel.i386 package because the labs need machine of 32-bit 
 # representations of integers.
 yum -y install glibc-devel.i386   # Centos 6/7
 ```
@@ -190,6 +190,36 @@ int howManyBits(int x) {
 }
 ```
 
-In two's complement, for instance, a positive number with the most significant 1 at x must be represented by at least "x + 1" bits. Such as `5(101)` should be used at least 4 bits-`0101` because there should be negative numbers which has 1 in the most significant bit by the pattern of two's complement. Thus we can take advantage of this property to tackle the question. 
+In two's complement, for instance, a positive number with the most significant 1 at x must be represented by at least "x + 1" bits. Such as `5(101)` should be used at least 4 bits-`0101` because there should be negative numbers which has 1 in the most significant bit by the convention of two's complement. Thus we can take advantage of this property to solve the problem. 
 
 1) The first step is how to find the most significant "1".
+
+For negative numbers, the leading bit is `1`. 
+
+Elaboration of a solution.
+
+> If `x` is negative, `x = (sign & ~x) | (~sign & x); ` computes a value which is just 1 less than its absolute. For instance, for `-128` the result of the computation is `127`. 
+>
+> If `x` is positive, `x` in the equation has not been changed. For example, the result is still `120` if an argument is `127`.
+
+```c
+int howManyBits(int x) {
+  int b16, b8, b4, b2, b1, b0;
+  int sign = x >> 31;
+  x = (sign & ~x) | (~sign & x); 
+  b16 = !!(x >> 16) << 4; 
+  x = x >> b16;
+  b8 = !!(x >> 8) << 3; 
+  x = x >> b8;
+  b4 = !!(x >> 4) << 2;
+  x = x >> b4;
+  b2 = !!(x >> 2) << 1;
+  x = x >> b2;
+  b1 = !!(x >> 1);
+  x =x >> b1;
+  b0 = x;
+  return b16 + b8 + b4 + b2 + b1 + b0 + 1; //1位sign 位所占位置
+}
+
+```
+
