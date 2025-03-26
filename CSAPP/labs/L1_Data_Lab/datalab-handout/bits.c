@@ -229,7 +229,7 @@ int isAsciiDigit(int x) {
 	int r2 = higherBound >> 31;
 	/*
 	 * "return !(r1 & r2)" is wrong when the result is '0&1' which also yields '0'. 
-	 * But '1' means that 'x' is not ASCII digit.
+	 * But '1' indicates that 'x' is not ASCII digit.
 	 * */ 
 	return !r1 & !r2; 
 }
@@ -284,7 +284,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-	int a = (x | ~x + 1);
+	int a = (x | (~x + 1));
 	a = a >> 31;
 	return a + 1;
 }
