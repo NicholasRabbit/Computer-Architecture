@@ -210,7 +210,7 @@ Elaboration of the following solution.
 int howManyBits(int x) {
   int sign = x >> 31;
   int abs_x = (sign & ~x) | (~sign & x);
-  int b16, b8, b4, b2, b1;
+  int b16, b8, b4, b2, b1, b0;
   b16 = !!(abs_x >> 16) << 4;
   abs_x = abs_x >> b16;
   b8 = !!(abs_x >> 8) << 3;
@@ -220,8 +220,25 @@ int howManyBits(int x) {
   b2 = !!(abs_x >> 2) << 1;
   abs_x = abs_x >> b2;
   b1 = !!(abs_x >> 1);
-  return b16 + b8 + b4 + b2 + b1 + abs_x + 1;
+  abs_x = abs_x >> b1;
+  b0 = abs_x;
+  return b16 + b8 + b4 + b2 + b1 + b0 + 1;
 }
 ```
 
-The solution is correct, but I can't understand from `b16` to the end. 
+> The following computation aims to find out whether there is any `1` in the leftmost 16 bits. If so, it needs 16 + 1 bits at least.
+>
+> `abs_x >> 16` truncates the rightmost 16 bits. If there is any bit in the leftmost 16 bits, `!!(abs_x >> 16)`  is 1 so the result of `1<<4` is 16 which indicates that it needs $16+1$ bits. 
+>
+> Then we keep on squeezing the leftmost 16 bits by shifting `b16`(its value is either 0 or 16).
+>
+> And then repeat until the last bits.
+
+```c
+b16 = !!(abs_x >> 16) << 4;
+abs_x = abs_x >> b16;
+```
+
+
+
+ 
