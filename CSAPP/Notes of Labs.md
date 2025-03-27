@@ -196,30 +196,32 @@ In two's complement, for instance, a positive number with the most significant 1
 
 For negative numbers, the leading bit is `1`. 
 
-Elaboration of a solution.
+Elaboration of the following solution.
 
-> If `x` is negative, `x = (sign & ~x) | (~sign & x); ` computes a value which is just 1 less than its absolute. For instance, for `-128` the result of the computation is `127`. 
+> Assuming that `x` is one-byte, we can conclude as follows.
 >
-> If `x` is positive, `x` in the equation has not been changed. For example, the result is still `120` if an argument is `127`.
+> If `x` is negative, `sign` is`0b1111_1111`  and `abs_x = (sign & ~x) | (~sign & x) ` computes a value which is just 1 less than its absolute value. For instance, for `-128` the result of the computation is `127`. 
+>
+> If `x` is positive, `sign` is `0b0000_0000` and `abs_x` in the equation has not been changed. For example, the result is still `120` if an argument is `120`.
+>
+> In conclusion, as in two's complement numbers are asymmetric, the so-called absolute value of a negative is 1 less than its real arithmetic absolute value(`abs_x=127` when `x` is `-128`), but the absolute value of a positive number is the same as its arithmetic absolute value.
 
 ```c
 int howManyBits(int x) {
-  int b16, b8, b4, b2, b1, b0;
   int sign = x >> 31;
-  x = (sign & ~x) | (~sign & x); 
-  b16 = !!(x >> 16) << 4; 
-  x = x >> b16;
-  b8 = !!(x >> 8) << 3; 
-  x = x >> b8;
-  b4 = !!(x >> 4) << 2;
-  x = x >> b4;
-  b2 = !!(x >> 2) << 1;
-  x = x >> b2;
-  b1 = !!(x >> 1);
-  x =x >> b1;
-  b0 = x;
-  return b16 + b8 + b4 + b2 + b1 + b0 + 1; //1位sign 位所占位置
+  int abs_x = (sign & ~x) | (~sign & x);
+  int b16, b8, b4, b2, b1;
+  b16 = !!(abs_x >> 16) << 4;
+  abs_x = abs_x >> b16;
+  b8 = !!(abs_x >> 8) << 3;
+  abs_x = abs_x >> b8;
+  b4 = !!(abs_x >> 4) << 2;
+  abs_x = abs_x >> b4;
+  b2 = !!(abs_x >> 2) << 1;
+  abs_x = abs_x >> b2;
+  b1 = !!(abs_x >> 1);
+  return b16 + b8 + b4 + b2 + b1 + abs_x + 1;
 }
-
 ```
 
+The solution is correct, but I can't understand from `b16` to the end. 
