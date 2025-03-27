@@ -301,7 +301,24 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+
+	int sign = x >> 31;
+	int abs_x = (sign & ~x) | (~sign & x);
+
+	int b16, b8, b4, b2, b1;
+
+	b16 = !!(abs_x >> 16) << 4;
+	abs_x = abs_x >> b16;
+	b8 = !!(abs_x >> 8) << 3;
+	abs_x = abs_x >> b8;
+	b4 = !!(abs_x >> 4) << 2;
+	abs_x = abs_x >> b4;
+	b2 = !!(abs_x >> 2) << 1;
+	abs_x = abs_x >> b2;
+	b1 = !!(abs_x >> 1);
+
+	return b16 + b8 + b4 + b2 + b1 + abs_x + 1;
+
 }
 //float
 /* 
