@@ -23,15 +23,20 @@ int main(void)
 char howManyBitsChar(char x) 
 {
 	char sign = x >> 7;
-	char abs_x = (sign & ~x) | (~sign & x);
-	int b4, b2, b1;
+	char abs_neg = (sign & ~x);  //
+	char abs_pos = (~sign & x);
+	char abs_x = abs_neg | abs_pos;
+
+	char b4, b2, b1, b0;
 	b4 = !!(abs_x >> 4) << 2;
 	abs_x = abs_x >> b4;
 	b2 = !!(abs_x >> 2) << 1;
 	abs_x = abs_x >> b2;
 	b1 = !!(abs_x >> 1);
+	abs_x = abs_x >> b1;
+	b0 = abs_x;
 
-	return b4 + b2 + b1 + abs_x + 1;
+	return b4 + b2 + b1 + b0 + 1;
 }
 
 

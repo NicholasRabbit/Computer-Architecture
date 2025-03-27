@@ -305,7 +305,7 @@ int howManyBits(int x) {
 	int sign = x >> 31;
 	int abs_x = (sign & ~x) | (~sign & x);
 
-	int b16, b8, b4, b2, b1;
+	int b16, b8, b4, b2, b1, b0;
 
 	b16 = !!(abs_x >> 16) << 4;
 	abs_x = abs_x >> b16;
@@ -316,8 +316,10 @@ int howManyBits(int x) {
 	b2 = !!(abs_x >> 2) << 1;
 	abs_x = abs_x >> b2;
 	b1 = !!(abs_x >> 1);
+	abs_x = abs_x >> b1;
+	b0 = abs_x;
 
-	return b16 + b8 + b4 + b2 + b1 + abs_x + 1;
+	return b16 + b8 + b4 + b2 + b1 + b0 + 1;
 
 }
 //float
