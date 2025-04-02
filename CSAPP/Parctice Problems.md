@@ -272,7 +272,7 @@ Notes:
 > 2. In this problem the number of both rows and columns is N and thus there are $N\times N$ elements in total.
 > 3. The formula of computing diagonal elements is, for instance, `A[0][0] + (N+1) = A[1][1]`.
 
-An elaboration of assembly code.
+An elaboration of the assembly code.
 
 ```assembly
 4 .L14
