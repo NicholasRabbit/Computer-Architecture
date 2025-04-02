@@ -541,6 +541,8 @@ int var_ele (int n, int A[n][n], int i, int j) {
 Note that `rp` is a pointer in `rp->height`.
 
 ```c
-struct rect *rp;  // NOT struct rect rp.
+// 'rp' is a pointer here not a variable of struct. NOT "struct rect rp". 
+struct rect *rp;  
 ```
 
+In C a structure is similar to an array and all the components in it are store in a contiguous region of memory. A pointer of structure is the address of its first byte.
