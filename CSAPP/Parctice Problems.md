@@ -304,3 +304,14 @@ void fix_set_diag_opt(fix_matrix A, int val) {
 }
 ```
 
+### Practice Problem 3.39
+
+```c
+void sp_init(struct prob *sp)
+{
+    sp->s.x = sp->s.y;  // Note that it is 'sp->s.y' but not 's.y'.
+    sp->p = &(sp->s.x); // NOT &(s.x) which is my wrong answer.
+    sp->next = sp; // NOT '&(s.p)'. There isn't any 'p' in s.
+}
+```
+
