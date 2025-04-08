@@ -478,7 +478,7 @@ The following content is quoted from "CSAPP"
 
 The IEEE floating-point standard represents a number in a form $V=(-1)^s* M\times2^{E}$.
 
-$E=e-bias$
+$E=e-bias$($e$ is the exponent).
 
 **Case 1: Normalised Values**
 
@@ -504,23 +504,49 @@ An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(
 
 2) To represent numbers are very close to $0$.
 
-#### 2.4.3 Example Numbers
+##### 2.4.3 Example Numbers
+
+**(1) An analysis of Figure 2.33.**
 
 Note: fields *s, exp* and *frac* are *1, k,* and *s* bits.
-
-Figure 2.33  
 
 Representative values for 6-bit floating-point format.
 
 The bits of each part are:  s: $1$, exp: $k= 3$,  frac: $2$
 
-Normalised Values:
+**Normalised Values:**
 
 Because the exponent  1~7, bias is $2^{k-1}=2{^3-1}=3$ , we can get $-1-3=-2, 7-3=4$ so $E$ is in range  $-2\leq{E}\leq4$.
 
 For fraction part:  $1.f_1,f_2$. As aforementioned, since in IEEE regulation $1$ is not explicitly represented the maximum value of $f_1f_2$  is $0.2^{-1}2^{-2}$, namely $0.75$ which represents $1.75$. And $1.75$ x $4$ is $14$ when $s$ is 0 and is $-14$ when $s$ is $1$.
 
+**(2) Floating-point representations and unsigned values(Page 143).**
 
+**(3) The bit representation of a float $0.5$ .**
+
+The following fragment of code is used to get the floating-point representation by take advantage of `union` in C.
+
+```c
+#include <stdio.h>
+unsigned float_to_point(float f);
+int main(void)
+{
+	unsigned u = float_to_point(0.5f);
+	printf("%.2x\n", u);
+	return 0;
+}
+unsigned float_to_point(float f)
+{
+	union {
+		float f;
+		unsigned u;
+	} temp;
+	temp.f = f;
+	return temp.u;
+}
+```
+
+The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times)` which can be rearranged as a floating point format `0(s) 0111 1110(exp) 0(23 0s, fraction)`. Apparently, it is a normalised value since the exponent is in the range of $1-255$. The bias is $127$ and `0111 1110` is $126$. Hence the $E=e-bias=126-127=-1$ and the fraction is $1.0$ after adding the implicit $1$. So we can get $V=(-1)^s\times 1.0\times 2^{-1}=0.5$. N.B. The fraction is $0$ NOT $2^{-1}$
 
 
 
