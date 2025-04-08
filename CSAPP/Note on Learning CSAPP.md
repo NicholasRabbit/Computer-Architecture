@@ -564,6 +564,8 @@ int var_ele (int n, int A[n][n], int i, int j) {
 
 #### 3.9 Heterogeneous Data Structures
 
+##### 3.9.1 Structures
+
 Note that `rp` is a pointer in `rp->height`.
 
 ```c
@@ -572,3 +574,18 @@ struct rect *rp;
 ```
 
 In C a structure is similar to an array and all the components in it are store in a contiguous region of memory. A pointer of structure is the address of its first byte.
+
+##### 3.9.2 Unions
+
+1. Half of the bytes in each **leaf node** are wasted in the following implementation of a binary tree.
+
+   ```c
+   struct NODE_S {
+     struct NODE_S *left; 
+     struct NODE_S *right;
+     double data;
+   };
+   ```
+
+   
+
