@@ -315,3 +315,21 @@ void sp_init(struct prob *sp)
 }
 ```
 
+### Practice Problem 3.40
+
+| EXPR                                                         | TYPE    | Code                                                         |
+| ------------------------------------------------------------ | ------- | ------------------------------------------------------------ |
+|                                                              |         | `movw $ax, ($edx)`  <br /> # The register is `$ax` here.     |
+| `&up->t1.d`<br /># It equals `&(up->t1.d)`, namely get the <br/> address of `up->t1.d`. | short * | `leal 2(%eax), $eax`<br /> `movl %eax, (%edx)`               |
+| `up->t2.a`                                                   | int *   | `movl $eax, (%edx)`                                          |
+| `up->t2.a[up->t1.s]`                                         | int     | `movl 4(%eax), %ecx`  <br /> # Get  data in `t1.s`.<br /> `movl (%eax, %ecx, 4), %eax`<br/> # Compute `t2.a[up->t1.s]` <br /> # And get the value of it<br /> `movl %eax, %ebx` |
+| `*up->t2.p`<br /> # Get the object which the pointer references. | char    | `movl 8(%eax), %eax`<br /> `movb (%eax), %al`<br /> `movb %al, (%edx)` |
+
+*I will review it later.* 
+
+
+
+
+
+
+
