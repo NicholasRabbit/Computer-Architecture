@@ -587,5 +587,8 @@ In C a structure is similar to an array and all the components in it are store i
    };
    ```
 
-   
+
+##### 3.9.3 Data Alignment
+
+In Linux, the address of a `short` must be a multiple of 2; consequently, the least significant bit of the address is `0`. Because in a binary number, the second bit is equivalent to a decimal $2$ ; therefore, the least significant `1`, which equals a decimal 1, is zero.  The value in each position of a binary number is $8,4,2,1$.
 

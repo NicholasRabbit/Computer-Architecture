@@ -327,9 +327,33 @@ void sp_init(struct prob *sp)
 
 *I will review it later.* 
 
+### Practice Problem 3.41
 
+B.  `struct P2 (int i; char c; char d; int j;);`
 
+```text
+i 	c 	d	j   total	alignment
+0	4	5	8  	12		4
+```
 
+They are 12 bytes in total because `c` and `d` are stored in adjacent spaces in memory and then followed by padding of 2 bytes. I thought it was 16 bytes. 
 
+C. `struct P3 {short w[3]; char c[3];};`
 
+```txt
+w	c	total	alignment
+0	6	10		2
+```
 
+There are 3 bytes in the char array `c` and then an extra byte added by compiler in order to respect the convention of alignment. 
+
+D. `struct P4 {short w[3]; char *c[3]}`
+
+N.B. `*c` is an array of pointer of char. Obviously, the size of any pointer is 4 bytes all the time in a Linux/IA32 machine.
+
+```txt
+w	c	total	alignment
+0	8	20		4
+```
+
+Two bytes are added by compiler after `w`. 
