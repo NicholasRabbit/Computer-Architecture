@@ -356,4 +356,38 @@ w	c	total	alignment
 0	8	20		4
 ```
 
-Two bytes are added by compiler after `w`. 
+Two bytes are added by compiler after `w` so that the size is 8 bytes in total which satisfies alignment requirement, namely the memory address is a multiple of 4 in this circumstance. 
+
+### Practice Problem 3.42
+
+Note that the code is compile on a Windows machine.
+
+A. N.B. Small objects don't have to be aligned with the element with the largest size. If the size of an element is smaller than its preceded one in a "structure", it would be aligned with the larger precedent element. 
+
+```txt
+Objects	Size   Offset
+a		4		0
+b		2		4  # b is aligned with a so extra 2 bytes are added.
+c		8		8
+d		1		16 # d is 'char' but it should be aligned with c which comprises 8 bytes
+e		4		20
+f		1		24 # It is the same; 3 bytes are added.
+g		8		32
+h		4		40 # The first address starts at "40" for 'h'.
+```
+
+B. The total size of this structure would be 44 bytes if 4 more bytes were not added at the end of it in order to align `h` to `g`. But these 4 bytes should be added even though `h` is the last object in this structure.
+
+C. A manoeuvre is that to rearrange all data elements in descending order of size when the size of them all equal a power of 2. So the solution is as follows.
+
+Why should it be rearranged in a descending order?
+
+As aforementioned, a smaller data element will be aligned with its larger precedent one. 
+
+```txt
+c g a e h b d f
+8 8 4 4 4 2 1 1  # There are 32 bytes in total.
+```
+
+
+
