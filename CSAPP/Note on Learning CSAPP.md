@@ -592,3 +592,38 @@ In C a structure is similar to an array and all the components in it are store i
 
 In Linux, the address of a `short` must be a multiple of 2; consequently, the least significant bit of the address is `0`. Because in a binary number, the second bit is equivalent to a decimal $2$ ; therefore, the least significant `1`, which equals a decimal 1, is zero.  The value in each position of a binary number is $8,4,2,1$.
 
+#### 3.10 Putting It Together: Understanding Pointers
+
+1) Casting one type of a pointer to another only changes its type but not its value.
+
+2) Casting has higher precedence than arithmetic operation. For instance, 
+
+``` c
+char *p
+// It computes 'p+28(7*4)' because it is cast to integer pointer at first.
+(int *) p+7;
+
+// However, the followning code computes 'p+7' because parentheses has increased the
+// precedence of add in 'p+7'.
+(int *) (p+7);
+```
+
+3) Pointers can also point to functions. 
+
+The value of a function pointer is the address of the first instruction in the machine code which  represents the function. 
+
+```c
+// Here is the prototype of a function named 'fun'.
+int fun(int x, int *p);
+// Declare a function pointer and assign a addres of a function to it.
+// The last parentheses indicate the two arguments of this function/
+// The first "int" is the return type while the parentheses of it is not necessary.
+// But (*fp) must be bracketed, otherwise it will be 'int * fp(int, int *)' which is a
+// prototype of another function with "int *" pointer as its return value and "fp" as its
+// name.
+(int) (*fp)(int, int *);  
+fp = fun;
+int y = 1;
+int result = fp(3, &y);
+```
+
