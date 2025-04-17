@@ -155,7 +155,7 @@ Every computer has a *word size* which indicates the nominal size of a pointer d
 
 As a programmer, we must be extremely cautious when are calculating numbers to prevent catastrophe which is caused by overflow. For example, in the 2's complement system the range of a char(1 byte)is from `-128~127`, if we add 100 to 50 the result is 150 which actually represents -106. 
 
-#### 2.1.3 Addressing and Byte Ordering
+#### 2.1.4 Addressing and Byte Ordering
 
 Each byte has its own address in computer system. As programme files such as source file(\*.c), assembly file(\*.s), relocatable object file(\*.o) and executable file(\*.out) which all span multiple bytes, it is necessary for every byte having its address or it could be chaotic and the monolithic pillars may collapse.
 
@@ -458,12 +458,31 @@ The following content is quoted from "CSAPP"
 
 ##### 2.3.7 Extra
 
-Integer C puzzles (See the end of Lecture 03 of the video course of CSAPP)
+**Integer C puzzles** (It is shown at the end of Lecture 03 of the video course of CSAPP)
 
-1)  If $x>=0$, then $-x<=0$.  True.
+```c
+int x = foo();
+int y = bar();
+unsigned ux = x;
+unsigned uy = y;
+```
 
-2)  If $x<=0$, then $-x>=0$.  False. 
+1) `x<0​` --> `((x*2) < 0)`.  False.
+
+If $x$ is $T_{MAX}$, $x*2$ is $0$.
+
+2) `ux >= 0`. True.
+
+3) `x & 7 == 7` --> `(x << 30) < 0`.  True.
+
+7's binary representation is `0111` so the least significant three bits of `x` is `...111`.
+
+4)  If $x>=0$, then $-x<=0$.  True.
+
+5)  If $x<=0$, then $-x>=0$.  False. 
 When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
+
+
 
 #### 2.4 Floating Point 
 
