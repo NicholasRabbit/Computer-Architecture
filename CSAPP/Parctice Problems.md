@@ -4,6 +4,12 @@ A.  T(new) = 20h
 
 It is 1.2x
 
+### Practice Problem 2.6
+
+Why the hexadecimal presentation of  `3510593.0` is `0x4A1F23E0` in the 3rd edition of the book and is `0x4A564504` in 2nd edition? 
+
+I also got the later result.  Why is that? Perhaps the answer is wrong in the 3rd edition. 
+
 ### Practice Problem  2.29
 
 ![img](note-images/clip_image002.jpg)

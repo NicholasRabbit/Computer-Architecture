@@ -178,13 +178,7 @@ like `40 06 04 bf ` so that we can read it like what we do in math class.
 
 Note: See "[Analysis of Storage]("..\C-Code\26_AssemblyLanguage_And_Storage\Analysis of Storage.md")" for more about address, little endian and big endian.
 
-
-
-#### Practice Problem 2.6
-
-Why the hexadecimal presentation of  `3510593.0` is `0x4A1F23E0` in the 3rd edition of the book and is `0x4A564504` in 2nd edition? 
-
-I also got the later result.  Why is that?
+**N.B.** See `CSAPP/code/code_examples_in_the_book/chapter_2/` which verifies the "endian" of a machine with the help of a C programme.
 
 #### 2.1.6  Introduction to Boolean Algebra
 
@@ -447,8 +441,6 @@ We notice that the product of unsigned multiplication is also `0100` after trunc
 
 ##### 2.3.6 Multiplying by Constants
 
-
-
 The integer multiply instructions is very slow, requiring 10 clock cycles whereas other integer operations such as addition, subtraction, bit-level operations, and shifting are required only 1 clock cycle.
 
 So many C compilers will optimise code like `x*14` to `x<<3 + x<<2 + x<<1` recognising that $14=2^3+2^2+2^1$. It is also recognised as $14=2^4-2^1$. 
@@ -464,7 +456,14 @@ The following content is quoted from "CSAPP"
 >
 > Form B:  (x<<n+1) - (x<<m)
 
+##### 2.3.7 Extra
 
+Integer C puzzles (See the end of Lecture 03 of the video course of CSAPP)
+
+1)  If $x>=0$, then $-x<=0$.  True.
+
+2)  If $x<=0$, then $-x>=0$.  False. 
+When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
 
 #### 2.4 Floating Point 
 
