@@ -50,7 +50,12 @@ void test_show_bytes(int val)
 
 int main(int argc, char const *argv[])
 {
-	test_show_bytes(12345);
+	int a = 12345;
+	printf("int a = 12345; a = 0x%.2x\n", a);
+
+	test_show_bytes(a);
+
 	return 0;
+
 }
 
