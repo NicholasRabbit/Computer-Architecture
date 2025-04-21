@@ -2,7 +2,7 @@
 
 [CS 15-213](https://www.cs.cmu.edu/~213/index.html)
 
-**Textbook** :  Computer Systems: A Programmer's Perspective, 3/E 
+My notes are written when reading the second edition of Computer Systems: A Programmer's Perspective.
 
 ### Tips
 
