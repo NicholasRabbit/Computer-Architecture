@@ -239,6 +239,65 @@ b16 = !!(abs_x >> 16) << 4;
 abs_x = abs_x >> b16;
 ```
 
+#### 11, floatScale2
 
+```c
+//float
+/* 
+ * floatScale2 - Return bit-level equivalent of expression 2*f for
+ *   floating point argument f.
+ *   Both the argument and result are passed as unsigned int's, but
+ *   they are to be interpreted as the bit-level representation of
+ *   single-precision floating point values.
+ *   When argument is NaN, return argument
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+unsigned floatScale2(unsigned uf) {
+  return 2;
+}
+```
 
- 
+According to IEEE floating-point standard, a floating-point number is represented by 4 bytes(32 bits). The most significant bit indicates the sign; the following 8 bits, which in the range between 32 to 23, represents the exponent while the rest 23 bits is the value of fraction. 
+
+There are three cases of the argument `f`. Whereas, the sign is either $-1$ or $1$ in any circumstances.
+
+1. Normalised Values.
+
+   The exponent is in the range between 1 and 254 and the fraction is represented by the least 23 bits with an implicit leading bit - 1.
+
+   1) Get the bit representing the sign
+
+   ```c
+   unsigned s = uf >> 31;
+   ```
+
+   2) Truncate the bits which represents the exponent of the argument.
+
+   ```c
+   // The aim of using AND(&) is to eliminate the sign bit.
+   unsigned exp = (uf >> 23) & 0xff;
+   ```
+
+   Since it is a normalised value, we can only just add 1 to the exponent to implement the multiplication of `2*f`. 
+
+   ```c
+   exp += 1;
+   ```
+
+   3) Whereas, the original exponent should be replaced by the new one. So we change the most significant 9 bits to 0s then we can put `exp` back into the result. 
+
+   ```c
+   // To eliminate the sign and the exponent by having the leading 9 bits become 0s.
+   unsigned frac = (uf << 9) >> 23; 
+   ```
+
+   4) Combine all of the three parts.
+
+   ```c
+   unsigned result = s << 31 | exp << 23 | frac;
+   ```
+
+   Attention should be paid is when the fraction is all 0s in the normalised case...
+
