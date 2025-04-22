@@ -335,7 +335,26 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+	// 1. Normalised Values.
+	unsigned s = uf >> 31;
+	unsigned exp = (uf >> 23) & 0xff;
+	// Implementing 2*f by adding 1 to the exponent.
+	unsigned frac = (uf << 9) >> 23;
+
+	// NaN
+	if (exp == 0xff)
+		return uf;
+	// Denormalised Values
+	else if (exp == 0x0) {
+		frac = (frac << 9) >> 23;
+		return (s << 31) | exp <<23 | frac;
+	}
+	// Normalised Values
+	else
+		exp += 1; 
+
+	return (s << 31) | exp <<23 | frac;
+
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
