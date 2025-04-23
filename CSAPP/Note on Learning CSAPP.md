@@ -522,6 +522,8 @@ An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(
 
 2) To represent numbers are very close to $0$.
 
+3) Note that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised values. See Figure 2.34.
+
 ##### 2.4.3 Example Numbers
 
 **(1) An analysis of Figure 2.33.**

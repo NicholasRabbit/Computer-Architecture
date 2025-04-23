@@ -346,7 +346,7 @@ unsigned floatScale2(unsigned uf) {
 	if (exp == 0xff)
 		return uf;
 	// Denormalised Values. It is not necessary to add the implicit leading "1"
-	// to the significand.Thus, we only need to multiply fraction by 2.
+	// to the significand.Thus, we only need to multiply the fraction and 2.
 	else if (exp == 0x0) {
 		/*
 		 * Note that if the leading bit of the fraction is 1, the least significant

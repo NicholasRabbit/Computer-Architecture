@@ -263,41 +263,103 @@ According to IEEE floating-point standard, a floating-point number is represente
 
 There are three cases of the argument `f`. Whereas, the sign is either $-1$ or $1$ in any circumstances.
 
-1. Normalised Values.
+**Preparation: Extract three parts of a floating-point number**
 
-   The exponent is in the range between 1 and 254 and the fraction is represented by the least 23 bits with an implicit leading bit - 1.
+The exponent is in the range between 1 and 254 and the fraction is represented by the least 23 bits with an implicit leading bit - 1.
 
-   1) Get the bit representing the sign
+1) Extract the bit representing the sign
 
-   ```c
-   unsigned s = uf >> 31;
-   ```
+```c
+unsigned s = uf >> 31;
+```
 
-   2) Truncate the bits which represents the exponent of the argument.
+2) Slice the bits and get the exponent.
 
-   ```c
-   // The aim of using AND(&) is to eliminate the sign bit.
-   unsigned exp = (uf >> 23) & 0xff;
-   ```
+```c
+// The aim of using AND(&) is to eliminate the sign bit.
+unsigned exp = (uf >> 23) & 0xff;
+```
 
-   Since it is a normalised value, we can only just add 1 to the exponent to implement the multiplication of `2*f`. 
+3) Whereas, the original exponent should be replaced by the new one. So we change the most significant 9 bits to 0s then we join `exp` into the result later. 
+
+```c
+// To eliminate the sign and the exponent by having the leading 9 bits become 0s.
+//unsigned frac = (uf << 9) >> 23;  // This line of code is buggy.
+unsigned frac = (uf << 9) >> 9; // It should be shifted right by 9 bits, too.
+```
+
+1. **Normalised Values**
+
+   1.1 Since it is a normalised value, we can only just add 1 to the exponent to implement the multiplication of `2*f`. 
 
    ```c
    exp += 1;
    ```
 
-   3) Whereas, the original exponent should be replaced by the new one. So we change the most significant 9 bits to 0s then we can put `exp` back into the result. 
-
-   ```c
-   // To eliminate the sign and the exponent by having the leading 9 bits become 0s.
-   unsigned frac = (uf << 9) >> 23; 
-   ```
-
-   4) Combine all of the three parts.
+   1.2 Combine all of the three parts.
 
    ```c
    unsigned result = s << 31 | exp << 23 | frac;
    ```
 
-   Attention should be paid is when the fraction is all 0s in the normalised case...
+2. **Denormalised Values**
+
+   Attention should be paid is when the fraction is all 0s in the normalised case.
+
+   The exponent of all denormalised values are all 0's and by the IEEE floating=point standard there is NOT  an implicit 1 to be added to the fraction. So the denormalised values are always smaller than 0.
+
+   ```c
+   // Condition
+   exp == 0;
+   // Multiply the fraction and 2 directly.
+   frac = frac << 1;
+   ```
+
+   Combine all of the three parts, too.
+
+   ```c
+   unsigned result = s << 31 | exp << 23 | frac;
+   ```
+
+3. **NaN**
+
+   When all of the bits of the exponent are 1s, it is a NaN.
+
+   There are a total of 8 bits in single precision so the condition is as follows.
+
+   `exp == 0xff;` 
+
+```c
+unsigned floatScale2(unsigned uf) {
+	// 1. To extract the sign.
+	unsigned s = uf >> 31;
+	// 2. To slice the exponent.
+	unsigned exp = (uf >> 23) & 0xff;
+	// 3. To retrive the fractional part. 
+	unsigned frac = (uf << 9) >> 9; 
+
+	// NaN
+	if (exp == 0xff)
+		return uf;
+	// Denormalised Values. It is not necessary to add the implicit leading "1"
+	// to the significand.Thus, we only need to multiply the fraction and 2.
+	else if (exp == 0x0) {
+		/*
+		 * Note that if the leading bit of the fraction is 1, the least significant
+		 * bit of the exponent will become 1 after carrying the 1 from "frac << 1".
+		 * Whereas, there is no need to handle this "1" because it will become a normalised
+		 * value and the reslut is correct. Presumably, IEEE has already designed deliberately.
+		 * */
+		frac = frac << 1;
+		return (s << 31) | (exp <<23) | frac;
+	}
+	// Normalised Values
+	else
+		// Implementing 2*f by adding 1 to the exponent.
+		exp += 1; 
+
+	return (s << 31) | (exp <<23) | frac;
+
+}
+```
 
