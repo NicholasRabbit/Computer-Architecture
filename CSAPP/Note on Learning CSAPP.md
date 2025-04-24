@@ -616,7 +616,7 @@ In Linux, the address of a `short` must be a multiple of 2; consequently, the le
 
 1) Casting one type of a pointer to another only changes its type but not its value.
 
-2) Casting has higher precedence than arithmetic operation. For instance, 
+2) Casting has higher precedence than arithmetic operations. For instance, 
 
 ``` c
 char *p
@@ -630,12 +630,12 @@ char *p
 
 3) Pointers can also point to functions. 
 
-The value of a function pointer is the address of the first instruction in the machine code which  represents the function. 
+The value of a function pointer is the address of the first instruction in the machine code which represents the function. 
 
 ```c
 // Here is the prototype of a function named 'fun'.
 int fun(int x, int *p);
-// Declare a function pointer and assign a addres of a function to it.
+// Declare a function pointer and assign a address of a function to it.
 // The last parentheses indicate the two arguments of this function/
 // The first "int" is the return type while the parentheses of it is not necessary.
 // But (*fp) must be bracketed, otherwise it will be 'int * fp(int, int *)' which is a
@@ -647,3 +647,19 @@ int y = 1;
 int result = fp(3, &y);
 ```
 
+#### 3.11 Life in the Real World: Using the GDB Debugger
+
+```shell
+disas # Disassemble current function
+```
+
+### 3.12 Out-of-Bounds Memory References and Buffer Overflow
+
+1) An explanation of the code.
+
+```c
+// This is a function named 'gets' returning a char pointer.
+char *gets(char *s){}
+```
+
+2) The addresses of the elements in an array ascend coordinated with its indices / indexes. Namely, the bigger an index is, the higher the address is. So in page 292 the `%edx, %ebp...` are corrupted sequentially. 
