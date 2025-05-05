@@ -397,3 +397,8 @@ c g a e h b d f
 
 
 
+### Practice Problem 3.43
+
+N.B. the hexadecimal numbers for 0 to 9 range from `0x30` to `0x39`. 
+
+Don't forget that there is always an terminating `null` at the end of a char array.
