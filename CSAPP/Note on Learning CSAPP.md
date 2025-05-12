@@ -368,7 +368,7 @@ If a malicious programmer writes code to call `copy_from_kernel(...)` with a neg
 
 2. The minimum value of unsigned numbers is 0 so when $0-1$ the result is the maximum value.
 
-   Which is $0-1->U_{max}$ 
+   So $0-1>=U_{max}$ 
 
 #### 2.3 Integer Arithmetic
 
@@ -467,22 +467,45 @@ unsigned ux = x;
 unsigned uy = y;
 ```
 
-1) `x<0​` --> `((x*2) < 0)`.  False.
+<img src="note-images/1747036436440.png" alt="1747036436440" style="zoom:67%;" />
 
-If $x$ is $T_{MAX}$, $x*2$ is $0$.
+1) `x<0​` --> `((x*2) < 0)`.  
 
-2) `ux >= 0`. True.
+False. If $x$ is $T_{MAX}$, $x*2$ is $0$.
 
-3) `x & 7 == 7` --> `(x << 30) < 0`.  True.
+2) `ux >= 0`. 
 
-7's binary representation is `0111` so the least significant three bits of `x` is `...111`.
+True.
 
-4)  If $x>=0$, then $-x<=0$.  True.
+3) `x & 7 == 7` --> `(x << 30) < 0`.  
 
-5)  If $x<=0$, then $-x>=0$.  False. 
-When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
+True. 7's binary representation is `0111` so the least significant three bits of `x` is `...111`.
 
+4) `ux > -1`. 
 
+False. When a signed value is being computed with an unsigned value, it will cast to an unsigned, while`-1`  has the same bit representation as the largest unsigned value. So it is a false statement. 
+
+5) `x > y` ==> `-x < -y`.  
+
+False. If `y` is $T_{min}$, `-y` is also $T{min}$. But `-x` could be a positive number. 
+
+6) `x * x > 0`.  
+
+False. If x is large enough, there might be an overflow so the result is a negative value. 
+
+7) `x > 0 && y > 0` ==> `x + y > 0`.
+
+False. There could be an overflow for the computation `x + y`. 
+
+8)  If $x>=0$, then $-x<=0$.  True.
+
+9)  If $x<=0$, then $-x>=0$.  
+
+False. When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
+
+10) `(x | -x) >> 31 == -1`.
+
+False. When `x` is 0, the statement is false.  
 
 #### 2.4 Floating Point 
 
@@ -667,3 +690,9 @@ char *gets(char *s){}
 But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 6. Why is it `-12(%ebp)` in `leal -12(%ebp), %ebx`? See my analyses. N.B. there are 4 bytes in each row in a stack.
 
 ![1745913271621](note-images/1745913271621.png)
+
+##### 3.12.1 Thwarting Buffer Overflow Attacks
+
+Why can it be cracked by enumerating $2^{15}=32,768$ starting address for the randomisation over *n*=$2^{23}$ if we set up a 256 bytes nop sled? (Page 296)
+
+I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still can't understand that statement. 
