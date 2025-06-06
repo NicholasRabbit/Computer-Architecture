@@ -402,3 +402,24 @@ c g a e h b d f
 N.B. the hexadecimal numbers for 0 to 9 range from `0x30` to `0x39`. 
 
 Don't forget that there is always an terminating `null` at the end of a char array.
+
+### Practice Problem 3.44
+
+to be reviewed...
+
+### Practice Problem 3.45
+
+to be reviewed...
+
+### Practice Problem 3.46
+
+A. 
+
+256 terabytes equals $256\times 1024= 262,144 (gigabytes=GB)$.
+
+In 2010, $1000 can pay 16.3 gigabytes so the factor is 
+
+$factor = 262,144 \div 16.3 \approx 1.608 \times 10^4$. Then we get an equation: $1.48^t = 1.608 \times 10^4$.
+
+t is approximately 25. 
+
