@@ -591,9 +591,46 @@ unsigned float_to_point(float f)
 
 The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times)` which can be rearranged as a floating point format `0(s) 0111 1110(exp) 0(23 0s, fraction)`. Apparently, it is a normalised value since the exponent is in the range of $1-255$. The bias is $127$ and `0111 1110` is $126$. Hence the $E=e-bias=126-127=-1$ and the fraction is $1.0$ after adding the implicit $1$. So we can get $V=(-1)^s\times 1.0\times 2^{-1}=0.5$. N.B. The fraction is $0$ NOT $2^{-1}$
 
+#### 3.7 Procedures 
+
+##### 3.7.2 Transferring Control
+
+1,  The following instructions support procedure calls and returns. (Page 255)
+
+(1) `call Label` or `call *Operand`
+
+"Label" is usually a name of a function in assembly code. For example, `call sum`
+
+There are two steps after the `call` is executed. First, it push the return address onto the top of stack; second, it jumps to the address of the called function. N.B. the return address is the address of the instruction immediately following the `call`.  See page 255. 
+
+(2) `ret` 
+
+There is not any arguments in this instruction. 
+
+The `ret` instruction also includes two operations which are `pop` an address of the stack, presumably the address is the return address in the caller which the `call` instruction `push` on the stack, and jumps to this location. 
+
+(3) `leave` 
+
+There is not any arguments in this instruction, either.
+
+The `leave` is equivalent to the following two instructions:
+
+```assembly
+# %ebp now points the the bottom of current, namely the called fuction, stack.
+# This instruciton is to set the stack pointer %esp to the bottom of the current stack
+movel %ebp,%esp
+# "popl" always move the top value of the stack. %esp points to the top all the time.
+# Because %esp is at the bottom now, "popl %ebp" will move the value "old %ebp" 
+# which is %ebp of caller's to the register %ebp. That is to restore the stack pointer to
+# the caller's statck.
+popl %ebp
+```
 
 
-#### 3.8.5 Variable-Size Arrays
+
+#### 3.8 Array Allocation and Access
+
+##### 3.8.5 Variable-Size Arrays
 
 In C, the sizes of multidimensional arrays could be determined at compile time. 
 
