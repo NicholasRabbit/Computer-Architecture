@@ -525,7 +525,7 @@ $E=e-bias$($e$ is the exponent).
 
 1) Single precision(Float)
 
-The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=126,  254 - 127 = 127)
+The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=-126,  254 - 127 = 127)
 
 It is the same in double precision.
 
@@ -564,6 +564,8 @@ Because the exponent  1~7, bias is $2^{k-1}=2{^3-1}=3$ , we can get $-1-3=-2, 7-
 For fraction part:  $1.f_1,f_2$. As aforementioned, since in IEEE regulation $1$ is not explicitly represented the maximum value of $f_1f_2$  is $0.2^{-1}2^{-2}$, namely $0.75$ which represents $1.75$. And $1.75$ x $4$ is $14$ when $s$ is 0 and is $-14$ when $s$ is $1$.
 
 **(2) Floating-point representations and unsigned values(Page 143).**
+
+How to convert simple integer values into floating-point form? See page 143.
 
 **(3) The bit representation of a float $0.5$ .**
 
@@ -616,13 +618,13 @@ There is not any arguments in this instruction, either.
 The `leave` is equivalent to the following two instructions:
 
 ```assembly
-# %ebp now points the the bottom of current, namely the called fuction, stack.
+# %ebp now points the the bottom of currentstack, namely the called fuction.
 # This instruciton is to set the stack pointer %esp to the bottom of the current stack
 movel %ebp,%esp
 # "popl" always move the top value of the stack. %esp points to the top all the time.
 # Because %esp is at the bottom now, "popl %ebp" will move the value "old %ebp" 
-# which is %ebp of caller's to the register %ebp. That is to restore the stack pointer to
-# the caller's statck.
+# which is %ebp of caller's to the register %ebp. The aim is to restore the stack pointer 
+# to the caller's statck.
 popl %ebp
 ```
 
