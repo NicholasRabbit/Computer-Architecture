@@ -11,7 +11,7 @@ void show_bytes(byte_pointer start, size_t len)
 {
 	int i;
 	for (i = 0; i < len; i++)
-		printf(" %.2x", start[i]);
+		printf("%p  %.2x\t", &start[i], start[i]);
 	printf("\n");
 }
 
@@ -25,6 +25,7 @@ int main(int argc, char const *argv[])
 	show_bytes(ap, 1);
 	show_bytes(ap, 2);
 	show_bytes(ap, 3);
+	show_bytes(ap, 4);
 
 	return 0;
 }
