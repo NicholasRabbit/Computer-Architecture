@@ -363,3 +363,27 @@ unsigned floatScale2(unsigned uf) {
 }
 ```
 
+#### 12, floatFloat2Int
+
+```c
+/* 
+ * floatFloat2Int - Return bit-level equivalent of expression (int) f
+ *   for floating point argument f.
+ *   Argument is passed as unsigned int, but
+ *   it is to be interpreted as the bit-level representation of a
+ *   single-precision floating point value.
+ *   Anything out of range (including NaN and infinity) should return
+ *   0x80000000u.
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+int floatFloat2Int(unsigned uf) {
+  return 2;
+}
+```
+
+What does it ask us to do?
+
+It asks us to convert a float value, which is represented by an unsigned integer, to its equivalent integer form. See page 143 in CSAPP; in that page an integer value is converted to its float-point form. Here we do the reverse computation.
+
