@@ -224,7 +224,7 @@ For example, `1100 >> 6` means `1100 >> (6%4)`.
 
 #### 2.2 Integer representations
 
-##### 2.2.2 Unsigned Encodings
+##### 2.2.2 Unsigned Encoding
 
 Explanation of a formula.
 $$
@@ -274,7 +274,7 @@ See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
 
 ##### 2.2.6 Expanding the Bit Representation of a Number
 
-(1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
+(1) To convert an unsigned number to a larger data type we simply add leading zeros  to the representation.
 
 ```c
 unsigned short us = 0x3c9f;
@@ -593,6 +593,12 @@ unsigned float_to_point(float f)
 
 The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times)` which can be rearranged as a floating point format `0(s) 0111 1110(exp) 0(23 0s, fraction)`. Apparently, it is a normalised value since the exponent is in the range of $1-255$. The bias is $127$ and `0111 1110` is $126$. Hence the $E=e-bias=126-127=-1$ and the fraction is $1.0$ after adding the implicit $1$. So we can get $V=(-1)^s\times 1.0\times 2^{-1}=0.5$. N.B. The fraction is $0$ NOT $2^{-1}$
 
+#### 3.4 Accessing Information
+
+##### 3.4.2 Data Movement Instructions
+
+- IA32 imposes the restriction that data from one place in memory could not be moved directly to another place in memory. Thus, moving data from memory to another place in memory typically needs two steps: move the data from memory to a register and then move the data from the register to memory.
+
 #### 3.7 Procedures 
 
 ##### 3.7.2 Transferring Control
@@ -735,3 +741,16 @@ But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 
 Why can it be cracked by enumerating $2^{15}=32,768$ starting address for the randomisation over *n*=$2^{23}$ if we set up a 256 bytes nop sled? (Page 296)
 
 I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still can't understand that statement. 
+
+
+
+#### 3.13 x86-64: Extending IA32 to 64 bits
+
+##### 3.13.3 Accessing Information
+
+An explanation of two sentences in Page 310.
+
+*"Perhaps unexpectedly, instructions that move or generate 32-bits register values also set the upper 32 bits of the register to zero. Consequently, there is no need for an instruction `movzlq`".*
+
+> Instructions of 32 bits in Figure 3.4 like `movl` set the upper 32 bits of the 64 bits in x86-64 to zero by default. `movl` and other 32-bit instructions could be used with operands of 64-bit value; they just ignore the upper 32 bits and set them to zero in the registers. Subsequently, we can use `movl` as an alternative instruction of `movzlq` . 
+
