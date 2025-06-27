@@ -3,7 +3,8 @@
 #define N 0x4640e400
 
 /*
- * See page 143.
+ * See page 143 where an integer was converted to a float by IEEE convention.
+ * Here we reverse the conversion to finish the lab.
  *
  * */
 

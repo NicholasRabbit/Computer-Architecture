@@ -378,7 +378,51 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+
+	/*
+	 * 1. Check if it is a normalised float-point value.
+	 * */
+	int sign, exp, E, frac, bias, f, normal;
+	normal = 0;
+	bias = 127;
+	
+	// 1.1 Get the exponent of the single-precision floating point value.
+	exp = (uf << 1) >> 24;
+	if (exp > 0 && exp < 255) {
+		normal = 1;
+	} 
+	// Denormalisd vlaues.
+	if (exp == 0)
+		return 0;
+	// 1.2 Compute the E.
+	E = exp - bias;
+
+	/*
+	 * 2. Retrieve the fractional part.
+	 * The fractional part is the 23 least significant bits of the value.
+	 * Note that if it is a normalised value we should add the implicit one 
+	 * back to it. If it is a denormalised value, it is not necessary to do
+	 * that.
+	 * */
+	frac = (uf << 9) >> 9;
+	if (normal) {
+		// Attention. 0x2 should be shifted by 23 bits not 24 bits
+		// since "1" is already the least sigficant bit.
+		int one = 0x1 << 23; 
+		frac = one | frac;
+	}
+
+	/*
+	 * 3. Shift the fraction to the right to restore the integer value.
+	 * */
+	frac = frac >> (23 - E);
+
+	// 4. Get the sign of the single-precision floating-point value.
+	sign = (uf >> 31) << 31;
+
+	// 5. Compute the final integer value.
+	return sign | frac;
+
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
