@@ -535,9 +535,13 @@ It is the same in double precision.
 
 **Case 2: Denormalized Values**
 
-When the exponent field is all zeros, so $2^0=1$ and $E=2^0-bias=1-bias$.
+Note that the $E$ is not $E=e-bias$ in normalised values, but  $E=1-bias$.
 
-Two purposed of denormalized values:
+Why do we set the $E$ this way in denormalised values?
+
+Because we can make a smooth transition between normal and denormal values. See Page 141.
+
+**Two purposed** of denormalized values:
 
 1) To represent $0$. 
 
@@ -545,7 +549,13 @@ An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(
 
 2) To represent numbers are very close to $0$.
 
-3) Note that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised values. See Figure 2.34.
+**Note** that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised ones. See Figure 2.34.
+
+**N.B.** Denormalised values are always less than 1. 
+
+**Case 3: Infinity & NaN**
+
+NaN stands for "not a number".
 
 ##### 2.4.3 Example Numbers
 
