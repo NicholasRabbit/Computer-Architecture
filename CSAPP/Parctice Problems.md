@@ -423,3 +423,12 @@ $factor = 262,144 \div 16.3 \approx 1.608 \times 10^4$. Then we get an equation:
 
 t is approximately 25. 
 
+### Practice Problem 3.50
+
+1. Note that there are fixed orders of the arguments in a function.
+
+![1752810694465](note-images/1752810694465.png)
+
+2. There size of the pointer of any data type is 64 bits in a x86-64 machine, so `(%rdx)` might be an integer pointer. 
+3. By the convention in Figure 3.40, we can know that `%edi` is the first argument and is added by a pointer `%(rdx)` in the third place. Therefore, we can infer that `x` is the first argument and its type is integer. Apparently, `%(rdx` is an integer pointer `int ` which stores `t`. 
+4. In the line 4: `movslq %edi, %rdi`, we can infer that `t` is a sign integer. `%rsi` is a sign long, so `*q` is a pointer of signed long type in the second place.
