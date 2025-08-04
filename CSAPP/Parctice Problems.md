@@ -423,3 +423,41 @@ $factor = 262,144 \div 16.3 \approx 1.608 \times 10^4$. Then we get an equation:
 
 t is approximately 25. 
 
+### Practice Problem 3.50
+
+1. Note that there are fixed orders of the arguments in a function.
+
+![1752810694465](note-images/1752810694465.png)
+
+2. There size of the pointer of any data type is 64 bits in a x86-64 machine, so `(%rdx)` might be an integer pointer. 
+3. By the convention in Figure 3.40, we can know that `%edi` is the first argument and is added by a pointer `%(rdx)` in the third place. Therefore, we can infer that `x` is the first argument and its type is integer. Apparently, `%(rdx` is an integer pointer `int ` which stores `t`. 
+4. In the line 4: `movslq %edi, %rdi`, we can infer that `t` is a sign integer. `%rsi` is a sign long, so `*q` is a pointer of signed long type in the second place.
+
+### Practice Problem 3.52
+
+My answers are different from the standard ones on the book, but, in general, they are correct except for the answer of question D. 
+
+A. `%rbx` is used to store the original value of the argument `x`.
+
+B. `pushq %rbx` indicates that the `x` of the caller's  is stored in the stack. 
+
+`pop1 %rbx` means that the `x` of a callee's is restored to `%rbx`. 
+
+C. 
+
+```assembly
+rfact:   # The start of a function.
+	pushq %rbx  # Move the value in %rbx to the top of the current stack.
+	movq %rdi, %rbx # Since 'x' is in %rdi, this instruction moves it to %rbx.
+	movl $1, %eax  # Move the immidiate 1 to %eax.
+	testq %rdi, %rdi  # To test the logical operation of x&x.
+	jle .L11  # If "x&x" is less than or equals 0, jump to L11.
+	leaq -1(%rdi), %rdi  # Decrement x by 1.
+	call rfact   # Calling the function "rfact"
+	imulq %rbx, %rax  # x multiply the return value of rfact.
+.L11
+	popq %rbx  # Pop out the return of a callee to %rbx. 
+	ret  # return. 
+```
+
+D. The register `%rsp` was not used. (Wrong!)
