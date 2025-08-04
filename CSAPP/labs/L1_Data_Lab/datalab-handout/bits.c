@@ -382,7 +382,7 @@ int floatFloat2Int(unsigned uf) {
 	/*
 	 * 1. Check if it is a normalised float-point value.
 	 * */
-	int sign, exp, E, frac, bias, f, normal;
+	int sign, exp, E, frac, bias, normal;
 	normal = 0;
 	bias = 127;
 	
