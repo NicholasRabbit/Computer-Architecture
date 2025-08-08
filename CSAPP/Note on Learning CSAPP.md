@@ -551,7 +551,7 @@ An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(
 
 **Note** that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised ones. See Figure 2.34.
 
-**N.B.** Denormalised values are always less than 1. 
+**N.B.** Denormalised values are always less than 1. Because there isn't any leading 1 before the `.`  in a significand and the fraction is always $\frac{1}{2}+\frac{1}{4}+\frac{1}{8}...$
 
 **Case 3: Infinity & NaN**
 

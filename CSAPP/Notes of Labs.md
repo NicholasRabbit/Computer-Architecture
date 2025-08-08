@@ -385,5 +385,49 @@ int floatFloat2Int(unsigned uf) {
 
 What does it ask us to do?
 
-It asks us to convert a float value, which is represented by an unsigned integer, to its equivalent integer form. See page 143 in CSAPP; in that page an integer value is converted to its float-point form. Here we do the reverse computation.
+It asks us to convert a float value, which is represented by an unsigned integer, to its equivalent integer form. See page 143 in CSAPP; in that page an integer value is converted to its float-point form. Here we reverse that process.
 
+A Solution:
+
+1. Decompose the float value into 3 fields, which are a sign, an exponent and a fraction. 
+
+   ```c
+   unsigned sign = uf >> 31;
+   unsigned exp = (uf >> 23) & 0xff;
+   unsigned frac = (uf << 9) >> 9;
+   int E = exp - 127;
+   ```
+
+   
+
+2. If it is a denormalised value, the `E = 1 - bias` is a negative number. Therefore, it is less than 0. When it is converted to an integer, it is 0.
+
+   ```c
+   if (exp == 0)
+       return 0;
+   ```
+
+   If `exp == 255`, it is either an Infinity or a NaN.
+
+   ```c
+   if (exp == 255)
+       return 0x80000000u;
+   ```
+
+   
+
+3. If it is a normalised value, we should add the implicit 1 back. In addition, there are three results.
+
+   If $E \le 23$, we shift the $M$ $23-E$ bits to the right. On the contrary, if $E > 23$, we should shift $M$ to the left by $E-23$ bits. In the third case, if $E>31$ which means $E-23>8$; the fraction will shift to the left by 9 bits or more. Note that the fraction can only shift at most 8 bits to the left and it can overwrite the sign bit in the 32nd place. 
+
+   ```c
+   int M = frac | (1 << 23);
+   if (E <= 23)
+       M = M >> (23 - E);
+   else if (E - 23 <= 8)
+       M = M << (E - 23);
+   else 
+       return 0x80000000u;   
+   ```
+
+   
