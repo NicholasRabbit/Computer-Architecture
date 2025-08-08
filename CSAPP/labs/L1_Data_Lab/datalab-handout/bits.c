@@ -379,48 +379,56 @@ unsigned floatScale2(unsigned uf) {
  */
 int floatFloat2Int(unsigned uf) {
 
+
 	/*
-	 * 1. Check if it is a normalised float-point value.
+	 * 1. First of all, we should get the three fields of a single-pression number,
+	 * which are a sign, an exponent and a fraction.
 	 * */
 	int sign, exp, E, frac, bias, normal;
 	normal = 0;
 	bias = 127;
 	
-	// 1.1 Get the exponent of the single-precision floating point value.
+	// 1.1 Get the sign of the single-precision floating-point value.
+	sign = (uf >> 31) << 31;
+	// 1.2 Get the exponent of the single-precision floating point value.
 	exp = (uf << 1) >> 24;
-	if (exp > 0 && exp < 255) {
-		normal = 1;
-	} 
-	// Denormalisd vlaues.
-	if (exp == 0)
-		return 0;
-	// 1.2 Compute the E.
+	// 1.2.1 Compute the E.
 	E = exp - bias;
 
 	/*
-	 * 2. Retrieve the fractional part.
+	 * 1.3. Retrieve the fractional part.
 	 * The fractional part is the 23 least significant bits of the value.
 	 * Note that if it is a normalised value we should add the implicit one 
 	 * back to it. If it is a denormalised value, it is not necessary to do
 	 * that.
 	 * */
 	frac = (uf << 9) >> 9;
+	// To check if it is a normalised value.
+	if (exp > 0 && exp < 255) {
+		normal = 1;
+	}
+
+
+	// 2. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	if (exp == 0xff)
+		return 0x80000000u;
+
+
 	if (normal) {
-		// Attention. 0x2 should be shifted by 23 bits not 24 bits
-		// since "1" is already the least sigficant bit.
 		int one = 0x1 << 23; 
 		frac = one | frac;
 	}
+	if (!normal && frac == 0)	
+		return 0;
+
 
 	/*
 	 * 3. Shift the fraction to the right to restore the integer value.
 	 * */
 	frac = frac >> (23 - E);
 
-	// 4. Get the sign of the single-precision floating-point value.
-	sign = (uf >> 31) << 31;
 
-	// 5. Compute the final integer value.
+	// 4. Compute the final integer value.
 	return sign | frac;
 
 }

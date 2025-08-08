@@ -32,8 +32,8 @@ int floatFloat2Int(unsigned uf) {
 	 * 1. First of all, we should get the three fields of a single-pression number,
 	 * which are a sign, an exponent and a fraction.
 	 * */
-	unsigned sign, exp;
-	int E, frac, bias, normal;
+	unsigned sign, exp, frac, M;
+	int E, bias, normal;
 	normal = 0;
 	bias = 127; // 2^k - 1. k bits of the exponent.
 	
@@ -41,7 +41,7 @@ int floatFloat2Int(unsigned uf) {
 	sign = (uf >> 31) << 31;
 	
 	// 1.2 Get the exponent of the single-precision floating point value.
-	exp = (uf << 1) >> 24;
+	exp = (uf << 1) >> 24; // or exp = (uf >> 23) & 0xff;
 	// 1.2.1 Compute the E.
 	E = exp - bias;
 	printf("E = %d\n", E);
@@ -53,42 +53,41 @@ int floatFloat2Int(unsigned uf) {
 	 * back to it. If it is a denormalised value, it is not necessary to do
 	 * that.
 	 * */
-	frac = (uf << 9) >> 9;
+	frac = (uf << 9) >> 9; // or frac = (uf >> 23) & 0xff;
 
-	// 2. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
+	// when it is converted to an integer, it is 0;
+	if (exp == 0)
+		return 0;
+	// 3. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
 	if (exp == 0xff)
 		return 0x80000000u;
 
+
 	// To check if it is a normalised value.
+	// When the code is executed here, the argument must be a normalised value.
+	// Therefore, it is not to set condition of "if (exp > 0 && exp < 255)". 
+	// Whereas, I add it in order to make it readable
 	if (exp > 0 && exp < 255) {
 		printf("exp = %.2x\n", exp);
-		normal = 1;
+		M = frac | (0x1 << 23);
+		if (E <= 23)
+			M = M >> (23 - E);
+		else if (E > 23 && E <= 31)
+			M = M << (E - 23);
+		else
+			return 0x80000000u;
+
 	}
 
 
-	if (normal) {
-		// To Add the impplicit one back to a normalised value.
-		// Attention! 0x1 should be shifted by 23 bits not 24 bits to the 24th bit from left
-		// since "1" is already the least sigficant bit.
-		int one = 0x1 << 23; 
-		frac = one | frac;
-	}
-	printf("fraction = 0x%.2x\n", frac);
+	//4. By now, we have gotten the absolute value of the integer, therefore, we
+	//should add the sign back.
+	if (sign)
+		M = ~M + 1; // To get the negative value of M.
 
+	return M;
 
-	/*
-	 * 3. Shift the fraction to the right to restore the integer value.
-	 * */
-	int shift_bits = 23 - E;
-	frac = frac >> shift_bits;
-
-
-	// 5. Generate the final integer value.
-	int int_value = sign | frac;
-
-	printf("int_value = %d\n", int_value);
-	
-	return int_value;
 
 }
 
