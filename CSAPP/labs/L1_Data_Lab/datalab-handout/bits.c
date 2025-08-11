@@ -379,57 +379,51 @@ unsigned floatScale2(unsigned uf) {
  */
 int floatFloat2Int(unsigned uf) {
 
-
-	/*
-	 * 1. First of all, we should get the three fields of a single-pression number,
-	 * which are a sign, an exponent and a fraction.
-	 * */
-	int sign, exp, E, frac, bias, normal;
-	normal = 0;
-	bias = 127;
+	unsigned sign, exp, frac;
+	int E, bias, M = 0;
+	bias = 127; // 2^k - 1. k bits of the exponent.
 	
-	// 1.1 Get the sign of the single-precision floating-point value.
 	sign = (uf >> 31) << 31;
-	// 1.2 Get the exponent of the single-precision floating point value.
-	exp = (uf << 1) >> 24;
-	// 1.2.1 Compute the E.
+	
+	exp = (uf << 1) >> 24; // or exp = (uf >> 23) & 0xff;
 	E = exp - bias;
 
-	/*
-	 * 1.3. Retrieve the fractional part.
-	 * The fractional part is the 23 least significant bits of the value.
-	 * Note that if it is a normalised value we should add the implicit one 
-	 * back to it. If it is a denormalised value, it is not necessary to do
-	 * that.
-	 * */
-	frac = (uf << 9) >> 9;
-	// To check if it is a normalised value.
-	if (exp > 0 && exp < 255) {
-		normal = 1;
-	}
+	frac = (uf << 9) >> 9; 
 
-
-	// 2. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
+	// when it is converted to an integer, it is 0;
+	if (exp == 0)
+		return 0;
+	// 3. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
 	if (exp == 0xff)
 		return 0x80000000u;
 
 
-	if (normal) {
-		int one = 0x1 << 23; 
-		frac = one | frac;
+	if (exp > 0 && exp < 255) {
+		M = frac | (0x1 << 23);
+		if (E < 0)
+			return 0;
+		if (E <= 23)
+			M = M >> (23 - E);
+		else if (E > 23 && E < 31)
+			M = M << (E - 23);
+		else
+			// E is larger than 31.
+			return 0x80000000u;
+
 	}
-	if (!normal && frac == 0)	
-		return 0;
 
 
-	/*
-	 * 3. Shift the fraction to the right to restore the integer value.
-	 * */
-	frac = frac >> (23 - E);
+	if (sign)
+		M = ~M + 1; // To get the negative value of M.
+
+	return M;
 
 
-	// 4. Compute the final integer value.
-	return sign | frac;
+
+
+
+
 
 }
 /* 

@@ -4,10 +4,12 @@
 
 // To illustrate, 0x7f80 0000 has the exponent of all 1s,
 // which indicates the number is NaN.
-#define M 0x7f800000
+#define J 0x7f800000
+
+#define K 0x800000
 
 
-/* 
+/* The question is as follows.
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
  *   for floating point argument f.
  *   Argument is passed as unsigned int, but
@@ -32,9 +34,8 @@ int floatFloat2Int(unsigned uf) {
 	 * 1. First of all, we should get the three fields of a single-pression number,
 	 * which are a sign, an exponent and a fraction.
 	 * */
-	unsigned sign, exp, frac, M;
-	int E, bias, normal;
-	normal = 0;
+	unsigned sign, exp, frac;
+	int E, bias, M;
 	bias = 127; // 2^k - 1. k bits of the exponent.
 	
 	// 1.1 Get the sign of the single-precision floating-point value.
@@ -53,7 +54,7 @@ int floatFloat2Int(unsigned uf) {
 	 * back to it. If it is a denormalised value, it is not necessary to do
 	 * that.
 	 * */
-	frac = (uf << 9) >> 9; // or frac = (uf >> 23) & 0xff;
+	frac = (uf << 9) >> 9; 
 
 	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
 	// when it is converted to an integer, it is 0;
@@ -66,16 +67,19 @@ int floatFloat2Int(unsigned uf) {
 
 	// To check if it is a normalised value.
 	// When the code is executed here, the argument must be a normalised value.
-	// Therefore, it is not to set condition of "if (exp > 0 && exp < 255)". 
-	// Whereas, I add it in order to make it readable
+	// Therefore, it is unnecessary to set condition of "if (exp > 0 && exp < 255)". 
+	// Whereas, I add it in order to make it more readable.
 	if (exp > 0 && exp < 255) {
 		printf("exp = %.2x\n", exp);
 		M = frac | (0x1 << 23);
+		if (E < 0)
+			return 0;
 		if (E <= 23)
 			M = M >> (23 - E);
-		else if (E > 23 && E <= 31)
+		else if (E > 23 && E < 31)
 			M = M << (E - 23);
 		else
+			// E is larger than 31.
 			return 0x80000000u;
 
 	}
@@ -110,12 +114,13 @@ int union_f(unsigned uf)
 
 int main(void) 
 {
-	unsigned uf = M;
+	unsigned uf = J;
 
 	union_f(uf);
 
 	int ret = floatFloat2Int(uf);
-	printf("integer = 0x%.2x\n", ret);
+	printf("The integer is = 0x%d\n", ret);
+	printf("The integer is = 0x%.2x\n", ret);
 
 	return 0;
 }
