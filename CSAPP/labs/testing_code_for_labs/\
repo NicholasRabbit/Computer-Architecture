@@ -4,7 +4,7 @@
 
 // To illustrate, 0x7f80 0000 has the exponent of all 1s,
 // which indicates the number is NaN.
-#define J 0x7f800000
+#define M 0x7f800000
 
 #define K 0x800000
 
@@ -34,8 +34,9 @@ int floatFloat2Int(unsigned uf) {
 	 * 1. First of all, we should get the three fields of a single-pression number,
 	 * which are a sign, an exponent and a fraction.
 	 * */
-	unsigned sign, exp, frac;
-	int E, bias, M;
+	unsigned sign, exp, frac, M;
+	int E, bias, normal;
+	normal = 0;
 	bias = 127; // 2^k - 1. k bits of the exponent.
 	
 	// 1.1 Get the sign of the single-precision floating-point value.
@@ -54,7 +55,7 @@ int floatFloat2Int(unsigned uf) {
 	 * back to it. If it is a denormalised value, it is not necessary to do
 	 * that.
 	 * */
-	frac = (uf << 9) >> 9; 
+	frac = (uf << 9) >> 9; // or frac = (uf >> 23) & 0xff;
 
 	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
 	// when it is converted to an integer, it is 0;
@@ -72,11 +73,9 @@ int floatFloat2Int(unsigned uf) {
 	if (exp > 0 && exp < 255) {
 		printf("exp = %.2x\n", exp);
 		M = frac | (0x1 << 23);
-		if (E < 0)
-			return 0;
 		if (E <= 23)
 			M = M >> (23 - E);
-		else if (E > 23 && E < 31)
+		else if (E > 23 && E <= 31)
 			M = M << (E - 23);
 		else
 			// E is larger than 31.
@@ -114,13 +113,12 @@ int union_f(unsigned uf)
 
 int main(void) 
 {
-	unsigned uf = J;
+	unsigned uf = K;
 
 	union_f(uf);
 
 	int ret = floatFloat2Int(uf);
-	printf("The integer is = 0x%d\n", ret);
-	printf("The integer is = 0x%.2x\n", ret);
+	printf("integer = 0x%.2x\n", ret);
 
 	return 0;
 }
