@@ -440,5 +440,15 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+
+	// The bit-level representation of 2.0.
+	// 2.0^x is equivalent to 1.0*2^x.
+	
+	if (x < -126)
+		return 0;
+	if (x > 127)
+		return 0x7f800000;  // return infinity.
+
+	return 0x0 | (x + 127) << 23;
+
 }
