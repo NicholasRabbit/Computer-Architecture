@@ -439,3 +439,37 @@ A Solution:
    ```
 
    
+
+#### 13, floatPower2
+
+```c
+/* 
+ * floatPower2 - Return bit-level equivalent of the expression 2.0^x
+ *   (2.0 raised to the power x) for any 32-bit integer x.
+ *
+ *   The unsigned value that is returned should have the identical bit
+ *   representation as the single-precision floating-point number 2.0^x.
+ *   If the result is too small to be represented as a denorm, return
+ *   0. If too large, return +INF.
+ * 
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while 
+ *   Max ops: 30 
+ *   Rating: 4
+ */
+unsigned floatPower2(int x) {
+    return 2;
+}
+```
+
+1. $2.0$ is equivalent to $1.0 \times2^1$ of which the bit-level representation is `0x4000_0000`. It is a normalised value. Consequently, $2.0^x = 1.0 \times 2^x$
+
+2. If it is a normalised value, the exponent is between 1 and 254. Consequently, we can deduce that the range of $x$ in $x = exponent - 127(bias)$ is from $-126$ to $127$.
+
+   ```c
+   if (x < -126)
+       return 0;
+   if (x > 127)
+       return 0x07800000;  // The single-precission float-point value of infinity.
+   ```
+
+   
