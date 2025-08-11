@@ -400,14 +400,14 @@ A Solution:
 
    
 
-2. If it is a denormalised value, the `E = 1 - bias` is a negative number. Therefore, it is less than 0. When it is converted to an integer, it is 0.
+2. If it is a denormalised value, the `E = 1 - bias` is a negative number. Therefore, it is less than 0. When a float value is converted to an integer, a float value round to 0. 
 
    ```c
    if (exp == 0)
        return 0;
    ```
 
-   If `exp == 255`, it is either an Infinity or a NaN.
+3. In the third case, if `exp == 255(0xff)`, it is either an Infinity or a NaN. The function should therefore return `0x80000000u`.
 
    ```c
    if (exp == 255)
@@ -416,15 +416,23 @@ A Solution:
 
    
 
-3. If it is a normalised value, we should add the implicit 1 back. In addition, there are three results.
+4. If it is a normalised value, we should add the implicit 1 back; there are 24 bits in total therefore 8 bits on the left, including a sign bit. Subsequently, there are 4 cases.
 
-   If $E \le 23$, we shift the $M$ $23-E$ bits to the right. On the contrary, if $E > 23$, we should shift $M$ to the left by $E-23$ bits. In the third case, if $E>31$ which means $E-23>8$; the fraction will shift to the left by 9 bits or more. Note that the fraction can only shift at most 8 bits to the left and it can overwrite the sign bit in the 32nd place. 
+   (1) If $E < 0$, any number of $1.x$ to the power of a negative value is always less than 0, so the integer is 0.
+
+   (2) If $E \le 23$, we shift the $M$ $23-E$ bits to the right. 
+
+   (3) On the contrary, if $31 > E > 23$, we should shift $M$ to the left by $E-23$ bits. 
+
+   (4) In the fourth case, if $E\ge 31$ which means $E-23\ge 8$; the fraction will shift to the left by 8 bits or more. Note that the fraction can only shift at most 8 bits to the left and it can overwrite the sign bit in the 32nd place. 
 
    ```c
    int M = frac | (1 << 23);
+   if (E < 0)
+       return 0;
    if (E <= 23)
        M = M >> (23 - E);
-   else if (E - 23 <= 8)
+   else if (E > 23 && E < 31)
        M = M << (E - 23);
    else 
        return 0x80000000u;   
