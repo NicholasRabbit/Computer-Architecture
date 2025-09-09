@@ -106,7 +106,7 @@ Computer representations use a limited number of bits to encode a number. For ex
 >print 200*300*400*500  # output -884,901,888
 ```
 
-#### Representing & Manipulating Sets
+### 2. Representing & Manipulating Information
 
 **1) Representation**
 
@@ -139,7 +139,9 @@ There is early termination in the following operations.
 
 Note that `&&` and `||` are different from `&` and `|` in C, respectively.
 
-#### 2.1.1 Hexadecimal Notation
+#### 2.1 Information Storage
+
+##### 2.1.1 Hexadecimal Notation
 
 When we say x is a power of 2, that is, $x=2^n$. We can also say that its binary representation is that 1 followed by $n$ zeros. For example, $8=2^3$ is  1000(binary). While a hexadecimal digit represents 4 digits in binary, namely 0 in hex mean 0000 in binary. So we can represent $2^{11} $ by a hexadecimal number which is `0X800`.  Because `0x8`=`0b1000` and `0x00`=`0b0000,0000`.
 
@@ -149,13 +151,13 @@ Remembering binary representations of  three keys hexadecimal numbers could help
 
 A: 1010,   C: 1100,  F:1111
 
-#### 2.1.2 Data Sizes
+##### 2.1.2 Data Sizes
 
 Every computer has a *word size* which indicates the nominal size of a pointer data. The size of any data type in computer is not limitless such as the sizes of an integer and long number are 4 and 8 bytes, respectively. 
 
 As a programmer, we must be extremely cautious when are calculating numbers to prevent catastrophe which is caused by overflow. For example, in the 2's complement system the range of a char(1 byte)is from `-128~127`, if we add 100 to 50 the result is 150 which actually represents -106. 
 
-#### 2.1.4 Addressing and Byte Ordering
+##### 2.1.4 Addressing and Byte Ordering
 
 Each byte has its own address in computer system. As programme files such as source file(\*.c), assembly file(\*.s), relocatable object file(\*.o) and executable file(\*.out) which all span multiple bytes, it is necessary for every byte having its address or it could be chaotic and the monolithic pillars may collapse.
 
@@ -180,13 +182,13 @@ Note: See "[Analysis of Storage]("..\C-Code\26_AssemblyLanguage_And_Storage\Anal
 
 **N.B.** See `CSAPP/code/code_examples_in_the_book/chapter_2/` which verifies the "endian" of a machine with the help of a C programme.
 
-#### 2.1.6  Introduction to Boolean Algebra
+##### 2.1.6  Introduction to Boolean Algebra
 
 There is a bit vector with indexes like $[a_{w-1}, a_{w-2}, ..., a_1, a_0]$.  For example,  a = [01101001]  encodes the set A = {0,3,5,6}. We should match the indexes from left to right such as 0 in $a_0$, 3 in $a_1$, 5 in $a_5$ and 6 in $a_6$, respectively.  \(P88\)
 
-#### 2.1.7 Bit-Level Operations in C
+##### 2.1.7 Bit-Level Operations in C
 
-#### 2.1.8 Logical Operation in C
+##### 2.1.8 Logical Operation in C
 
 `||, && and !` are logical operations. Don't confused them with bit-level operations-`|, &, ^, ~`.
 
@@ -199,7 +201,7 @@ The logical operations treat any nonzero argument as representing True and 0 as 
 0b1010 && 0b0000 = 0;
 ```
 
-#### 2.1.9 Shifting Operations in C
+##### 2.1.9 Shifting Operations in C
 
 **1) What the differences between logical and arithmetic shift?**
 
@@ -603,6 +605,8 @@ unsigned float_to_point(float f)
 
 The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times)` which can be rearranged as a floating point format `0(s) 0111 1110(exp) 0(23 0s, fraction)`. Apparently, it is a normalised value since the exponent is in the range of $1-255$. The bias is $127$ and `0111 1110` is $126$. Hence the $E=e-bias=126-127=-1$ and the fraction is $1.0$ after adding the implicit $1$. So we can get $V=(-1)^s\times 1.0\times 2^{-1}=0.5$. N.B. The fraction is $0$ NOT $2^{-1}$
 
+### 3. Machine-Level Representation of Programmes
+
 #### 3.4 Accessing Information
 
 ##### 3.4.2 Data Movement Instructions
@@ -764,3 +768,14 @@ An explanation of two sentences in Page 310.
 
 > Instructions of 32 bits in Figure 3.4 like `movl` set the upper 32 bits of the 64 bits in x86-64 to zero by default. `movl` and other 32-bit instructions could be used with operands of 64-bit value; they just ignore the upper 32 bits and set them to zero in the registers. Subsequently, we can use `movl` as an alternative instruction of `movzlq` . 
 
+
+
+### 4. Processor Architecture
+
+#### 4.1 The Y86 Instruction Set Architecture
+
+**What is "fetch stage"?**
+
+In a pipeline processor, the execution of an instruction is divided into several stages, which includes fetching, decoding, executing, memory access and writing back results.
+
+"Fetch stage" is the first stage of this pipeline, during which the processor retrieves (or fetch) the next instruction to be executed from memory. The address of this instruction is typically stored in Program Counter (namely PC).
