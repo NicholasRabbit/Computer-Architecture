@@ -461,3 +461,10 @@ rfact:   # The start of a function.
 ```
 
 D. The register `%rsp` was not used. (Wrong!)
+
+## Chapter 4
+
+### Practice Problem 4
+
+Note that the code starts at address of `0x100` means that the first byte of the byte encoding of the Y86 instructions is in it. The following sequence of code is put behind it.
+
