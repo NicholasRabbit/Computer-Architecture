@@ -779,3 +779,9 @@ An explanation of two sentences in Page 310.
 In a pipeline processor, the execution of an instruction is divided into several stages, which includes fetching, decoding, executing, memory access and writing back results.
 
 "Fetch stage" is the first stage of this pipeline, during which the processor retrieves (or fetch) the next instruction to be executed from memory. The address of this instruction is typically stored in Program Counter (namely PC).
+
+##### 4.1.4  Y86 Programs
+
+What is the "array" used for in Figure 4.7 ?
+
+It is the total volume of a program, including stacks and instructions. (That was concluded by me and has not been verified.)
