@@ -613,6 +613,31 @@ The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times
 
 - IA32 imposes the restriction that data from one place in memory could not be moved directly to another place in memory. Thus, moving data from memory to another place in memory typically needs two steps: move the data from memory to a register and then move the data from the register to memory.
 
+#### 3.6 Control
+
+##### 3.6.6 Conditional Move Instructions
+
+Why the the assembly code is invalid implementation of `cread(...)`(Page 245)?
+
+```c
+int cread(int *xp) {
+    return xp ? *xp : 0;
+}
+```
+
+```assembly
+# Invalid implementation of function cread
+# xp is in register %edx
+movl $0, %eax   # Set 0 as the return value.
+testl %edx, %edx  # Test xp: xp & xp
+# The following code is executed at any time since there isn't any `jump` instruction
+# before it. When the address in %edx is 0, it is a null pointer causing a deferencing
+# error. Thus, it is invalid.
+cmove (%edx), %eax
+```
+
+
+
 #### 3.7 Procedures 
 
 ##### 3.7.2 Transferring Control
