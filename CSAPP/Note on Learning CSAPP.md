@@ -810,3 +810,30 @@ In a pipeline processor, the execution of an instruction is divided into several
 What is the "array" used for in Figure 4.7 ?
 
 It is the total volume of a program, including stacks and instructions. (That was concluded by me and has not been verified.)
+
+##### 4.1.6 Some Y86 Instruction Details
+
+**Webaside ASM:ESAM**
+
+Why is `setae` used to replace the original assemble code in page 4 of this webaside?
+
+The reason is that the function `tmult_ok_asm(...)` should return 1 when it didn't overflow, but `setae` set `~CF` to a register while `CF`= 0 indicates there is no overflow so we should flip it. 
+
+```assembly
+# Hand-generated code for tmult_ok
+	.globl tmult_ok_asm
+# int tmult_ok_asm(long x, int y, long *dest);
+# x in %rdi, y in %rsi, dest in %rdx
+	tmult_ok_asm:
+	imulq %rdi, %rsi
+	movq %rsi, (%rdx)
+# Deleted code
+# testq %rsi, %rsi
+# setg %al
+# Inserted code
+	setae %al # Set low-order byte
+# End of inserted code
+	movzbl %al, %eax
+	ret
+```
+
