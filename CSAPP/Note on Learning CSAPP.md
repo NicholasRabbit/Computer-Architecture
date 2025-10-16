@@ -909,3 +909,26 @@ Since in `tmult_ok20`, `result` is the return value, we now move the value of `~
 ```
 
 Since `%ebx` is callee saved and we have write assemble code to overwrite `%bl` which is the low-order byte of `%ebx`, GCC takes steps to preserve its value and to restore it thereafter. 
+
+#### 4.3 Sequential Y86 Implementations
+
+##### 4.3.1 Organising Processing into Stages
+
+- Y86 is a sequential processor called SEQ. 
+- Note that each of the registers is represented by 4 bits, NOT 8 bits. So in `rA:rB`, either rA or rB has 4 bits.
+- In `icode:ifun`, each of them also has 4 bits. See Figure 4.2 in page 372. 
+- `valP` stores the address of next instruction. 
+
+(1) How is an instruction is executed in the machine level or how is an instruction is processed?
+
+There are a number of operations when processing an instruction and they are orgnised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example.
+
+```assembly
+1 0x000: 30f209000000
+2 0x006: 30f315000000
+3 0x00c: 6123  # subl %edx, %ebx
+```
+
+**Fetch:**  In the fetch stage, a machine reads the bytes of an instruction from memory. Since Y86 is a sequential processor, it only reads one instruction from the address in the PC(program counter). In fact, one line of instruction with at most 6 bytes is read. Whereas, in our example, there are only 2 bytes which are `0x6123` (`icode:ifun` and `rA:rB`.) in 0x00c(memory address). 
+
+Note that when reading `0x23` in `0x6132`, the PC will be incremented by 1 so that it can move to the next byte. A generic expression is $rA:rB \leftarrow M_1[PC+1]$.
