@@ -586,4 +586,17 @@ popl	%ebp
 ret
 ```
 
->>>>>>> 8cfa13c85057bdb632e7bfcfac8c220c9647cbac
+### Practice Problem 4.11
+
+Specific
+
+`irmovl $128, %esp`
+
+$icode:ifun \leftarrow M_1[0x00e] =3:0$
+
+$rA:rB \leftarrow M_1[0x00f]=f:4$ 
+
+$valC \leftarrow M_4[0x010]=0x00,00,00,80(128)$.  It is little endian. 
+
+$valP \leftarrow 0x00e + 6 = 0x014$
+

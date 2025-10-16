@@ -910,6 +910,14 @@ Since in `tmult_ok20`, `result` is the return value, we now move the value of `~
 
 Since `%ebx` is callee saved and we have write assemble code to overwrite `%bl` which is the low-order byte of `%ebx`, GCC takes steps to preserve its value and to restore it thereafter. 
 
+#### 4.2 Logic Design and the Hardware Control Language(HCL)
+
+##### 4.2.5 Memory and Clocking
+
+**What is a register file?**
+
+The register file is one type of random-access memory(RAM), but it is in a CPU. A processer can obtain the value in a register from the register file by register identifiers(which are addresses). In an IA32 or Y86 processor, there are 8 eight registers in the register file(%eax, %ecx, etc.).
+
 #### 4.3 Sequential Y86 Implementations
 
 ##### 4.3.1 Organising Processing into Stages
@@ -919,16 +927,37 @@ Since `%ebx` is callee saved and we have write assemble code to overwrite `%bl` 
 - In `icode:ifun`, each of them also has 4 bits. See Figure 4.2 in page 372. 
 - `valP` stores the address of next instruction. 
 
-(1) How is an instruction is executed in the machine level or how is an instruction is processed?
+**How is an instruction is executed in the machine level or how is an instruction is processed?**
 
-There are a number of operations when processing an instruction and they are orgnised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example.
+There are a number of operations when processing an instruction and they are orgnised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example. See "Aside" in page 401.
 
 ```assembly
-1 0x000: 30f209000000
-2 0x006: 30f315000000
+1 0x000: 30f209000000  	# irmovl $9, %edx
+2 0x006: 30f315000000  	# irmovl $21, %ebx
 3 0x00c: 6123  # subl %edx, %ebx
 ```
 
-**Fetch:**  In the fetch stage, a machine reads the bytes of an instruction from memory. Since Y86 is a sequential processor, it only reads one instruction from the address in the PC(program counter). In fact, one line of instruction with at most 6 bytes is read. Whereas, in our example, there are only 2 bytes which are `0x6123` (`icode:ifun` and `rA:rB`.) in 0x00c(memory address). 
+**Fetch:**  Before this stage, two constants, 9 and 21, have been moved to `%edx` and `%ebx`, respectively. In the fetch stage, a machine reads the bytes of an instruction from memory. Since Y86 is a sequential processor, it only reads one instruction from the address in the PC(program counter). In fact, one line of instruction with at most 6 bytes is read. Whereas, in our example, there are only 2 bytes which are `0x6123` (`icode:ifun` and `rA:rB`.) in 0x00c(memory address). `0x61` is `icode` while `0x23` is `ifun`; `2` is `rA`  and `3` is `rB`. `2` and `3` are register identifiers. 
 
 Note that when reading `0x23` in `0x6132`, the PC will be incremented by 1 so that it can move to the next byte. A generic expression is $rA:rB \leftarrow M_1[PC+1]$.
+
+$valP$ into which is stored the address of next instruction which is the result of current program counter add ed by 2: $PC+2$. 
+
+**Decode:**  After this instruction is fetched, it is only a sequence of bits so that the machine should what it instructs. Thus, it will be decoded by refering to Figure 4.2, 4.3 and 4.4 (from Page 372). 
+
+`0x61` indicates `subl`, so a combinational logic of subtraction of double words is prepared.
+
+`0x23` represents `%edx` and `%ebx`, respectively. Thus, their value in the register file will be obtained.
+
+**Execute:** Since all the instruction and the value of operands are all ready, the processor will use appropriate ALU to execute this instruction. Then it will set CC(Conditional Code).
+
+$valE \leftarrow 21-9=12$
+
+**Memory:** The memory stage may write data to memory. Whereas, in this example, it is needn't to do that since both of operands are registers.
+
+**Write Back:** In the stage of write back, the results of "Execute" will write back to registers.
+
+$R[\%ebx] \leftarrow valE=12$ 
+
+**PC update:** Upte the program counter. Since there are two bytes in this instruction, so the program counter  is incremented by 2, which is `0x00e`
+
