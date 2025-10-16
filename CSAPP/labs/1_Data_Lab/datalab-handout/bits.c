@@ -378,7 +378,53 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+
+	unsigned sign, exp, frac;
+	int E, bias, M = 0;
+	bias = 127; // 2^k - 1. k bits of the exponent.
+	
+	sign = (uf >> 31) << 31;
+	
+	exp = (uf << 1) >> 24; // or exp = (uf >> 23) & 0xff;
+	E = exp - bias;
+
+	frac = (uf << 9) >> 9; 
+
+	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
+	// when it is converted to an integer, it is 0;
+	if (exp == 0)
+		return 0;
+	// 3. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	if (exp == 0xff)
+		return 0x80000000u;
+
+
+	if (exp > 0 && exp < 255) {
+		M = frac | (0x1 << 23);
+		if (E < 0)
+			return 0;
+		if (E <= 23)
+			M = M >> (23 - E);
+		else if (E > 23 && E < 31)
+			M = M << (E - 23);
+		else
+			// E is larger than 31.
+			return 0x80000000u;
+
+	}
+
+
+	if (sign)
+		M = ~M + 1; // To get the negative value of M.
+
+	return M;
+
+
+
+
+
+
+
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -394,5 +440,15 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+
+	// The bit-level representation of 2.0.
+	// 2.0^x is equivalent to 1.0*2^x.
+	
+	if (x < -126)
+		return 0;
+	if (x > 127)
+		return 0x7f800000;  // return infinity.
+
+	return 0x0 | (x + 127) << 23;
+
 }

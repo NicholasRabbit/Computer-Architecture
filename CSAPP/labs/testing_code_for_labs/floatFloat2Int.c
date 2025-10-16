@@ -1,0 +1,126 @@
+#include <stdio.h>
+
+#define N 0x4640e400
+
+// To illustrate, 0x7f80 0000 has the exponent of all 1s,
+// which indicates the number is NaN.
+#define J 0x7f800000
+
+#define K 0x800000
+
+
+/* The question is as follows.
+ * floatFloat2Int - Return bit-level equivalent of expression (int) f
+ *   for floating point argument f.
+ *   Argument is passed as unsigned int, but
+ *   it is to be interpreted as the bit-level representation of a
+ *   single-precision floating point value.
+ *   Anything out of range (including NaN and infinity) should return
+ *   0x80000000u.
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+
+
+/*
+ * See page 143 of CSAPP 2nd where an integer was converted to a float by IEEE convention.
+ * Here we reverse the conversion to finish the lab.
+ *
+ * */
+
+int floatFloat2Int(unsigned uf) {
+	/*
+	 * 1. First of all, we should get the three fields of a single-pression number,
+	 * which are a sign, an exponent and a fraction.
+	 * */
+	unsigned sign, exp, frac;
+	int E, bias, M;
+	bias = 127; // 2^k - 1. k bits of the exponent.
+	
+	// 1.1 Get the sign of the single-precision floating-point value.
+	sign = (uf >> 31) << 31;
+	
+	// 1.2 Get the exponent of the single-precision floating point value.
+	exp = (uf << 1) >> 24; // or exp = (uf >> 23) & 0xff;
+	// 1.2.1 Compute the E.
+	E = exp - bias;
+	printf("E = %d\n", E);
+
+	/*
+	 * 1.3. Retrieve the fractional part.
+	 * The fractional part is the 23 least significant bits of the value.
+	 * Note that, by the convention of IEEE, if it is a normalised value we should add the implicit 1 
+	 * back to it. If it is a denormalised value, it is not necessary to do
+	 * that.
+	 * */
+	frac = (uf << 9) >> 9; 
+
+	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
+	// when it is converted to an integer, it is 0;
+	if (exp == 0)
+		return 0;
+	// 3. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	if (exp == 0xff)
+		return 0x80000000u;
+
+
+	// To check if it is a normalised value.
+	// When the code is executed here, the argument must be a normalised value.
+	// Therefore, it is unnecessary to set condition of "if (exp > 0 && exp < 255)". 
+	// Whereas, I add it in order to make it more readable.
+	if (exp > 0 && exp < 255) {
+		printf("exp = %.2x\n", exp);
+		M = frac | (0x1 << 23);
+		if (E < 0)
+			return 0;
+		if (E <= 23)
+			M = M >> (23 - E);
+		else if (E > 23 && E < 31)
+			M = M << (E - 23);
+		else
+			// E is larger than 31.
+			return 0x80000000u;
+
+	}
+
+
+	//4. By now, we have gotten the absolute value of the integer, therefore, we
+	//should add the sign back.
+	if (sign)
+		M = ~M + 1; // To get the negative value of M.
+
+	return M;
+
+
+}
+
+
+// Printing representation of bits of various data types.
+int union_f(unsigned uf)
+{
+	union {
+		float f;
+		unsigned u;
+	} temp;
+	temp.u = uf;
+
+	printf("temp.f = %.1f\n", temp.f);
+	printf("temp.u = 0x%.2x\n", temp.u);
+
+	return 0;
+}
+
+
+int main(void) 
+{
+	unsigned uf = J;
+
+	union_f(uf);
+
+	int ret = floatFloat2Int(uf);
+	printf("The integer is = 0x%d\n", ret);
+	printf("The integer is = 0x%.2x\n", ret);
+
+	return 0;
+}

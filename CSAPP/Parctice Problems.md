@@ -4,6 +4,8 @@ A.  T(new) = 20h
 
 It is 1.2x
 
+## Chapter 2
+
 ### Practice Problem 2.6
 
 Why the hexadecimal presentation of  `3510593.0` is `0x4A1F23E0` in the 3rd edition of the book and is `0x4A564504` in 2nd edition? 
@@ -99,6 +101,8 @@ Actually, some parts of the solution are incomprehensible. I will figure it out 
 
 
 
+## Chapter 3
+
 ### Practice Problem 3.10
 
 ```txt
@@ -152,9 +156,7 @@ Disassembly of section .text:
 
 The instruction `xorl %edx, %edx` is compact because it takes advantage of **register-to-register encoding** in x86 assembly, which is optimized to use minimal bytes for operations that only involve registers. Here's a breakdown of why it requires only two bytes:
 
-------
-
-##### **1. Instruction Encoding Overview**
+**1. Instruction Encoding Overview**
 
 In x86 assembly, instructions are encoded using:
 
@@ -178,7 +180,7 @@ When the source and destination registers are the same, this compact encoding al
 
 ------
 
-##### **2. Exact Encoding for `xorl %edx, %edx`**
+**2. Exact Encoding for `xorl %edx, %edx`**
 
 - **Opcode**: `0x31` (indicates XOR for two 32-bit registers).
 
@@ -206,14 +208,14 @@ This is exactly **two bytes** long.
 
 ------
 
-##### **3. Why Only Two Bytes?**
+**3. Why Only Two Bytes?**
 
 1. **Efficient Encoding**: The x86 instruction set uses compact encoding for operations that involve only registers. This avoids the need to include additional bytes for immediate values or memory addresses.
 2. **Redundancy Optimization**: Since both operands are the same register, the ModR/M byte can fully specify the operation without needing extra data.
 
 ------
 
-##### **Comparison with `movl $0, %edx`**
+**Comparison with `movl $0, %edx`**
 
 For `movl $0, %edx`, the instruction must include:
 
@@ -231,7 +233,7 @@ In contrast, `xorl %edx, %edx` avoids the need for the immediate value and uses 
 
 ------
 
-##### **Key Takeaways**
+**Key Takeaways**
 
 - **Encoding Efficiency**: The compact encoding of `xorl %edx, %edx` results in only two bytes (`31 D2`).
 - **Optimization**: This is why compilers favour such instructions to zero out registers—it minimizes memory usage and instruction size, improving performance in tight loops or embedded systems.
@@ -403,4 +405,185 @@ N.B. the hexadecimal numbers for 0 to 9 range from `0x30` to `0x39`.
 
 Don't forget that there is always an terminating `null` at the end of a char array.
 
+<<<<<<< HEAD
 To be reviewed and analysed later. 
+=======
+### Practice Problem 3.44
+
+to be reviewed...
+
+### Practice Problem 3.45
+
+to be reviewed...
+
+### Practice Problem 3.46
+
+A. 
+
+256 terabytes equals $256\times 1024= 262,144 (gigabytes=GB)$.
+
+In 2010, $1000 can pay 16.3 gigabytes so the factor is 
+
+$factor = 262,144 \div 16.3 \approx 1.608 \times 10^4$. Then we get an equation: $1.48^t = 1.608 \times 10^4$.
+
+t is approximately 25. 
+
+### Practice Problem 3.50
+
+1. Note that there are fixed orders of the arguments in a function.
+
+![1752810694465](note-images/1752810694465.png)
+
+2. There size of the pointer of any data type is 64 bits in a x86-64 machine, so `(%rdx)` might be an integer pointer. 
+3. By the convention in Figure 3.40, we can know that `%edi` is the first argument and is added by a pointer `%(rdx)` in the third place. Therefore, we can infer that `x` is the first argument and its type is integer. Apparently, `%(rdx` is an integer pointer `int ` which stores `t`. 
+4. In the line 4: `movslq %edi, %rdi`, we can infer that `t` is a sign integer. `%rsi` is a sign long, so `*q` is a pointer of signed long type in the second place.
+
+### Practice Problem 3.52
+
+My answers are different from the standard ones on the book, but, in general, they are correct except for the answer of question D. 
+
+A. `%rbx` is used to store the original value of the argument `x`.
+
+B. `pushq %rbx` indicates that the `x` of the caller's  is stored in the stack. 
+
+`pop1 %rbx` means that the `x` of a callee's is restored to `%rbx`. 
+
+C. 
+
+```assembly
+rfact:   # The start of a function.
+	pushq %rbx  # Move the value in %rbx to the top of the current stack.
+	movq %rdi, %rbx # Since 'x' is in %rdi, this instruction moves it to %rbx.
+	movl $1, %eax  # Move the immidiate 1 to %eax.
+	testq %rdi, %rdi  # To test the logical operation of x&x.
+	jle .L11  # If "x&x" is less than or equals 0, jump to L11.
+	leaq -1(%rdi), %rdi  # Decrement x by 1.
+	call rfact   # Calling the function "rfact"
+	imulq %rbx, %rax  # x multiply the return value of rfact.
+.L11
+	popq %rbx  # Pop out the return of a callee to %rbx. 
+	ret  # return. 
+```
+
+D. The register `%rsp` was not used. (Wrong!)
+
+## Chapter 4
+
+### Practice Problem 4.1
+
+Note that the code starts at address of `0x100` means that the first byte of the byte encoding of the Y86 instructions is in it. The following sequence of code is put behind it.
+
+### Practice Problem 4.3
+
+Tips:
+
+- In Y86 instruction set, there isn't any instructions adding an immediate to a register directly. Consequently, any operation of adding an immediate to a register in IA32 should be decomposed two instructions in Y86. As an illustration, `addl $4 %ecx` is converted to `irmovl $4 %ebx` and `addl %ebx, %ecx` as we can see in Page 380.
+- There are only a few Y86 instruction set and note the  type of operands which are different of that of IA32. Some complicated Instructions that are not included in Y86 should be implemented with multiple Y86 instructions. 
+
+The C code of the problem is as follows.
+
+```c
+#include <stdio.h>
+int rSum(int *Start, int Count)
+{
+	if (Count < 0)
+		return 0;
+	return *Start + rSum(Start + 1, Count - 1);
+}
+```
+
+
+
+The following assembly code was generated by the following command in a x86_64 machine. 
+
+`> gcc -S -m32 p4.3_rSum.c  -o test_rSum_32.s ` 
+
+The IA32 code which was generated in my machine is different from the answer due the version of two machines. I converted my IA32 code to Y86 assembly.
+
+```assembly
+	.file	"p4.3_rSum.c"
+	.text
+	.globl	rSum
+	.type	rSum, @function
+rSum:
+.LFB0:
+	.cfi_startproc
+	pushl	%ebp
+	.cfi_def_cfa_offset 8
+	.cfi_offset 5, -8
+	movl	%esp, %ebp
+	.cfi_def_cfa_register 5
+	pushl	%ebx
+	subl	$20, %esp
+	.cfi_offset 3, -12
+	cmpl	$0, 12(%ebp)  # "Count" is in 12(%ebp) of the current stack frame.
+	jns	.L2 # If the latest condition code indicates 12(%ebp) is Nonnegative, jump to .L2
+	movl	$0, %eax
+	jmp	.L3
+.L2:
+	movl	8(%ebp), %eax # Move "Start"(the value of a pointer, the address) to %eax.
+	movl	(%eax), %ebx  # Move "*Start"(the value of a variable) to %ebx.
+	movl	12(%ebp), %eax # Move "Count" to %eax.
+	leal	-1(%eax), %edx # Count - 1.
+	movl	8(%ebp), %eax # Move "Start"(address, pointer) to %eax.
+	addl	$4, %eax  # Start + 1.
+	movl	%edx, 4(%esp) # Move "Count" to 4(%esp)
+	movl	%eax, (%esp)  # Move "Start"(the value of a pointer, address) to (%esp)
+	call	rSum 
+	addl	%ebx, %eax # Add "*Start" to "Count".
+.L3:
+	addl	$20, %esp 
+	popl	%ebx  # The value of %eax of the previous stack is in (%esp).
+	.cfi_restore 3
+	popl	%ebp
+	.cfi_restore 5
+	.cfi_def_cfa 4, 4
+	ret
+	.cfi_endproc
+.LFE0:
+	.size	rSum, .-rSum
+	.ident	"GCC: (GNU) 4.8.5 20150623 (Red Hat 4.8.5-44)"
+	.section	.note.GNU-stack,"",@progbits
+```
+
+Y86 code
+
+```assembly
+rSum:
+pushl	%ebp
+movl	%esp, %ebp
+pushl	%ebx
+# The following two instructions implements `subl $20, %esp` in IA32.
+irmovl	$20, %ecx
+subl	%ecx, %esp   
+# compl 12(%ebp)
+mrmovl	12(%ebp), %ecx
+andl	%ecx, ecx
+jns		.L2
+irmovl	$0, %eax
+jmp		.L3
+
+.L2
+mrovl	8(%ebp), %eax
+mrovl	(%eax), %ebx 
+mrovl	12(%ebp), %eax
+# leal	-1(%eax), %edx
+subl	$1, %eax
+rrmovl	%eax, %edx
+mrmovl	8(%ebp), %eax
+# addl	%4, %eax
+irmovl	$4, %ecx
+rrmovl	%ecx, %eax
+rmovl	%edx, 4(%esp)
+rmovl	%eax, (%esp)
+call	rSum
+addl	%ebx, %eax
+.L3:
+irmovl	$20, %ecx
+rrmovl 	%ecx, %esp
+popl	%ebx
+popl	%ebp
+ret
+```
+
+>>>>>>> 8cfa13c85057bdb632e7bfcfac8c220c9647cbac

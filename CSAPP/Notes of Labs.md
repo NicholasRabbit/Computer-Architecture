@@ -363,3 +363,114 @@ unsigned floatScale2(unsigned uf) {
 }
 ```
 
+#### 12, floatFloat2Int
+
+```c
+/* 
+ * floatFloat2Int - Return bit-level equivalent of expression (int) f
+ *   for floating point argument f.
+ *   Argument is passed as unsigned int, but
+ *   it is to be interpreted as the bit-level representation of a
+ *   single-precision floating point value.
+ *   Anything out of range (including NaN and infinity) should return
+ *   0x80000000u.
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 30
+ *   Rating: 4
+ */
+int floatFloat2Int(unsigned uf) {
+  return 2;
+}
+```
+
+What does it ask us to do?
+
+It asks us to convert a float value, which is represented by an unsigned integer, to its equivalent integer form. See page 143 in CSAPP; in that page an integer value is converted to its float-point form. Here we reverse that process.
+
+A Solution:
+
+1. Decompose the float value into 3 fields, which are a sign, an exponent and a fraction. 
+
+   ```c
+   unsigned sign = uf >> 31;
+   unsigned exp = (uf >> 23) & 0xff;
+   unsigned frac = (uf << 9) >> 9;
+   int E = exp - 127;
+   ```
+
+   
+
+2. If it is a denormalised value, the `E = 1 - bias` is a negative number. Therefore, it is less than 0. When a float value is converted to an integer, a float value round to 0. 
+
+   ```c
+   if (exp == 0)
+       return 0;
+   ```
+
+3. In the third case, if `exp == 255(0xff)`, it is either an Infinity or a NaN. The function should therefore return `0x80000000u`.
+
+   ```c
+   if (exp == 255)
+       return 0x80000000u;
+   ```
+
+   
+
+4. If it is a normalised value, we should add the implicit 1 back; there are 24 bits in total therefore 8 bits on the left, including a sign bit. Subsequently, there are 4 cases.
+
+   (1) If $E < 0$, any number of $1.x$ to the power of a negative value is always less than 0, so the integer is 0.
+
+   (2) If $E \le 23$, we shift the $M$ $23-E$ bits to the right. 
+
+   (3) On the contrary, if $31 > E > 23$, we should shift $M$ to the left by $E-23$ bits. 
+
+   (4) In the fourth case, if $E\ge 31$ which means $E-23\ge 8$; the fraction will shift to the left by 8 bits or more. Note that the fraction can only shift at most 8 bits to the left and it can overwrite the sign bit in the 32nd place. 
+
+   ```c
+   int M = frac | (1 << 23);
+   if (E < 0)
+       return 0;
+   if (E <= 23)
+       M = M >> (23 - E);
+   else if (E > 23 && E < 31)
+       M = M << (E - 23);
+   else 
+       return 0x80000000u;   
+   ```
+
+   
+
+#### 13, floatPower2
+
+```c
+/* 
+ * floatPower2 - Return bit-level equivalent of the expression 2.0^x
+ *   (2.0 raised to the power x) for any 32-bit integer x.
+ *
+ *   The unsigned value that is returned should have the identical bit
+ *   representation as the single-precision floating-point number 2.0^x.
+ *   If the result is too small to be represented as a denorm, return
+ *   0. If too large, return +INF.
+ * 
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while 
+ *   Max ops: 30 
+ *   Rating: 4
+ */
+unsigned floatPower2(int x) {
+    return 2;
+}
+```
+
+1. $2.0$ is equivalent to $1.0 \times2^1$ of which the bit-level representation is `0x4000_0000`. It is a normalised value. Consequently, $2.0^x = 1.0 \times 2^x$
+
+2. If it is a normalised value, the exponent is between 1 and 254. Consequently, we can deduce that the range of $x$ in $x = exponent - 127(bias)$ is from $-126$ to $127$.
+
+   ```c
+   if (x < -126)
+       return 0;
+   if (x > 127)
+       return 0x07800000;  // The single-precission float-point value of infinity.
+   ```
+
+   
+

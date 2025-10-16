@@ -106,7 +106,7 @@ Computer representations use a limited number of bits to encode a number. For ex
 >print 200*300*400*500  # output -884,901,888
 ```
 
-#### Representing & Manipulating Sets
+### 2. Representing & Manipulating Information
 
 **1) Representation**
 
@@ -139,7 +139,9 @@ There is early termination in the following operations.
 
 Note that `&&` and `||` are different from `&` and `|` in C, respectively.
 
-#### 2.1.1 Hexadecimal Notation
+#### 2.1 Information Storage
+
+##### 2.1.1 Hexadecimal Notation
 
 When we say x is a power of 2, that is, $x=2^n$. We can also say that its binary representation is that 1 followed by $n$ zeros. For example, $8=2^3$ is  1000(binary). While a hexadecimal digit represents 4 digits in binary, namely 0 in hex mean 0000 in binary. So we can represent $2^{11} $ by a hexadecimal number which is `0X800`.  Because `0x8`=`0b1000` and `0x00`=`0b0000,0000`.
 
@@ -149,13 +151,13 @@ Remembering binary representations of  three keys hexadecimal numbers could help
 
 A: 1010,   C: 1100,  F:1111
 
-#### 2.1.2 Data Sizes
+##### 2.1.2 Data Sizes
 
 Every computer has a *word size* which indicates the nominal size of a pointer data. The size of any data type in computer is not limitless such as the sizes of an integer and long number are 4 and 8 bytes, respectively. 
 
 As a programmer, we must be extremely cautious when are calculating numbers to prevent catastrophe which is caused by overflow. For example, in the 2's complement system the range of a char(1 byte)is from `-128~127`, if we add 100 to 50 the result is 150 which actually represents -106. 
 
-#### 2.1.4 Addressing and Byte Ordering
+##### 2.1.4 Addressing and Byte Ordering
 
 Each byte has its own address in computer system. As programme files such as source file(\*.c), assembly file(\*.s), relocatable object file(\*.o) and executable file(\*.out) which all span multiple bytes, it is necessary for every byte having its address or it could be chaotic and the monolithic pillars may collapse.
 
@@ -180,13 +182,13 @@ Note: See "[Analysis of Storage]("..\C-Code\26_AssemblyLanguage_And_Storage\Anal
 
 **N.B.** See `CSAPP/code/code_examples_in_the_book/chapter_2/` which verifies the "endian" of a machine with the help of a C programme.
 
-#### 2.1.6  Introduction to Boolean Algebra
+##### 2.1.6  Introduction to Boolean Algebra
 
 There is a bit vector with indexes like $[a_{w-1}, a_{w-2}, ..., a_1, a_0]$.  For example,  a = [01101001]  encodes the set A = {0,3,5,6}. We should match the indexes from left to right such as 0 in $a_0$, 3 in $a_1$, 5 in $a_5$ and 6 in $a_6$, respectively.  \(P88\)
 
-#### 2.1.7 Bit-Level Operations in C
+##### 2.1.7 Bit-Level Operations in C
 
-#### 2.1.8 Logical Operation in C
+##### 2.1.8 Logical Operation in C
 
 `||, && and !` are logical operations. Don't confused them with bit-level operations-`|, &, ^, ~`.
 
@@ -199,7 +201,7 @@ The logical operations treat any nonzero argument as representing True and 0 as 
 0b1010 && 0b0000 = 0;
 ```
 
-#### 2.1.9 Shifting Operations in C
+##### 2.1.9 Shifting Operations in C
 
 **1) What the differences between logical and arithmetic shift?**
 
@@ -224,7 +226,7 @@ For example, `1100 >> 6` means `1100 >> (6%4)`.
 
 #### 2.2 Integer representations
 
-##### 2.2.2 Unsigned Encodings
+##### 2.2.2 Unsigned Encoding
 
 Explanation of a formula.
 $$
@@ -274,7 +276,7 @@ See my C code about unsigned and signed value. (29_Unsigned_and_Signed)
 
 ##### 2.2.6 Expanding the Bit Representation of a Number
 
-(1) To convert an unsinged number to a larger data type we simply add leading zeros  to the representation.
+(1) To convert an unsigned number to a larger data type we simply add leading zeros  to the representation.
 
 ```c
 unsigned short us = 0x3c9f;
@@ -368,7 +370,7 @@ If a malicious programmer writes code to call `copy_from_kernel(...)` with a neg
 
 2. The minimum value of unsigned numbers is 0 so when $0-1$ the result is the maximum value.
 
-   Which is $0-1->U_{max}$ 
+   So $0-1>=U_{max}$ 
 
 #### 2.3 Integer Arithmetic
 
@@ -467,22 +469,45 @@ unsigned ux = x;
 unsigned uy = y;
 ```
 
-1) `x<0​` --> `((x*2) < 0)`.  False.
+<img src="note-images/1747036436440.png" alt="1747036436440" style="zoom:67%;" />
 
-If $x$ is $T_{MAX}$, $x*2$ is $0$.
+1) `x<0​` --> `((x*2) < 0)`.  
 
-2) `ux >= 0`. True.
+False. If $x$ is $T_{MAX}$, $x*2$ is $0$.
 
-3) `x & 7 == 7` --> `(x << 30) < 0`.  True.
+2) `ux >= 0`. 
 
-7's binary representation is `0111` so the least significant three bits of `x` is `...111`.
+True.
 
-4)  If $x>=0$, then $-x<=0$.  True.
+3) `x & 7 == 7` --> `(x << 30) < 0`.  
 
-5)  If $x<=0$, then $-x>=0$.  False. 
-When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
+True. 7's binary representation is `0111` so the least significant three bits of `x` is `...111`.
 
+4) `ux > -1`. 
 
+False. When a signed value is being computed with an unsigned value, it will cast to an unsigned, while`-1`  has the same bit representation as the largest unsigned value. So it is a false statement. 
+
+5) `x > y` ==> `-x < -y`.  
+
+False. If `y` is $T_{min}$, `-y` is also $T{min}$. But `-x` could be a positive number. 
+
+6) `x * x > 0`.  
+
+False. If x is large enough, there might be an overflow so the result is a negative value. 
+
+7) `x > 0 && y > 0` ==> `x + y > 0`.
+
+False. There could be an overflow for the computation `x + y`. 
+
+8)  If $x>=0$, then $-x<=0$.  True.
+
+9)  If $x<=0$, then $-x>=0$.  
+
+False. When $x$ is $T_{min}$ $-x$ is still a negative number. For instance, for a $w-bits$ binary number  if $w=4$, we assume that $x=-8(T_{min})$, then $-x$ is still $-8$ which is less than 0.
+
+10) `(x | -x) >> 31 == -1`.
+
+False. When `x` is 0, the statement is false.  
 
 #### 2.4 Floating Point 
 
@@ -502,7 +527,7 @@ $E=e-bias$($e$ is the exponent).
 
 1) Single precision(Float)
 
-The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=126,  254 - 127 = 127)
+The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=-126,  254 - 127 = 127)
 
 It is the same in double precision.
 
@@ -512,9 +537,13 @@ It is the same in double precision.
 
 **Case 2: Denormalized Values**
 
-When the exponent field is all zeros, so $2^0=1$ and $E=2^0-bias=1-bias$.
+Note that the $E$ is not $E=e-bias$ in normalised values, but  $E=1-bias$.
 
-Two purposed of denormalized values:
+Why do we set the $E$ this way in denormalised values?
+
+Because we can make a smooth transition between normal and denormal values. See Page 141.
+
+**Two purposed** of denormalized values:
 
 1) To represent $0$. 
 
@@ -522,7 +551,13 @@ An attention that should be paid is that in IEEE standard $-0.0(s=1)$ and $+0.0(
 
 2) To represent numbers are very close to $0$.
 
-3) Note that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised values. See Figure 2.34.
+**Note** that there is no need to add an implicit `1` back to the fraction; denormalised values are always smaller than 1 since the exponent is all zeros. There is smooth transition from denormalised values to normalised ones. See Figure 2.34.
+
+**N.B.** Denormalised values are always less than 1. Because there isn't any leading 1 before the `.`  in a significand and the fraction is always $\frac{1}{2}+\frac{1}{4}+\frac{1}{8}...$
+
+**Case 3: Infinity & NaN**
+
+NaN stands for "not a number".
 
 ##### 2.4.3 Example Numbers
 
@@ -541,6 +576,8 @@ Because the exponent  1~7, bias is $2^{k-1}=2{^3-1}=3$ , we can get $-1-3=-2, 7-
 For fraction part:  $1.f_1,f_2$. As aforementioned, since in IEEE regulation $1$ is not explicitly represented the maximum value of $f_1f_2$  is $0.2^{-1}2^{-2}$, namely $0.75$ which represents $1.75$. And $1.75$ x $4$ is $14$ when $s$ is 0 and is $-14$ when $s$ is $1$.
 
 **(2) Floating-point representations and unsigned values(Page 143).**
+
+How to convert simple integer values into floating-point form? See page 143.
 
 **(3) The bit representation of a float $0.5$ .**
 
@@ -568,9 +605,83 @@ unsigned float_to_point(float f)
 
 The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times)` which can be rearranged as a floating point format `0(s) 0111 1110(exp) 0(23 0s, fraction)`. Apparently, it is a normalised value since the exponent is in the range of $1-255$. The bias is $127$ and `0111 1110` is $126$. Hence the $E=e-bias=126-127=-1$ and the fraction is $1.0$ after adding the implicit $1$. So we can get $V=(-1)^s\times 1.0\times 2^{-1}=0.5$. N.B. The fraction is $0$ NOT $2^{-1}$
 
+### 3. Machine-Level Representation of Programmes
+
+#### 3.4 Accessing Information
+
+##### 3.4.2 Data Movement Instructions
+
+- IA32 imposes the restriction that data from one place in memory could not be moved directly to another place in memory. Thus, moving data from memory to another place in memory typically needs two steps: move the data from memory to a register and then move the data from the register to memory.
+
+#### 3.6 Control
+
+##### 3.6.6 Conditional Move Instructions
+
+Why the the assembly code is invalid implementation of `cread(...)`(Page 245)?
+
+```c
+int cread(int *xp) {
+    return xp ? *xp : 0;
+}
+```
+
+```assembly
+# Invalid implementation of function cread
+# xp is in register %edx
+movl $0, %eax   # Set 0 as the return value.
+testl %edx, %edx  # Test xp: xp & xp
+# The following code is executed at any time since there isn't any `jump` instruction
+# before it. When the address in %edx is 0, it is a null pointer causing a deferencing
+# error. Thus, it is invalid.
+cmove (%edx), %eax
+```
 
 
-#### 3.8.5 Variable-Size Arrays
+
+#### 3.7 Procedures 
+
+##### 3.7.2 Transferring Control
+
+1,  The following instructions support procedure calls and returns. (Page 255)
+
+(1) `call Label` or `call *Operand`
+
+"Label" is usually a name of a function in assembly code. For example, `call sum`
+
+There are two steps after the `call` is executed. First, it push the return address onto the top of stack; second, it jumps to the address of the called function. N.B. the return address is the address of the instruction immediately following the `call`.  See page 255. 
+
+(2) `ret` 
+
+There is not any arguments/operands in this instruction. 
+
+The `ret` instruction also includes two operations:
+
+1. The first is to `pop` an address off the stack, presumably the address is the return address in the caller which a previous `call` instruction `push` on the stack. 
+
+2. The second is to jump to this location. 
+
+(3) `leave` 
+
+There is not any arguments in this instruction, either.
+
+The `leave` is equivalent to the following two instructions:
+
+```assembly
+# %ebp now points the the bottom of currentstack, namely the called fuction.
+# This instruciton is to set the stack pointer %esp to the bottom of the current stack
+movel %ebp,%esp
+# "popl" always move the top value of the stack. %esp points to the top all the time.
+# Because %esp is at the bottom now, "popl %ebp" will move the value "old %ebp" 
+# which is %ebp of caller's to the register %ebp. The aim is to restore the stack pointer 
+# to the caller's statck.
+popl %ebp
+```
+
+
+
+#### 3.8 Array Allocation and Access
+
+##### 3.8.5 Variable-Size Arrays
 
 In C, the sizes of multidimensional arrays could be determined at compile time. 
 
@@ -667,3 +778,134 @@ char *gets(char *s){}
 But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 6. Why is it `-12(%ebp)` in `leal -12(%ebp), %ebx`? See my analyses. N.B. there are 4 bytes in each row in a stack.
 
 ![1745913271621](note-images/1745913271621.png)
+
+##### 3.12.1 Thwarting Buffer Overflow Attacks
+
+Why can it be cracked by enumerating $2^{15}=32,768$ starting address for the randomisation over *n*=$2^{23}$ if we set up a 256 bytes nop sled? (Page 296)
+
+I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still can't understand that statement. 
+
+
+
+#### 3.13 x86-64: Extending IA32 to 64 bits
+
+##### 3.13.3 Accessing Information
+
+(1) An explanation of two sentences in Page 310.
+
+*"Perhaps unexpectedly, instructions that move or generate 32-bits register values also set the upper 32 bits of the register to zero. Consequently, there is no need for an instruction `movzlq`".*
+
+> Instructions of 32 bits in Figure 3.4 like `movl` set the upper 32 bits of the 64 bits in x86-64 to zero by default. `movl` and other 32-bit instructions could be used with operands of 64-bit value; they just ignore the upper 32 bits and set them to zero in the registers. Subsequently, we can use `movl` as an alternative instruction of `movzlq` . 
+
+(2) **N.B**. There is only one operand in `imulq` and `mulq` since they have a implicit operand, `%rax`. The result of multiplication will be stored in the second operand, `%rax`, by convention.
+
+For an instance, `mulq %rdx` is `%rdx` * `%rax`. See page 313.
+
+
+
+### 4. Processor Architecture
+
+#### 4.1 The Y86 Instruction Set Architecture
+
+**What is "fetch stage"?**
+
+In a pipeline processor, the execution of an instruction is divided into several stages, which includes fetching, decoding, executing, memory access and writing back results.
+
+"Fetch stage" is the first stage of this pipeline, during which the processor retrieves (or fetch) the next instruction to be executed from memory. The address of this instruction is typically stored in Program Counter (namely PC).
+
+##### 4.1.4  Y86 Programs
+
+What is the "array" used for in Figure 4.7 ?
+
+It is the total volume of a program, including stacks and instructions. (That was concluded by me and has not been verified.)
+
+##### 4.1.6 Some Y86 Instruction Details
+
+**Webaside ASM:ESAM**  
+
+> To solve Practice Problem 4.6  we should know how to embedded assembly code into C code.
+
+(1) Why is `setae` used to replace the original assemble code in page 4 of this webaside?
+
+The reason is that the function `tmult_ok_asm(...)` should return 1 when it didn't overflow, but `setae` set `~CF` to a register while `CF`= 0 indicates there is no overflow so we should flip it. 
+
+```assembly
+# Hand-generated code for tmult_ok
+	.globl tmult_ok_asm
+# int tmult_ok_asm(long x, int y, long *dest);
+# x in %rdi, y in %rsi, dest in %rdx
+	tmult_ok_asm:
+	imulq %rdi, %rsi
+	movq %rsi, (%rdx)
+# Deleted code
+# testq %rsi, %rsi
+# setg %al
+# Inserted code
+	setae %al # Set low-order byte
+# End of inserted code
+	movzbl %al, %eax
+	ret
+```
+
+(2) One efficient way to write assembly manually is to modify the assembly code generated by gcc.
+
+**Extended Form of `asm`**
+
+`=r`  : update register  (Output)
+
+`r`: read register  (Input)
+
+```c
+int tmult_ok2(long x, long y, long *dest)
+{
+	int result;
+
+	*dest = x*y;
+	asm("setae %%bl # Set low-order byte\n\t"
+        // Don't write '\n\t' at the end of the last line of assembly code strings.
+        "movzbl %%bl,%[val] # Zero extend to be result"  // No '\n\t'.
+        : [val] "=r" (result) /* Output */
+        : /* No inputs */
+        : "%bl" /* Overwrites */
+	   );
+	return result;
+}
+```
+
+Note: 
+
+1. that all the lines of assembly code except for the last one should be ended with `\n\t` so that the generated assembly code follows the normal formatting conventions for assembly code. If there are comments, write '\n\t' after them.
+2. There are two `%%` in the assembly code strings when we are writing inline assembly code in C.
+
+**Elaboration of the inline assembly code in the above C code.**  
+
+```c
+// ...
+"movzbl %%bl,%[val] 
+: [val] "=r" (result)
+```
+
+An assembler has assigned a register to the variable`result`, we don't what it is but we want to replace it with `%bl`. What shall we do? 
+
+First of all, write `movzbl %%bl, %[val]` to move `%bl` to `val` and then we update(`=r`) the register in which the `result` is stored by using `(result)`. 
+
+Since in `tmult_ok20`, `result` is the return value, we now move the value of `~CF` to `%bl` and move `%bl` to the register stored the return value, namely `result`. Finally, we write assembly code in C implementing the function to test if `x*y` overflow or not. 
+
+*Assembly code generated by GCC.*
+
+```assembly
+# int tmult_ok2(long x, long y, long *dest)
+# x at %rdi, y at %rsi, dest at %rdx
+	tmult_ok2:
+	pushq %rbx # Save %rbx
+	imulq %rsi, %rdi # Compute x * y
+	movq %rdi, (%rdx) # Store at dest
+# Code generated by asm
+	setae %bl # Set low-order byte
+	movzbl %bl,%eax # Zero extend %eax
+# End of asm-generated code
+	popq %rbx # Restore %rbx
+	ret
+```
+
+Since `%ebx` is callee saved and we have write assemble code to overwrite `%bl` which is the low-order byte of `%ebx`, GCC takes steps to preserve its value and to restore it thereafter. 
