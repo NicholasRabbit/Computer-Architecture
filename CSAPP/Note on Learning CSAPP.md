@@ -953,6 +953,12 @@ $valP$ into which is stored the address of next instruction which is the result 
 
 $valE \leftarrow 21-9=12$
 
+> **N.B.** 
+>
+> Instructions like `irmovl` and `rrmovl`  proceed like arithmetic operations. For `irmovl`, the first input of a ALU is an immediate value(a constant value denoted as valC) and the second is 0; they are computed as $valE \leftarrow 0 + valC$. 
+>
+> In the computation of `rrmovl`, for example, in `rrmovl %edx, %ebx` the processor don't need the fetch the value in the second operand(`%ebx`); it only fetch the value in the first operand(`%edx`) and set the second input of ALU to 0. Then ALU add 0 to the first operand(`%edx`).  The computation is $valE \leftarrow 0 + valA$. Finally, the value in `%edx` is moved to `%ebx`.
+
 **Memory:** The memory stage may write data to memory. Whereas, in this example, it is needn't to do that since both of operands are registers.
 
 **Write Back:** In the stage of write back, the results of "Execute" will write back to registers.
