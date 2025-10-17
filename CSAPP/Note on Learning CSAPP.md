@@ -922,12 +922,14 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 ##### 4.3.1 Organising Processing into Stages
 
+**(1) Notes of 4.3.1**
+
 - Y86 is a sequential processor called SEQ. 
 - Note that each of the registers is represented by 4 bits, NOT 8 bits. So in `rA:rB`, either rA or rB has 4 bits.
 - In `icode:ifun`, each of them also has 4 bits. See Figure 4.2 in page 372. 
 - `valP` stores the address of next instruction. 
 
-**How is an instruction is executed in the machine level or how is an instruction is processed?**
+**(2) How is an instruction is executed in the machine level or how is an instruction is processed?**
 
 There are a number of operations when processing an instruction and they are orgnised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example. See "Aside" in page 401.
 
@@ -967,3 +969,10 @@ $R[\%ebx] \leftarrow valE=12$
 
 **PC update:** Upte the program counter. Since there are two bytes in this instruction, so the program counter  is incremented by 2, which is `0x00e`
 
+**(3) Explanation of Figure 4.19**
+
+`rmmovl rA, D(rB)` instructs that value in a register rA to an address in memory referenced by `D(rB)`. 
+
+In `D(rB)` D denotes displacement, which indicates that the address in `rB` should be displaced first and then move the value into the address. To illustrate, in `rmmovl %edx, 8(%esp)` `%edx` holds 12 and `%esp` holds `0x100`, 12 should be moved into `0x100+8=0x108`. Note that 8 is a decimal number. 
+
+That's why in Execute stage valE $\leftarrow$ valB + valC;  valC is the displacement and valB is the value in rB so valE is the address to which valA is moved. 
