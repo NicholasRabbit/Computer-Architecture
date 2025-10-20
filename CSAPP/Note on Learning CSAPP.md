@@ -976,3 +976,6 @@ $R[\%ebx] \leftarrow valE=12$
 In `D(rB)` D denotes displacement, which indicates that the address in `rB` should be displaced first and then move the value into the address. To illustrate, in `rmmovl %edx, 8(%esp)` `%edx` holds 12 and `%esp` holds `0x100`, 12 should be moved into `0x100+8=0x108`. Note that 8 is a decimal number. 
 
 That's why in Execute stage valE $\leftarrow$ valB + valC;  valC is the displacement and valB is the value in rB so valE is the address to which valA is moved. 
+
+In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte value of displacement in the instruction whose address starts at [PC+2]. As an illustration, the 5th line in Figure 4.17 is `0x014: 404364000000  | rmmovl %esp, 100(%ebx)` in which `64000000` starts with [PC+2]; note that it is an little endian and should be read as `0x00 00 00 64`. 
+
