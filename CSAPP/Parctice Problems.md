@@ -586,7 +586,35 @@ popl	%ebp
 ret
 ```
 
+### Practice Problem 4.6
+
+See `CASPP/code/pratice_problems`
+
+### **Practice Problem 4.7**
+
+See `CASPP/code/pratice_problems`
+
 ### Practice Problem 4.11
+
+```assembly
+1 0x000: 30f209000000 	| irmovl $9, %edx
+2 0x006: 30f315000000 	| irmovl $21, %ebx
+3 0x00c: 6123 			| subl %edx, %ebx # subtract
+4 0x00e: 30f480000000 	| irmovl $128,%esp # Problem 4.11
+5 0x014: 404364000000 	| rmmovl %esp, 100(%ebx) # store
+6 0x01a: a02f 			| pushl %edx # push
+7 0x01c: b00f 			| popl %eax # Problem 4.12
+8 0x01e: 7328000000 	| je done # Not taken
+9 0x023: 8029000000 	| call proc # Problem 4.16
+10 0x028: 				| done:
+11 0x028: 00 			| halt
+12 0x029: 				| proc:
+13 0x029: 90 			| ret # Return
+```
+
+**Figure 4.17 Sample Y86 instruction sequence**
+
+
 
 **Specific**
 
@@ -617,3 +645,40 @@ R[%esp] $\leftarrow$ valE = 128
 **PC update:**
 
 PC $\leftarrow$ valP = 0x014
+
+### Practice Problem 4.12
+
+See Figure 4.17 in Practice Problem 4.11.
+
+Note that `%esp` is 124 now. 
+
+| Stage      | Generic <br />`popl rA`                                      | Specific<br />`popl %eax`                                    |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Fetch      | icode:ifun $\leftarrow$ $M_1$[PC]<br />rA:rB $\leftarrow$ $M_1$[PC+1]<br />valP $\leftarrow$ PC + 2 | icode:ifun $\leftarrow$ $M_1$[0x01c] = b:0<br />rA:rB $\leftarrow$ $M_1$[0x01d] = 0:f  <br />valP $\leftarrow$ 0x01c + 2 = 0x01e |
+| Decode     | valA $\leftarrow$ R[%esp]<br />valB $\leftarrow$ R[%esp]     | valA $\leftarrow$ R[%esp] = 124<br />valB $\leftarrow$ R[%esp] = 124 |
+| Execute    | valE $\leftarrow$ valB + 4                                   | valeE $\leftarrow$ 124 + 4 = 128                             |
+| Memory     | valM $\leftarrow$ $M_4$[valA]                                | valM $\leftarrow$ $M_4$[128] (**Wrong!!**)                   |
+| Write Back | R[%esp] $\leftarrow$ valE<br />R[rA] $\leftarrow$ valM       | R[%esp] $\leftarrow$ 128<br />R[%eax] $\leftarrow$ 9         |
+| PC update  | PC $\leftarrow$ valP                                         | PC $\leftarrow$ 0x01e                                        |
+
+My answer is wrong in the Memory Stage and the correct answer is "valM $\leftarrow$ $M_4$[124] = 9"
+
+What effect does this instruction execution have on the registers and PC?
+
+The instruction sets %eax to 9, sets the stack pointer %esp to 128 and increments the program counter by 2. 
+
+### Practice Problem 4.13
+
+*What would be the effect of the instruction `pushl %esp` according to the steps listed in Figure 4.20? Does this conform to the desired behaviour for Y86, as determined in Problem 4.6?*
+
+(1) The instruction `pushl %esp` will push the original value of `%esp` to the stack and then increment its value by 4, which accords to the steps list in Figure 4.20. It obtains the original value of `%esp` and move it to valA in the Decode stage and then move this value to $M_4$[valE] $\leftarrow$ valA in the Memory stage. 
+
+(2) Of course it conforms the desired behaviour of Y86, as we find in Problem 4.6.
+
+### Practice Problem 4.14
+
+Assume the two register writes in the write-back stage for `popl` occur in the order listed in Figure 4.20. What would be the effect of executing `popl %esp`? Does this conform to the desired behaviour for Y86, as determined in Problem 4.7?
+
+(1) `popl %esp` will move the value in the current stack to `%esp` as we test in practice problem 4.7.
+
+(2) Definitely it conforms the desired behaviour for Y 86, as determined in Problem 4.7.

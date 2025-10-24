@@ -1062,3 +1062,16 @@ That's why in Execute stage valE $\leftarrow$ valB + valC;  valC is the displace
 
 In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte value of displacement in the instruction whose address starts at [PC+2]. As an illustration, the 5th line in Figure 4.17 is `0x014: 404364000000  | rmmovl %esp, 100(%ebx)` in which `64000000` starts with [PC+2]; note that it is an little endian and should be read as `0x00 00 00 64`. 
 
+**(4) Analyses of Figure 4.20 (`pushl` and `popl`)**
+
+1. After reading the stages of Y86 instruction, we can now know why `pushl %esp`push the original value of `%esp` to its current stack. See practice problem 4.7 and 4.13.
+
+2. The order of two instructions in Write back stage of `popl rA` shouldn't be changed. 
+
+   R[%esp] $\leftarrow$ valE
+
+   R[rA] $\leftarrow$ valM
+
+   As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
+
+   See practice problem 4.7 and 4.17. 
