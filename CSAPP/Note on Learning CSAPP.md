@@ -619,7 +619,7 @@ The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times
 
 CF: Carry Flag. It is used to detect overflow for unsigned operations.
 
-For example, when we use `addl` instruction to perform the equivalent of the C code `int t = a + b;`, CF will be set to the result a Boolean expression: `(unsigned) t < (unsigned)a`, which is 1 when it is true-Unsigned overflow. If overflow doesn't happen, `t >= b` . 
+For example, when we use `addl` instruction to perform the equivalent of the C code `int t = a + b;`, CF will be set to the result a Boolean expression: `(unsigned) t < (unsigned)a`, which is 1 when it is true and that indicates Unsigned overflow. If overflow doesn't happen, the result of `(unsigned) t < (unsigned)a` is CF=0 indicating no Unsigned overflow.  It is the same with condition codes.
 
 ##### 3.6.6 Conditional Move Instructions
 
@@ -1075,3 +1075,14 @@ In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte v
    As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
 
    See practice problem 4.7 and 4.17. 
+
+**(5) Three control transfer instructions: `jXX`, `call`, and `ret`**
+
+Why does `valP`  equal PC+5 in `jXX Dest` in Figure 4.21?
+
+The reason is there isn't any registers in these `jXX Dest` instructions, so `icode:ifun` is one byte and the size of the address of destination is 4 bytes. Thus, there are 5 bytes in total. 
+
+Figure 4.21
+
+ ![1761553940028](note-images/1761553940028.png)
+
