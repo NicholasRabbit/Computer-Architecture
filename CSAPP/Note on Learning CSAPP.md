@@ -656,6 +656,8 @@ cmove (%edx), %eax
 
 There are two steps after the `call` is executed. First, it push the return address onto the top of stack; second, it jumps to the address of the called function. N.B. the return address is the address of the instruction immediately following the `call`.  See page 255. 
 
+See the sequence of stages of `call` and `ret` in Page 4.8 and Practice Problem 4.16 to know more details of these instructions. 
+
 (2) `ret` 
 
 There is not any arguments/operands in this instruction. 
@@ -818,6 +820,10 @@ For an instance, `mulq %rdx` generates the result of `%rdx` * `%rax`. See page 3
 In a pipeline processor, the execution of an instruction is divided into several stages, which includes fetching, decoding, executing, memory access and writing back results.
 
 "Fetch stage" is the first stage of this pipeline, during which the processor retrieves (or fetch) the next instruction to be executed from memory. The address of this instruction is typically stored in Program Counter (namely PC).
+
+##### 4.1.1 Programmer-Visible State
+
+In IA 32 and Y86, instructions of conditional moves is executed implicitly. As an illustration, `cmovle %eax, %ebx` computes `%ebx - %eax`; it is not like `subl %eax, %ebx` that we can read. The computation of `cmovle`  is done in ALU automatically and Conditional Codes(CC) are updated simultaneously.  Consequently, in this problem, we can retrieve the value after any conditional moves. 
 
 ##### 4.1.4  Y86 Programs
 
@@ -1080,9 +1086,14 @@ In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte v
 
 Why does `valP`  equal PC+5 in `jXX Dest` in Figure 4.21?
 
-The reason is there isn't any registers in these `jXX Dest` instructions, so `icode:ifun` is one byte and the size of the address of destination is 4 bytes. Thus, there are 5 bytes in total. 
+The reason is there isn't any registers as operands in these `jXX Dest` instructions, so `icode:ifun` is one byte and the size of the address of destination is 4 bytes. Thus, there are 5 bytes in total. 
 
 Figure 4.21
 
  ![1761553940028](note-images/1761553940028.png)
 
+**(6) Sequence of stages of `call` and `ret`**
+
+See Page 408. 
+
+In the sequence of stages of `call Dest`, the address of the instruction which follows `call` is pushed onto the stack; the value of this address is valP $\leftarrow$ PC + 5. Then the address of `Dest` is set to PC so that `call` will skip to this address to execute instruction there. 

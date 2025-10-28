@@ -405,9 +405,8 @@ N.B. the hexadecimal numbers for 0 to 9 range from `0x30` to `0x39`.
 
 Don't forget that there is always an terminating `null` at the end of a char array.
 
-<<<<<<< HEAD
 To be reviewed and analysed later. 
-=======
+
 ### Practice Problem 3.44
 
 to be reviewed...
@@ -616,35 +615,14 @@ See `CASPP/code/pratice_problems`
 
 
 
-**Specific**
-
-**Fetch:**
-
-`irmovl $128, %esp`
-
-$icode:ifun \leftarrow M_1[0x00e] =3:0$
-
-$rA:rB \leftarrow M_1[0x00f]=f:4$ 
-
-$valC \leftarrow M_4[0x010]=0x00,00,00,80(128)$.      It is little endian. 
-
-$valP \leftarrow 0x00e + 6 = 0x014$
-
-Execute:
-
-valE $\leftarrow$ 0 + 128 = 128
-
-**Memory:**
-
-Nothing happened
-
-**Write Back:**
-
-R[%esp] $\leftarrow$ valE = 128
-
-**PC update:**
-
-PC $\leftarrow$ valP = 0x014
+| Stage      | Generic  `irmovl V, rB` | Specific `irmovl $128, %esp`                                 |
+| ---------- | ----------------------- | ------------------------------------------------------------ |
+| Fetch      |                         | `irmovl $128, %esp`  <br />$icode:ifun \leftarrow M_1[0x00e] =3:0$ <br />rA:rB $\leftarrow M_1$[0x00f]= f:4 <br />valC $\leftarrow M_4$[0x010]=0x00,00,00,80(128).  It is little endian. <br />valP $ \leftarrow $0x00e + 6 = 0x014 |
+| Decode     |                         |                                                              |
+| Execute    |                         | valE $\leftarrow$ 0 + 128 = 128                              |
+| Memory     |                         | Nothing happened                                             |
+| Write Back |                         | R[%esp] $\leftarrow$ valE = 128                              |
+| PC update  |                         | PC $\leftarrow$ valP = 0x014                                 |
 
 ### Practice Problem 4.12
 
@@ -682,3 +660,42 @@ Assume the two register writes in the write-back stage for `popl` occur in the o
 (1) `popl %esp` will move the value in the current stack to `%esp` as we test in practice problem 4.7.
 
 (2) Definitely it conforms the desired behaviour for Y 86, as determined in Problem 4.7.
+
+
+
+### Practice Problem 4.15
+
+In IA 32 and Y86, instructions of conditional moves is executed implicitly. As an illustration, `cmovle %eax, %ebx` computes `%ebx - %eax`; it is not like `subl %eax, %ebx` that we can read. The computation of `cmovle`  is done in ALU automatically and Conditional Codes(CC) are updated simultaneously.  Consequently, in this problem, we can retrieve the value after any conditional moves. 
+
+Solution of this problem:
+
+We can get conditional code in the Execute stage and use it as a condition to test if the value in rA should be moved to rB.
+
+| Stage      | `cmovXX rA, rB`                                              |
+| ---------- | ------------------------------------------------------------ |
+| Execute    | valE $\leftarrow$ 0 + valA<br />Cnd $\leftarrow$ Cond(CC, ifun)    // added |
+| Memory     |                                                              |
+| Write Back | if (Cnd) R[rB] $\leftarrow$ valE                             |
+
+Could I write "R[rB] $\leftarrow$ Cnd ? valE : valB" as the example  of `jxx Dest` in Figure 4.21? To be proved.
+
+| Stage      | `cmovXX rA, rB`                                              |
+| ---------- | ------------------------------------------------------------ |
+| Execute    | valE $\leftarrow$ 0+valA <br />valB $\leftarrow$ R[rB]   // get the original value in rB |
+| Memory     |                                                              |
+| Write Back | R[rB] $\leftarrow$ Cnd ? valE : valB   // as `jxx Dest` in Figure 4.21 |
+
+
+
+### Practice Problem 4.17
+
+| Stage      | Generic `call Dest`                                          | Specific `call 0x029`                                        |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Fetch      | icode:ifun $\leftarrow$ $M_1$[PC]<br />valC $\leftarrow$ $M_4$[PC + 1]<br />valP $\leftarrow$ PC + 5 | icode:ifun $\leftarrow$ $M_1$[0x023]<br />valC $\leftarrow$ $M_4$[0x024] = 0x29<br />valP $\leftarrow$ 0x23 + 0x5 = 0x28 |
+| Decode     | valB $\leftarrow$ R[%esp]                                    | valB $\leftarrow$ R[%esp] = 128                              |
+| Execute    | valE $\leftarrow$ valB + (-4)                                | valE $\leftarrow$ 128 + (-4) = 124                           |
+| Memory     | $M_4$[valE] $\leftarrow$ valP                                | $M_4$[124] $\leftarrow$ 0x28                                 |
+| Write Back | R[%esp] $\leftarrow$ valE                                    | R[%esp] $\leftarrow$ 124                                     |
+| PC update  | PC $\leftarrow$ valC                                         | PC $\leftarrow$ 0x29                                         |
+
+The register `%esp` is set to 124, the PC is set to 0x29, and the memory in the address 124 is updated  to 0x28. 
