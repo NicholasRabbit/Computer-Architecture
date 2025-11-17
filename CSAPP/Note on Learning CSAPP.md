@@ -613,6 +613,22 @@ The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times
 
 - IA32 imposes the restriction that data from one place in memory could not be moved directly to another place in memory. Thus, moving data from memory to another place in memory typically needs two steps: move the data from memory to a register and then move the data from the register to memory.
 
+- The behaviour of `pushl %ebp` is equivalent to that of the pair of instructions.
+
+  ```assembly
+  subl $4, %esp
+  movl %ebp, (%esp)
+  ```
+
+  Similarly, the behaviour of `popl %eax` is equivalent to the following pair of instructions.
+
+  ```assembly
+  movl (%esp), %eax
+  addl $4, %esp
+  ```
+
+  
+
 #### 3.6 Control
 
 ##### 3.6.1 Condition Codes

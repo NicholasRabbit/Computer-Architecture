@@ -1,4 +1,10 @@
-### 1, Errors 
+### 1, Preparation for the labs 
+
+[Preparation for the laboratories](https://blog.csdn.net/qq_45677541/article/details/123955438)
+
+**Solution of errors**
+
+(1) "fatal error gnu/stubs-32.h no such file or directory "
 
 Running `make btest` on a machine of 64-bit representation of integers may cause an error(`fatal error gnu/stubs-32.h no such file or directory `).  The solution is given as follows.
 
@@ -10,7 +16,7 @@ Solution:
 yum -y install glibc-devel.i386   # Centos 6/7
 ```
 
-### 2, How to do the lab?
+### 2, How to test?
 
 In the root directory of `datalab-handout` , run the following commands if you complete the code.
 
@@ -31,11 +37,11 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 [datalab: Page 4 and 5.](./labs/L1_Data_Lab/datalab.pdf)
 
-### 3, Elaboration of questions and answers
+### 3, Laboratory
 
-[Answers](https://blog.csdn.net/qq_45677541/article/details/123955438)
+#### Data Labs
 
-#### 1, tMin(void)
+##### 1, tMin(void)
 
 ```shell
 /* 
@@ -51,7 +57,7 @@ int tmin(void) {
 }
 ```
 
-#### 7, conditional
+##### 7, conditional
 
 1, `x ? y : z`  equals $F =xy + \overline xz$. 
 
@@ -74,7 +80,7 @@ To explain the logic process of the solution needs to start with the equation $F
 
 Apparently, `x = ~(!x) + 1` is an approach aiming to produce the mask. When `x` is non-zero, `!x` is 0 and the operation on the right side of `=` yields `0`  which is then flipped to produce `0xFFFFFFFF` in the operation: `(~x + y)`.  By now, the first part, $xy$,  in  $F =xy + \overline xz$ is made. Note that `~x` in the code `(~x & y)` represents $x$ in the equation. If `x` is zero, it is the same process.
 
-#### 8, isLessOrEqual
+##### 8, isLessOrEqual
 
 See ` CSAPP/labs/testing_code_for_labs`
 
@@ -166,11 +172,11 @@ In this circumstance, two requirements have to be met. First is they have the sa
  72 }
 ```
 
-#### 9, logicalNeg
+##### 9, logicalNeg
 
 See `../ CSAPP/labs/testing_code_for_labs/logicalNeg.c`
 
-#### 10, howManyBits
+##### 10, howManyBits
 
 ```c
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -239,7 +245,7 @@ b16 = !!(abs_x >> 16) << 4;
 abs_x = abs_x >> b16;
 ```
 
-#### 11, floatScale2
+##### 11, floatScale2
 
 ```c
 //float
@@ -363,7 +369,7 @@ unsigned floatScale2(unsigned uf) {
 }
 ```
 
-#### 12, floatFloat2Int
+##### 12, floatFloat2Int
 
 ```c
 /* 
@@ -440,7 +446,7 @@ A Solution:
 
    
 
-#### 13, floatPower2
+##### 13, floatPower2
 
 ```c
 /* 
@@ -473,4 +479,83 @@ unsigned floatPower2(int x) {
    ```
 
    
+
+#### Bomb Lab
+
+**How to do the bomb lab?**
+
+(1) It is suggested that we should disassemble the binary file, `bomb`, and analyse the machine code step by step to defuse bombs. There are many phases and one bomb is in each of them. 
+
+(2) Since the bomb ignores blank lines of input, we can save our solutions of first bombs in a file named, for example, `psol.txt` so that we don't have to input when we are trying to defuse the next bomb.
+
+```shell
+>./bomb psol.txt
+```
+
+(3) We should learn examine the assembly code of `bomb` step by step  and know how to set breakpoints. 
+
+(4) To know how to inspect registers and memory states can also help us to defuse the bomb. 
+
+**Phase 1**
+
+**How to defuse "phase 1"?**
+
+```c
+    //...
+	/* Hmm...  Six phases must be more secure than one phase! */
+    input = read_line();             /* Get input                   */
+    phase_1(input);                  /* Run the phase               */
+    phase_defused();                 /* Drat!  They figured it out!
+    ...
+```
+
+Since only the source code of `main` is provided and it is implausible to step into the function `phase_1(input)`, we should disassemble it. 
+
+Note that in x86_64, `%rdi` and `%rsi` are the first and the second argument, respectively. 
+
+(1) First of all, run `gdb bomb` and set a break point at the function `phase_1(input)`. We input "abc" to test.
+
+(2) After disassembling the current function to find where `phase_1(...)`  is called, we can see at the address of `0x400e37` that it moves the value in `%rax` to `%rdi` after calling `read_line`.
+
+```assembly
+  400e32:	e8 67 06 00 00       	callq  40149e <read_line>
+  400e37:	48 89 c7             	mov    %rax,%rdi
+  400e3a:	e8 a1 00 00 00       	callq  400ee0 <phase_1>
+```
+
+Apparently, "abc" is stored in `%rax` and then is moved to `%rdi`. To verify that, enter `x/s $rax`  to examine the string stored at `$rax`. It is "abc" and we find it. 
+
+```shell
+(gdb)x/s $rax
+0x603780 <input_strings>:       "abc"
+```
+
+(3) There isn't any source code of `phase_1(...)`, of course, therefore, we can't use `step` to enter into it. Otherwise, we can't see anything and the bomb is detonated. We can use `stepi` to execute an instruction in assembly code. 
+
+```shell
+(gdb)stepi
+```
+
+The assembly code of `phase_1(...)` is as follows. 
+
+```assembly
+0000000000400ee0 <phase_1>:
+  400ee0:	48 83 ec 08          	sub    $0x8,%rsp
+  400ee4:	be 00 24 40 00       	mov    $0x402400,%esi
+  400ee9:	e8 4a 04 00 00       	callq  401338 <strings_not_equal>
+  400eee:	85 c0                	test   %eax,%eax
+  400ef0:	74 05                	je     400ef7 <phase_1+0x17>
+  400ef2:	e8 43 05 00 00       	callq  40143a <explode_bomb>
+  400ef7:	48 83 c4 08          	add    $0x8,%rsp
+  400efb:	c3                   	retq   
+```
+
+Now we read its assembly code thoroughly and find that `$0x402400` is moved to `%esi`. `$0x402400` might be an address of some strings. We should check it. 
+
+```shell
+(gdb)x/s 0x402400
+0x402400:       "Border relations with Canada have never been better."
+```
+
+Great! We have found it. Whereas, we had better not stop but to verify it by analysing the rest of assembly code. 
 

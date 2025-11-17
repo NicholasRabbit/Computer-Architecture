@@ -608,7 +608,7 @@ See `CASPP/code/pratice_problems`
 10 0x028: 				| done:
 11 0x028: 00 			| halt
 12 0x029: 				| proc:
-13 0x029: 90 			| ret # Return
+13 0x029: 90 			| ret # Return	
 ```
 
 **Figure 4.17 Sample Y86 instruction sequence**
