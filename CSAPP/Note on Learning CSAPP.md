@@ -1021,7 +1021,27 @@ In conclusion, we manage to populate data to registers for variables in the orig
 
 **What is a register file?**
 
-The register file is one type of random-access memory(RAM), but it is in a CPU. A processer can obtain the value in a register from the register file by register identifiers(which are addresses). In an IA32 or Y86 processor, there are 8 eight registers in the register file(%eax, %ecx, etc.).
+The register file is one type of random-access memory(RAM), but it is in a CPU. A processor can obtain the value in a register from the register file by register identifiers(which are addresses). In an IA32 or Y86 processor, there are 8 eight registers in the register file(%eax, %ecx, etc.).
+
+*The following diagram shows a typical register file.* 
+
+![1763428539504](note-images/1763428539504.png)
+
+(1) A register identifier is set into `srcA` or `srcB`(See Figure 4.4 in page 374) so CPU(processor) knows which value of a register to output. As an illustration, when `srcA` is set to 1(which represents `%ecx`), the register file will read the value in it and output the content in `%ecx` as `valA`. Typically, there are two operands in an instruction of machine-level programming language, such as `movl %ecx, %eax`, so there are two input register identifiers: `srcA` and `srcB`. An operating system instructs register files when an instruction is executed for the next instruction of a program. 
+
+(2) It is the same with `dstW` and `valW`. CPU will access the register file with a register identifier in `dstW` and the value to write into this register in `valW`. To illustrate, when `subl $0x8, %esp` is executed, `dstW` is set to 4 and `valW` is set to `0x8`. Eventually, when the *clock* rises, the value in `%esp` will be updated.
+
+(3) Attention should be paid is that writing and reading can happen simultaneously, when CPU is reading a register which is being written, the value it gets will changed with a slightly delay. 
+
+**There is a random-access memory in a processor for storing program data.**
+
+![1763432543420](note-images/1763432543420.png)
+
+(1) When processor is reading from this "Data Memory", the clock is set to 0 and if the "address" is valid, after some delay, the value stored at the address will appear at "data out". If the "address" is invalid, the "error" signal will be set to 1. 
+
+(2) Writing in "Data memory" is as same as operation in register files. First of all, the "clock" is set to 1 and the value at the "address" will be updated to that in "data in".
+
+
 
 #### 4.3 Sequential Y86 Implementations
 
@@ -1036,7 +1056,7 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 **(2) How is an instruction is executed in the machine level or how is an instruction is processed?**
 
-There are a number of operations when processing an instruction and they are orgnised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example. See "Aside" in page 401.
+There are a number of operations when processing an instruction and they are organised in a particular sequence of stages. Let's take line 3 in Figure 4.17  in page 399 as an example. See "Aside" in page 401.
 
 ```assembly
 1 0x000: 30f209000000  	# irmovl $9, %edx
@@ -1113,3 +1133,9 @@ Figure 4.21
 See Page 408. 
 
 In the sequence of stages of `call Dest`, the address of the instruction which follows `call` is pushed onto the stack; the value of this address is valP $\leftarrow$ PC + 5. Then the address of `Dest` is set to PC so that `call` will skip to this address to execute instruction there. 
+
+
+
+##### 4.3.2 SEQ Hardware Structure
+
+(1) Condition code is updated by ALUs.
