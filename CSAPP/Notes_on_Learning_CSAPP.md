@@ -1033,7 +1033,7 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 (3) Attention should be paid is that writing and reading can happen simultaneously, when CPU is reading a register which is being written, the value it gets will changed with a slightly delay. 
 
-**There is a random-access memory in a processor for storing program data.**
+**There is a random-access memory for storing program data.**
 
 ![1763432543420](note-images/1763432543420.png)
 
@@ -1041,7 +1041,7 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 (2) Writing in "Data memory" is as same as operation in register files. First of all, the "clock" is set to 1 and the value at the "address" will be updated to that in "data in".
 
-
+(3) "Date memory" is in so-called "memory", namely a piece of physical bar of memory.
 
 #### 4.3 Sequential Y86 Implementations
 
@@ -1106,13 +1106,15 @@ In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte v
 
 **(4) Analyses of Figure 4.20 (`pushl` and `popl`)**
 
+<img src="note-images/1763518521791.png" alt="1763518521791" style="zoom: 80%;" />
+
 1. After reading the stages of Y86 instruction, we can now know why `pushl %esp`push the original value of `%esp` to its current stack. See practice problem 4.7 and 4.13.
 
 2. The order of two instructions in Write back stage of `popl rA` shouldn't be changed. 
 
-   R[%esp] $\leftarrow$ valE
-
-   R[rA] $\leftarrow$ valM
+   > R[%esp] $\leftarrow$ valE
+>
+   > R[rA] $\leftarrow$ valM
 
    As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
 
@@ -1124,7 +1126,7 @@ Why does `valP`  equal PC+5 in `jXX Dest` in Figure 4.21?
 
 The reason is there isn't any registers as operands in these `jXX Dest` instructions, so `icode:ifun` is one byte and the size of the address of destination is 4 bytes. Thus, there are 5 bytes in total. 
 
-Figure 4.21
+*Figure 4.21*
 
  ![1761553940028](note-images/1761553940028.png)
 
@@ -1139,3 +1141,14 @@ In the sequence of stages of `call Dest`, the address of the instruction which f
 ##### 4.3.2 SEQ Hardware Structure
 
 (1) Condition code is updated by ALUs.
+
+##### 4.3.3 SEQ Timing 
+
+(1) What does the "read back" mean in "The processor never needs to read back the state updated by an instruction in order to complete the processing of this in instruction" in page 414?
+
+It means that the processor won't read a register again when process an instruction. As an illustration, to perform `pushl %edx` , the first step is to decrease `%esp` by 4 and then the second is to move the value in `%edx`  into the current stack in memory where `-4(%esp)` deference. Actually, in the second step processor doesn't read the updated value in `%esp`  but read `valE` instead(See Figure 4.20). `valE` can be treated as a temporary value under this circumstance. 
+
+Why can't the processor "read back" the state in a register? 
+
+Attention should be paid is that although an instruction is organised as 6 stages, they actually execute simultaneously. To illustrate, the processor can perform memory and register write at the same time in "Memory" and "Write  Back" stages, respectively. See Figure 4.20. If the processor read the updated value in `%esp` in the above example, it is prone to error when the `%esp` is updated by another instruction, perhaps. 
+
