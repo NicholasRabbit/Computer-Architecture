@@ -1144,11 +1144,31 @@ In the sequence of stages of `call Dest`, the address of the instruction which f
 
 ##### 4.3.3 SEQ Timing 
 
-(1) What does the "read back" mean in "The processor never needs to read back the state updated by an instruction in order to complete the processing of this in instruction" in page 414?
+(1) How does hardware implement SEQ?
+
+To implement SEQ, we make use of combinational logic  and two forms of memory devices: clocked registers (the program counter and the condition code register) and random access memories (RAM: including the register file, the instruction memory and the data memory.)
+
+Note that instruction memory is treated as part of combinational logic since it is only used to read instructions. 
+
+Combinational logic: 
+
+Combinational logic consists of ALUs, instruction memories..
+
+The data memory is written only when an `rmmovl, pushl, or call` instruction is called since they all need  to access data memory.
+
+(2) What does the "read back" mean in "The processor never needs to read back the state updated by an instruction in order to complete the processing of this in instruction" in page 414?
 
 It means that the processor won't read a register again when process an instruction. As an illustration, to perform `pushl %edx` , the first step is to decrease `%esp` by 4 and then the second is to move the value in `%edx`  into the current stack in memory where `-4(%esp)` deference. Actually, in the second step processor doesn't read the updated value in `%esp`  but read `valE` instead(See Figure 4.20). `valE` can be treated as a temporary value under this circumstance. 
 
 Why can't the processor "read back" the state in a register? 
 
 Attention should be paid is that although an instruction is organised as 6 stages, they actually execute simultaneously. To illustrate, the processor can perform memory and register write at the same time in "Memory" and "Write  Back" stages, respectively. See Figure 4.20. If the processor read the updated value in `%esp` in the above example, it is prone to error when the `%esp` is updated by another instruction, perhaps. 
+
+(3) State elements.
+
+Program counter, condition code register, register file, and data memory are state elements.
+
+(4) Elaboration of Figure 4.25 Tracing Two cycles of execution by SEQ.
+
+State of program counter, condition code register, register file, and data memory are only updated when the next cycle begins. In other words, the updated values have been already generated at the "End of cycle 3", but they have NOT been moved into these state elements until the beginning of cycle 4. (Read the third paragraph in page 414 and the last two paragraphs in page 415.)
 
