@@ -687,7 +687,7 @@ Could I write "R[rB] $\leftarrow$ Cnd ? valE : valB" as the example  of `jxx Des
 
 
 
-### Practice Problem 4.17
+### Practice Problem 4.16
 
 | Stage      | Generic `call Dest`                                          | Specific `call 0x029`                                        |
 | ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -699,3 +699,27 @@ Could I write "R[rB] $\leftarrow$ Cnd ? valE : valB" as the example  of `jxx Des
 | PC update  | PC $\leftarrow$ valC                                         | PC $\leftarrow$ 0x29                                         |
 
 The register `%esp` is set to 124, the PC is set to 0x29, and the memory in the address 124 is updated  to 0x28. 
+
+
+
+### Practice Problem 4.18
+
+My answer is as follows, which is wrong.
+
+```txt
+int srcB=[
+	icode in {IIRMOL, IRRMOVL, IRMMOVL, IMRMOVL, IOPL}: rB;
+	icode in {IPUSHL, IPOPL}:RNONE
+]
+```
+
+The correct solution is:
+
+```txt
+int srcB=[
+	icode in {IOPL, IRMMOVL, IMRMOVL}:rB;
+]
+```
+
+
+

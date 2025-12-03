@@ -482,7 +482,7 @@ unsigned floatPower2(int x) {
 
 #### Bomb Lab
 
-**How to do the bomb lab?**
+##### **How to do the bomb lab?**
 
 (1) It is suggested that we should disassemble the binary file, `bomb`, and analyse the machine code step by step to defuse bombs. There are many phases and one bomb is in each of them. 
 
@@ -490,13 +490,17 @@ unsigned floatPower2(int x) {
 
 ```shell
 >./bomb psol.txt
+# Or in gdb
+(gdb)start < psol.txt 
+# or 
+(gdb)run < psol.txt
 ```
 
 (3) We should learn examine the assembly code of `bomb` step by step  and know how to set breakpoints. 
 
 (4) To know how to inspect registers and memory states can also help us to defuse the bomb. 
 
-**Phase 1**
+##### **Phase 1**
 
 **How to defuse "phase 1"?**
 
@@ -558,4 +562,33 @@ Now we read its assembly code thoroughly and find that `$0x402400` is moved to `
 ```
 
 Great! We have found it. Whereas, we had better not stop but to verify it by analysing the rest of assembly code. 
+
+##### Phase 2 
+
+We conclude that the number of arguments should be 6 after analysing the assemble code in `read_six_numbers(...)` as follows. 
+
+```assembly
+000000000040145c <read_six_numbers>:
+  40145c:	48 83 ec 18          	sub    $0x18,%rsp
+  401460:	48 89 f2             	mov    %rsi,%rdx
+  401463:	48 8d 4e 04          	lea    0x4(%rsi),%rcx
+  401467:	48 8d 46 14          	lea    0x14(%rsi),%rax
+  40146b:	48 89 44 24 08       	mov    %rax,0x8(%rsp)
+  401470:	48 8d 46 10          	lea    0x10(%rsi),%rax
+  401474:	48 89 04 24          	mov    %rax,(%rsp)
+  401478:	4c 8d 4e 0c          	lea    0xc(%rsi),%r9
+  40147c:	4c 8d 46 08          	lea    0x8(%rsi),%r8
+  401480:	be c3 25 40 00       	mov    $0x4025c3,%esi
+  401485:	b8 00 00 00 00       	mov    $0x0,%eax
+  40148a:	e8 61 f7 ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+   # %eax holds the return value of 'sschanf', which indicates how many arguments input
+   # by a user. If it is greater than 5, the program will jump to 0x401499, therefore, it 
+   # skips the following "exlode_bomb".
+  40148f:	83 f8 05             	cmp    $0x5,%eax 
+  401492:	7f 05                	jg     401499 <read_six_numbers+0x3d>
+  401494:	e8 a1 ff ff ff       	callq  40143a <explode_bomb>
+  401499:	48 83 c4 18          	add    $0x18,%rsp
+  40149d:	c3                   	retq   
+
+```
 
