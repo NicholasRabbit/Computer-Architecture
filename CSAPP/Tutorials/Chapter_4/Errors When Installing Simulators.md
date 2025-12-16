@@ -1,6 +1,6 @@
 ### Errors of Installing Y86 Simulators
 
-When run `make` in `.../sim` in CentOS 7, there are some errors occurring. 
+When run `make` in `../sim` in CentOS 7, there are some errors occurring. 
 
 1) `/usr/bin/ld: cannot find -lfl`.
 
