@@ -721,5 +721,7 @@ int srcB=[
 ]
 ```
 
+### Practice Problem 4.22
 
+Note that `cmovXX` is derived from `rrmovl`, therefore, all of the operands are registers. 
 
