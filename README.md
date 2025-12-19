@@ -4,5 +4,5 @@ To begin with, CSAPP(Computer Systems: A Programmer's Perspective) is a highly r
 
 From the first day when I became a software engineer,  how the instruction of a programme is executed by the hardware inside the computer always intrigues me. However,  I have been busy with learning frameworks such as Spring, MyBatis and so forth in the first two years as a developer. Presumably, I don't know how to solve complicated problems due to lack of knowledge on computer architecture, network and operating systems. In order to be a "power programmer", I should make best effort to master fundamentals which have never changed for decades no matter how dramatically hard wares in computer have evolved. Though the book is a weighty tome, it is carefully written so that it is not so difficult to understand.
 
-Unexpectedly, I am not intimidated by assembly code; furthermore, I am able to read assembly code and then defuse the first two bombs in the bomb lab. 
+Unexpectedly, I am not intimidated by assembly code after I unconsciously learn to read it and tackled some practice problems about it in this book; furthermore, I am able to read assembly code and then defuse the first two bombs in the bomb lab. 
 
