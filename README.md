@@ -1,5 +1,8 @@
 # Computer-Architecture
-To begin with, CSAPP(Computer Systems: A Programmer's Perspective) is a highly recommended book for learning fundamentals of computer architecture. In addition, a video course by the authors themselves was released on the CMU(Carnage Melon University) website. It is the truth universally acknowledged that if you want to learn you had better learn from the best. 
+
+To begin with, CSAPP(Computer Systems: A Programmer's Perspective) is a highly recommended book for learning fundamentals of computer architecture. In addition, a video course by the authors themselves was released on the CMU(Carnage Melon University) website. It is the truth universally acknowledged that if you want to learn you had better learn from the best.
 
 From the first day when I became a software engineer,  how the instruction of a programme is executed by the hardware inside the computer always intrigues me. However,  I have been busy with learning frameworks such as Spring, MyBatis and so forth in the first two years as a developer. Presumably, I don't know how to solve complicated problems due to lack of knowledge on computer architecture, network and operating systems. In order to be a "power programmer", I should make best effort to master fundamentals which have never changed for decades no matter how dramatically hard wares in computer have evolved. Though the book is a weighty tome, it is carefully written so that it is not so difficult to understand.
+
+Unexpectedly, I am not intimidated by assembly code; furthermore, I am able to read assembly code and then defuse the first two bombs in the bomb lab. 
 
