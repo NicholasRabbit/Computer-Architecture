@@ -1172,3 +1172,10 @@ Program counter, condition code register, register file, and data memory are sta
 
 State of program counter, condition code register, register file, and data memory are only updated when the next cycle begins. In other words, the updated values have been already generated at the "End of cycle 3", but they have NOT been moved into these state elements until the beginning of cycle 4. (Read the third paragraph in page 414 and the last two paragraphs in page 415.)
 
+#### 4.4  General Principles of Pipelining
+
+##### 4.4.1 Computational Pipelines
+
+(1) Why is the throughput 8.13 GIPS? (Page 427)
+
+The reason is when I1 is in stage C, I2 is in stage B and I3 is in stage A so that there are three different stages of one instruction are performed per 100 + 20 picoseconds. According to the equation of throughput in page 426, the result is 8.13 GIPS. 
