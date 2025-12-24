@@ -8,10 +8,16 @@ TTY is short for teletypewriter. When Y86 simulator is run in TTY mode, it print
 
 ### 2, How to use Y86 simulator?
 
-After installing all the tools, see "Errors When Installing Simulators", we can execute some example object files from `y86-code` as follows. See 3.1 of the "simguide" of CSAPP-2e.
+(1) After installing all the tools, see "Errors When Installing Simulators", we can execute some example object files from `y86-code` as follows. See 3.1 of the "simguide" of CSAPP-2e.
 
 ```shell
 # Note that excute the follwing command in the directory of '/y86-code'.
-Linux > ../seq/ssim -t < asum.yo
+Unix > ../seq/ssim -t < asum.yo
+```
+
+(2) GUI mode is invoked by adding `-g`  in following a command. As an illustration, 
+
+```shell
+Unix > ../pipe/psim -t -g asum.yo # Note that there is no "<" for I/O redirection.  
 ```
 

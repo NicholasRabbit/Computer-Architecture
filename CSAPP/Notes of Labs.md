@@ -515,7 +515,7 @@ unsigned floatPower2(int x) {
 
 Since only the source code of `main` is provided and it is implausible to step into the function `phase_1(input)`, we should disassemble it. 
 
-Note that in x86_64, `%rdi` and `%rsi` are the first and the second argument, respectively. 
+Note that in x86_64, `%rdi` and `%rsi` are the first and the second argument, respectively. See Figure 3.35.
 
 (1) First of all, run `gdb bomb` and set a break point at the function `phase_1(input)`. We input "abc" to test.
 
@@ -648,4 +648,53 @@ Now let use go back the assembly code of `phase_2(...)`.
 ```
 
 **The solution is "1 2 4 8 16 32".**
+
+##### Phase 3
+
+*Tips:* 
+
+1. We assume that the `%eax` holds x; the following instruction is to jump to a target which is at the address of `8*x + 0x402470`. 
+
+   ```assembly
+   400f75:	ff 24 c5 70 24 40 00 	jmpq   *0x402470(,%rax,8)
+   ```
+
+2. 
+
+(1) The segment of code below is abstracted from `phase_3()`.
+
+```assembly
+  400f56:	b8 00 00 00 00       	mov    $0x0,%eax
+  400f5b:	e8 90 fc ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+  400f60:	83 f8 01             	cmp    $0x1,%eax
+  400f63:	7f 05                	jg     400f6a <phase_3+0x27>
+  400f65:	e8 d0 04 00 00       	callq  40143a <explode_bomb>
+```
+
+We can see that in `0x400f60`, `%eax` is compared with 1. Since `%eax` holds the return value of `sscanf()` indicating the number of input, we can deduce that it must be greater than 1. Otherwise, the program will proceed to the next line to call `explode_bomb`. I input "test" in this phase. Apparently, it is not correct. So I stop it to avoid exploding a bomb. 
+
+(2) Subsequently, I write `1 2` in the third line of `psol.txt` instead. 
+
+```assembly
+  400f47:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx
+  400f4c:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx
+# ...
+  400f6a:	83 7c 24 08 07       	cmpl   $0x7,0x8(%rsp)
+  400f6f:	77 3c                	ja     400fad <phase_3+0x6a>
+  400f71:	8b 44 24 08          	mov    0x8(%rsp),%eax
+  400f75:	ff 24 c5 70 24 40 00 	jmpq   *0x402470(,%rax,8)
+  # ...
+  400fad:	e8 88 04 00 00       	callq  40143a <explode_bomb>
+```
+
+Let's keep on defusing, we can see at the beginning of the assembly code of `phase_3()`. The processor loads effective address from `0xc(%rsp)` and `0x8(%rsp)` to `%rcx` and `%rdx`, respectively. They might be the two arguments input by me. To verify that, I enter the following command.
+
+```shell
+(gdb)x/wd ($rsp + 0x8)  # It is 1, which is the first argument.
+(gdb)x/wd ($rsp + 0xc)  # It is 2, which is the second argument. 
+```
+
+Then `0x8($rsp) ` is compared with a constant 7. If it is larger than 7, the program will jump to `0x400fad` where `explode_bomb()` will be called. Obviously, the first argument must be less than or equal to 7. Replace the first one with 7 in `psol.txt`. Now the arguments are 7 and 2. 
+
+
 

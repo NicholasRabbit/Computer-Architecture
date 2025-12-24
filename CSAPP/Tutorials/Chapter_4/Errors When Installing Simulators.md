@@ -2,24 +2,28 @@
 
 When run `make` in `../sim` in CentOS 7, there are some errors occurring. 
 
-1) `/usr/bin/ld: cannot find -lfl`.
+1. **"/usr/bin/ld: cannot find -lfl"**
 
-First of all, if you are in China, replace the default mirrors with domestic ones. See the note of CentOS in my personal note to know how to accomplish it
+   1) Replace default mirrors with domestic ones in China. 
 
-2) Then install `flex`. 
+   First of all, if you are in China, replace the default mirrors with domestic ones. See the note of CentOS in my personal note to know how to accomplish it
 
-```shell
-# 1. Check if flex is installed.
-flex --version.
-# 2. If not, install it.
-yum install flex
-```
+   2) Then install `flex`.  
 
-3) Install `libfl`
+   ```shell
+   # 1. Check if flex is installed.
+   flex --version.
+   # 2. If not, install it.
+   yum install flex
+   ```
 
-```shell
-yum install flex-devel
-```
+   3) Install `libfl`
 
+   ```shell
+   yum install flex-devel
+   ```
 
+   
+
+2. 
 
