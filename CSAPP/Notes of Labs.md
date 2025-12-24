@@ -653,13 +653,24 @@ Now let use go back the assembly code of `phase_2(...)`.
 
 *Tips:* 
 
-1. We assume that the `%eax` holds x; the following instruction is to jump to a target which is at the address of `8*x + 0x402470`. 
+1. We assume that the `%eax` holds x; the following instruction is an indirect jump to a target which is at the address of `8*x + 0x402470`.  If x is 7, the result is `0x402470 + 7*8 = 0x400fa6`.
 
    ```assembly
    400f75:	ff 24 c5 70 24 40 00 	jmpq   *0x402470(,%rax,8)
    ```
 
-2. 
+2. Note that don't input hexadecimal number because the format in `sscanf(...)` is `"%d %d"` which requires decimal number. 
+
+   ```assembly
+   400f51:	be cf 25 40 00       	mov    $0x4025cf,%esi
+   400f56:	b8 00 00 00 00       	mov    $0x0,%eax
+   400f5b:	e8 90 fc ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+   ```
+
+   ```shell
+   (gdb)x/s 0x4025cf
+   0x4025cf:  "%d %d"
+   ```
 
 (1) The segment of code below is abstracted from `phase_3()`.
 
@@ -695,6 +706,41 @@ Let's keep on defusing, we can see at the beginning of the assembly code of `pha
 ```
 
 Then `0x8($rsp) ` is compared with a constant 7. If it is larger than 7, the program will jump to `0x400fad` where `explode_bomb()` will be called. Obviously, the first argument must be less than or equal to 7. Replace the first one with 7 in `psol.txt`. Now the arguments are 7 and 2. 
+
+(3) Indirect jump. 
+
+```assembly
+  400f75:	ff 24 c5 70 24 40 00 	jmpq   *0x402470(,%rax,8)
+  # When the first argument(stored in %rax) is 0, it jumps to the next line: 0x400f7c
+  400f7c:	b8 cf 00 00 00       	mov    $0xcf,%eax
+  400f81:	eb 3b                	jmp    400fbe <phase_3+0x7b>
+  400f83:	b8 c3 02 00 00       	mov    $0x2c3,%eax
+  400f88:	eb 34                	jmp    400fbe <phase_3+0x7b>
+  400f8a:	b8 00 01 00 00       	mov    $0x100,%eax
+  400f8f:	eb 2d                	jmp    400fbe <phase_3+0x7b>
+  400f91:	b8 85 01 00 00       	mov    $0x185,%eax
+  400f96:	eb 26                	jmp    400fbe <phase_3+0x7b>
+  400f98:	b8 ce 00 00 00       	mov    $0xce,%eax
+  400f9d:	eb 1f                	jmp    400fbe <phase_3+0x7b>
+  400f9f:	b8 aa 02 00 00       	mov    $0x2aa,%eax
+  400fa4:	eb 18                	jmp    400fbe <phase_3+0x7b>
+  # When it is 7, the program jump here. 
+  400fa6:	b8 47 01 00 00       	mov    $0x147,%eax
+  400fab:	eb 11                	jmp    400fbe <phase_3+0x7b>
+  400fad:	e8 88 04 00 00       	callq  40143a <explode_bomb>
+  400fb2:	b8 00 00 00 00       	mov    $0x0,%eax
+```
+
+See the first tip of this phase above. `jmpq   *0x402470(,%rax,8)` is an indirect jump. 
+
+```shell
+(gdb) x/wx 0x402470  # Examine the jump target at the address of 0x402470.
+0x402470: 0x00400f7c
+```
+
+The target in the address of `0x402470` is ` 0x400f7c` which is exactly the address of next line. Unfortunately, I made a mistake by adding `0x400f7c + %rax * 8`. In fact, the equation should be `0x402470 + (%rax *8)`.  Apparently, it seems like a switch and the condition is less than or equal to 7. 
+
+When the first argument is 7, the second one is 327. The bomb in phase 3 is defused!
 
 
 
