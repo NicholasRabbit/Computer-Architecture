@@ -701,6 +701,8 @@ We can see that in `0x400f60`, `%eax` is compared with 1. Since `%eax` holds the
 Let's keep on defusing, we can see at the beginning of the assembly code of `phase_3()`. The processor loads effective address from `0xc(%rsp)` and `0x8(%rsp)` to `%rcx` and `%rdx`, respectively. They might be the two arguments input by me. To verify that, I enter the following command.
 
 ```shell
+# Note that the first and the second argument aren't moved to '0x8(%rsp)' and '0xc(%rsp)'
+# until 'sscanf' is called. 
 (gdb)x/wd ($rsp + 0x8)  # It is 1, which is the first argument.
 (gdb)x/wd ($rsp + 0xc)  # It is 2, which is the second argument. 
 ```
@@ -710,6 +712,7 @@ Then `0x8($rsp) ` is compared with a constant 7. If it is larger than 7, the pro
 (3) Indirect jump. 
 
 ```assembly
+  400f71:	8b 44 24 08          	mov    0x8(%rsp),%eax
   400f75:	ff 24 c5 70 24 40 00 	jmpq   *0x402470(,%rax,8)
   # When the first argument(stored in %rax) is 0, it jumps to the next line: 0x400f7c
   400f7c:	b8 cf 00 00 00       	mov    $0xcf,%eax
@@ -731,7 +734,7 @@ Then `0x8($rsp) ` is compared with a constant 7. If it is larger than 7, the pro
   400fb2:	b8 00 00 00 00       	mov    $0x0,%eax
 ```
 
-See the first tip of this phase above. `jmpq   *0x402470(,%rax,8)` is an indirect jump. 
+See the first tip of this phase above. `jmpq  *0x402470(,%rax,8)` is an indirect jump. 
 
 ```shell
 (gdb) x/wx 0x402470  # Examine the jump target at the address of 0x402470.
@@ -742,5 +745,20 @@ The target in the address of `0x402470` is ` 0x400f7c` which is exactly the addr
 
 When the first argument is 7, the second one is 327. The bomb in phase 3 is defused!
 
+Since it is a switch, there are alternative solutions. Let's start with 0. If the first argument is 0, then `0x8(%rsp)` is 0 and `%eax` is 0. Subsequently, `%rax` is 0 so that `jmpq  *0x402470(,%rax,8)` jump to the very next line: `400f7c  mov  $0xcf,%eax `.  0xcf = 207.
 
 
+
+##### Phase 4 
+
+Tips: 
+
+1. In `func4(...)`, the first operand  of `sar %eax`  which is omitted is 1 by default after I verify it. 
+
+   "SAL  k, D" : D $\leftarrow$ D << k.  The default value of k is 1. 
+
+   ```assembly
+     400fdd:	d1 f8           sar  %eax
+   ```
+
+   
