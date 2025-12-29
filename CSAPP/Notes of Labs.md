@@ -761,4 +761,56 @@ Tips:
      400fdd:	d1 f8           sar  %eax
    ```
 
-   
+
+
+
+Analyses:
+
+(1) First of all, the number of arguments is 2. 
+
+```assembly
+   # phase_4(...).
+  40101f:	b8 00 00 00 00       	mov    $0x0,%eax
+  401024:	e8 c7 fb ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+  401029:	83 f8 02             	cmp    $0x2,%eax  # Two arguments
+  40102c:	75 07                	jne    401035 <phase_4+0x29>
+  # ...
+  401035:	e8 00 04 00 00       	callq  40143a <explode_bomb>
+```
+
+(2) The first argument must be less than or equal to 12. 
+
+```assembly
+  # phase_4(...). The first argument is in "0x8(%rsp)"; I have verified that. 
+  40102e:	83 7c 24 08 0e       	cmpl   $0xe,0x8(%rsp)
+  401033:	76 05                	jbe    40103a <phase_4+0x2e>
+  401035:	e8 00 04 00 00       	callq  40143a <explode_bomb>
+```
+
+(3) The return value of `func4(...)` must be 0. Otherwise, the program will jump to `0x401058` to explode the bomb. 
+
+```assembly
+# func4(...)
+  401048:	e8 81 ff ff ff       	callq  400fce <func4>
+  40104d:	85 c0                	test   %eax,%eax
+  40104f:	75 07                	jne    401058 <phase_4+0x4c>  # Jump to explode_bomb
+  401051:	83 7c 24 0c 00       	cmpl   $0x0,0xc(%rsp)
+  401056:	74 05                	je     40105d <phase_4+0x51>
+  401058:	e8 dd 03 00 00       	callq  40143a <explode_bomb>
+```
+
+(3) Although I tried to reverse the assembly code of `func2()` into C, I failed. I input `12 23` at first, the return value of `func4(...)` is not 0. Then I input `0 23` and got 0 as the return value of it. 
+
+I will try to reverse it later. 
+
+(4) The second argument is easy to guess; it is 0, too. 
+
+```assembly
+  401051:	83 7c 24 0c 00       	cmpl   $0x0,0xc(%rsp)  
+  401056:	74 05                	je     40105d <phase_4+0x51>
+  401058:	e8 dd 03 00 00       	callq  40143a <explode_bomb>
+  40105d:	48 83 c4 18          	add    $0x18,%rsp
+  401061:	c3                   	retq   
+```
+
+`1 0` is also correct. 
