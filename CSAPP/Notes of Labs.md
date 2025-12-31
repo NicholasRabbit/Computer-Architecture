@@ -814,3 +814,100 @@ I will try to reverse it later.
 ```
 
 `1 0` is also correct. 
+
+
+
+##### Phase 5 
+
+Here is the assembly code of `phase_5(...)`.
+
+```assembly
+0000000000401062 <phase_5>:
+  401062:	53                   	push   %rbx
+  401063:	48 83 ec 20          	sub    $0x20,%rsp
+  401067:	48 89 fb             	mov    %rdi,%rbx
+  40106a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+  401071:	00 00  # nop
+  401073:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+  401078:	31 c0                	xor    %eax,%eax
+  40107a:	e8 9c 02 00 00       	callq  40131b <string_length>
+  40107f:	83 f8 06             	cmp    $0x6,%eax
+  401082:	74 4e                	je     4010d2 <phase_5+0x70>
+  401084:	e8 b1 03 00 00       	callq  40143a <explode_bomb>
+  401089:	eb 47                	jmp    4010d2 <phase_5+0x70>
+  40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx
+  40108f:	88 0c 24             	mov    %cl,(%rsp)
+  401092:	48 8b 14 24          	mov    (%rsp),%rdx
+  401096:	83 e2 0f             	and    $0xf,%edx
+  401099:	0f b6 92 b0 24 40 00 	movzbl 0x4024b0(%rdx),%edx
+  4010a0:	88 54 04 10          	mov    %dl,0x10(%rsp,%rax,1)
+  4010a4:	48 83 c0 01          	add    $0x1,%rax
+  4010a8:	48 83 f8 06          	cmp    $0x6,%rax
+  4010ac:	75 dd                	jne    40108b <phase_5+0x29>
+  4010ae:	c6 44 24 16 00       	movb   $0x0,0x16(%rsp)
+  4010b3:	be 5e 24 40 00       	mov    $0x40245e,%esi
+  4010b8:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi
+  4010bd:	e8 76 02 00 00       	callq  401338 <strings_not_equal>
+  4010c2:	85 c0                	test   %eax,%eax
+  4010c4:	74 13                	je     4010d9 <phase_5+0x77>
+  4010c6:	e8 6f 03 00 00       	callq  40143a <explode_bomb>
+  4010cb:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+  4010d0:	eb 07                	jmp    4010d9 <phase_5+0x77>
+  4010d2:	b8 00 00 00 00       	mov    $0x0,%eax
+  4010d7:	eb b2                	jmp    40108b <phase_5+0x29>
+  4010d9:	48 8b 44 24 18       	mov    0x18(%rsp),%rax
+  4010de:	64 48 33 04 25 28 00 	xor    %fs:0x28,%rax
+  4010e5:	00 00 
+  4010e7:	74 05                	je     4010ee <phase_5+0x8c>
+  4010e9:	e8 42 fa ff ff       	callq  400b30 <__stack_chk_fail@plt>
+  4010ee:	48 83 c4 20          	add    $0x20,%rsp
+  4010f2:	5b                   	pop    %rbx
+  4010f3:	c3                   	retq   
+```
+
+**Analyses of phase_5** 
+
+1. `%fs:0x28` is used to detect buffer overflow which is caused by malicious hackers. See [stack canary](.\Tutorials\Others\Stack Canary.md).
+
+   Note that `0x20 - 0x18 = 0x8`, but not 2. The following code move `%fs:0x28` to the place just preceded the return value. If a hacker tried to overwrite the return value(conventionally from lower address to higher), he must overwrite `0x18(%rsp)` first. Since the canary value(`%fs:0x28`) is random and changes every time when the program runs, it is difficult to guess and we can detect the overflow caused by a hacker when comparing it with the original content. 
+
+   ```assembly
+     # phase_5()
+     401063:	48 83 ec 20          	sub    $0x20,%rsp
+     401067:	48 89 fb             	mov    %rdi,%rbx
+     40106a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+     401073:	48 89 44 24 18       	mov    %rax,0x18(%rsp)
+     # ...
+     4010d9:	48 8b 44 24 18       	mov    0x18(%rsp),%rax
+     4010de:	64 48 33 04 25 28 00 	xor    %fs:0x28,%rax    # Verify the content.
+     4010e7:	74 05                	je     4010ee <phase_5+0x8c>
+     4010e9:	e8 42 fa ff ff       	callq  400b30 <__stack_chk_fail@plt>
+   ```
+
+   
+
+2. It seems to be an array. 
+
+3. Note that `movzbl (%rbx,%rax,1),%ecx` moves the least significant byte of the value stored at the address of `(%rbx, %rax, 1)`, but not the value of the address. `movzbl` is different from `lea`. The value is as follows.
+
+   ```shell
+   (gdb)x/xw ($rbx + $rax*1)
+   # I input "abcdef" so the integer is 0x64636261(64 63 62 61).
+   0x6038c0 <input_strings+320>:   0x64636261 
+   # Examine 6 characters starting from the address of "($rbx + $rax*1)".
+   (gdb)x/6c 
+   0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
+   ```
+
+   As a result, the content in `$ecx` is `0x61` after this instruction; `0x61` represents `a`, `0x62` represents `b` and so forth. Presumably, it will change when I input other characters. 
+
+   ```assembly
+     # phase_5()
+     40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx 
+     40108f:	88 0c 24             	mov    %cl,(%rsp)
+     401092:	48 8b 14 24          	mov    (%rsp),%rdx
+     401096:	83 e2 0f             	and    $0xf,%edx
+   ```
+   
+   Obviously, `movzbl (%rbx, %rax, 1), %ecx` instructs moving elements input by a user in an array with `%rax` as its index. 
+
