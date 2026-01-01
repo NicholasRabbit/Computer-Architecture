@@ -897,26 +897,26 @@ Here is the assembly code of `phase_5(...)`.
    # N.B.Little endian. Thus, the first byte at `0x6038c0` is 0x61.
    (gdb)x/bx ($rbx + $rax*1) 
    0x6038c0 <input_strings+320>:   0x61 
-   # # When %rax is 0, examine 6 characters starting from the 
-# address of "($rbx + $rax*1)".
+   # When %rax is 0, examine 6 characters starting from the 
+   # address of "($rbx + $rax*1)".
    (gdb)x/6c ($rbx + $rax*1) 
-0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
+   0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
    ```
    
    As a result, the content in `$ecx` is `0x61` after this instruction; `0x61` represents `a`, `0x62` represents `b` and so forth. Presumably, it will change when I input other characters. 
    
    ```assembly
-     # Segment 3 from phase_5()
-     40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx 
-     40108f:	88 0c 24             	mov    %cl,(%rsp) # %cl is the lowest byte of %ecx
-     401092:	48 8b 14 24          	mov    (%rsp),%rdx
-     401096:	83 e2 0f             	and    $0xf,%edx
+   # Segment 3 from phase_5()
+   40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx 
+   40108f:	88 0c 24             	mov    %cl,(%rsp) # %cl is the lowest byte of %ecx
+   401092:	48 8b 14 24          	mov    (%rsp),%rdx
+   401096:	83 e2 0f             	and    $0xf,%edx
    ```
    
    Obviously, `movzbl (%rbx, %rax, 1), %ecx` instructs moving elements of an array input by a user; `%rax` stores its indices.  
    
-   Since I input `abcdef`, the content in `%cl` is `0x61` which is the lowest byte after executing the above instructions. Consequently, `%edx` stores `0x1`.
-   
+   Since I input `abcdef`, the content in `%cl` is `0x61` which is the lowest byte after executing the above instructions. Consequently, `%edx` stores `0x1` after `401096: 83 e2 0f and  $0xf,%edx`.
+
 4. (4.1) After instructions in "Segment 3", `movzbl 0x4024b0(%rdx),%edx` of the below instructions moves the byte stored in `0x4024b0 + 0x1` to `%edx`. 
 
    ```assembly
