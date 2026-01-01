@@ -892,22 +892,99 @@ Here is the assembly code of `phase_5(...)`.
 
    ```shell
    (gdb)x/xw ($rbx + $rax*1)
-   # I input "abcdef" so the integer is 0x64636261(64 63 62 61).
+   # I input "abcdef" so the integer is 0x64636261(64 63 62 61). 
    0x6038c0 <input_strings+320>:   0x64636261 
-   # Examine 6 characters starting from the address of "($rbx + $rax*1)".
-   (gdb)x/6c 
-   0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
+   # N.B.Little endian. Thus, the first byte at `0x6038c0` is 0x61.
+   (gdb)x/bx ($rbx + $rax*1) 
+   0x6038c0 <input_strings+320>:   0x61 
+   # # When %rax is 0, examine 6 characters starting from the 
+# address of "($rbx + $rax*1)".
+   (gdb)x/6c ($rbx + $rax*1) 
+0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
    ```
-
+   
    As a result, the content in `$ecx` is `0x61` after this instruction; `0x61` represents `a`, `0x62` represents `b` and so forth. Presumably, it will change when I input other characters. 
-
+   
    ```assembly
-     # phase_5()
+     # Segment 3 from phase_5()
      40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx 
-     40108f:	88 0c 24             	mov    %cl,(%rsp)
+     40108f:	88 0c 24             	mov    %cl,(%rsp) # %cl is the lowest byte of %ecx
      401092:	48 8b 14 24          	mov    (%rsp),%rdx
      401096:	83 e2 0f             	and    $0xf,%edx
    ```
    
-   Obviously, `movzbl (%rbx, %rax, 1), %ecx` instructs moving elements input by a user in an array with `%rax` as its index. 
+   Obviously, `movzbl (%rbx, %rax, 1), %ecx` instructs moving elements of an array input by a user; `%rax` stores its indices.  
+   
+   Since I input `abcdef`, the content in `%cl` is `0x61` which is the lowest byte after executing the above instructions. Consequently, `%edx` stores `0x1`.
+   
+4. (4.1) After instructions in "Segment 3", `movzbl 0x4024b0(%rdx),%edx` of the below instructions moves the byte stored in `0x4024b0 + 0x1` to `%edx`. 
+
+   ```assembly
+     401099:	0f b6 92 b0 24 40 00 	movzbl 0x4024b0(%rdx),%edx  
+     4010a0:	88 54 04 10          	mov    %dl,0x10(%rsp,%rax,1)
+     4010a4:	48 83 c0 01          	add    $0x1,%rax
+     4010a8:	48 83 f8 06          	cmp    $0x6,%rax
+     4010ac:	75 dd                	jne    40108b <phase_5+0x29>
+   ```
+
+   (4.2) The string stored at the address of `0x4024b0` is as follows:
+
+   ```shell
+   (gdb) x/s 0x4024b0
+   0x4024b0 <array.3449>:  "maduiersnfotvbylSo you think you can stop the bomb with ctrl-c, do you?"
+   ```
+
+   (4.3) Apparently, the character at `0x4024b0 + 0x1` is also `a`. Presumably, it is coincidence because the least significant 4 bits of `0x61(a)` is `0x1`. To verify that, I replace 'a' with '2' in my original answer and now it is `2bcdef`.  Let's start.
+
+   ```shell
+   # Set a break point at 0x401099
+   (gdb)break *0x401099  # Presume the number of this break point is 3.
+   # Rerun after updating the answer. 
+   # "< psol.txt" can be omitted since I have input before. To let my note more readable
+   # I input it again. 
+   (gdb)run < psol.txt 
+   (gdb)until 3
+   ```
+
+   The content in `%edx` is `d` which is exactly the character of `0x4024b0 + 0x2` in `maduiersnfotvbyl...`
+
+   In conclusion, it is evident that the instructions in `phase_5()` selects elements from the string in (4.2) according the **lowest 4 bits of input characters as indices** and moves them to `0x10(%rsp,%rax,1)`(See assembly segment in 4.1). It compares the string stored at `0x10(%rsp)`(when `%rax` stores 0) with the string stored at `$0x40245e`
+
+   ```assembly
+     4010b3:	be 5e 24 40 00       mov    $0x40245e,%esi # The string to compare with. 
+     4010b8:	48 8d 7c 24 10       lea    0x10(%rsp),%rdi 
+     4010bd:	e8 76 02 00 00       callq  401338 <strings_not_equal>
+   ```
+
+   The string at `$0x40245e` is as follows:
+
+   ```shell
+   (gdb) x/s 0x40245e
+   0x40245e:       "flyers"  # Indices are: 9fe567
+   ```
+
+   What we need to do is to find the indices of "flyers" in the string in (4.2). They are `9fe567`. It is easy to input numbers less than 10. How can I input "fe"? It is possible to input characters whose hexadecimal value have suffices of `f` or `e`.  
+
+   ```txt
+   o : 0x6f
+   n : 0x6e
+   ```
+
+   The answer is `9on567`.
+
+   
+
+    
+
+   
+
+   
+
+   
+
+   
+
+   
+
+
 
