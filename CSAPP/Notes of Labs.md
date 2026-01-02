@@ -591,12 +591,13 @@ I conclude that the number of arguments should be 6 after analysing the assemble
   40149d:	c3                   	retq   
 ```
 
-These six arguments are moved to new registers.
+These six arguments are moved to new registers in `read_six_numbers(...)`.
 
 ```assembly
+# read_six_numbers(...)
 # Since in 'phase_2', there is an instruction:
 # 400f02:	48 89 e6     mov %rsp,%rsi
-# ,therefore, %rsi holds the value of the stack pointer %rsp.
+# ,therefore, %rsi holds the value of the stack pointer %rsp of the calling function.
 mov %rsi %rdx   # The first argument.
 lea 0x4(%rsi), %rcx
 lea 0x8(%rsi), %r8
@@ -902,9 +903,9 @@ Here is the assembly code of `phase_5(...)`.
    (gdb)x/6c ($rbx + $rax*1) 
    0x6038c0 <input_strings+320>:   97 'a'  98 'b'  99 'c'  100 'd' 101 'e' 102 'f'
    ```
-   
+
    As a result, the content in `$ecx` is `0x61` after this instruction; `0x61` represents `a`, `0x62` represents `b` and so forth. Presumably, it will change when I input other characters. 
-   
+
    ```assembly
    # Segment 3 from phase_5()
    40108b:	0f b6 0c 03          	movzbl (%rbx,%rax,1),%ecx 
@@ -912,10 +913,12 @@ Here is the assembly code of `phase_5(...)`.
    401092:	48 8b 14 24          	mov    (%rsp),%rdx
    401096:	83 e2 0f             	and    $0xf,%edx
    ```
-   
+
    Obviously, `movzbl (%rbx, %rax, 1), %ecx` instructs moving elements of an array input by a user; `%rax` stores its indices.  
-   
+
    Since I input `abcdef`, the content in `%cl` is `0x61` which is the lowest byte after executing the above instructions. Consequently, `%edx` stores `0x1` after `401096: 83 e2 0f and  $0xf,%edx`.
+
+   
 
 4. (4.1) After instructions in "Segment 3", `movzbl 0x4024b0(%rdx),%edx` of the below instructions moves the byte stored in `0x4024b0 + 0x1` to `%edx`. 
 
@@ -948,7 +951,7 @@ Here is the assembly code of `phase_5(...)`.
 
    The content in `%edx` is `d` which is exactly the character of `0x4024b0 + 0x2` in `maduiersnfotvbyl...`
 
-   In conclusion, it is evident that the instructions in `phase_5()` selects elements from the string in (4.2) according the **lowest 4 bits of input characters as indices** and moves them to `0x10(%rsp,%rax,1)`(See assembly segment in 4.1). It compares the string stored at `0x10(%rsp)`(when `%rax` stores 0) with the string stored at `$0x40245e`
+   In conclusion, it is evident that the instructions in `phase_5()` selects elements from the string in (4.2) with the **lowest 4 bits of input characters as indices** and moves them to `0x10(%rsp,%rax,1)`(See assembly segment in 4.1). It compares the string stored at `0x10(%rsp)`(when `%rax` stores 0) with the string stored at `$0x40245e`
 
    ```assembly
      4010b3:	be 5e 24 40 00       mov    $0x40245e,%esi # The string to compare with. 
@@ -963,7 +966,7 @@ Here is the assembly code of `phase_5(...)`.
    0x40245e:       "flyers"  # Indices are: 9fe567
    ```
 
-   What we need to do is to find the indices of "flyers" in the string in (4.2). They are `9fe567`. It is easy to input numbers less than 10. How can I input "fe"? It is possible to input characters whose hexadecimal value have suffices of `f` or `e`.  
+   What we need to do is to find the indices of "flyers" in the string in (4.2). They are `9fe567`. It is easy to input numbers less than 10. How can I input "fe"? It is possible to input characters of which the suffices of the hexadecimal number is  `f` or `e`.  
 
    ```txt
    o : 0x6f
@@ -972,19 +975,25 @@ Here is the assembly code of `phase_5(...)`.
 
    The answer is `9on567`. Great !
 
+##### Phase 6 
+
+1. After giving the first glance of the assembly code of `phase_6`, I concluded that the answer are six numbers. Hence, I input `1 2 3 4 6` to test. 
+
+   ```assembly
+     4010fc:	48 83 ec 50          	sub    $0x50,%rsp
+     401100:	49 89 e5             	mov    %rsp,%r13
+     401103:	48 89 e6             	mov    %rsp,%rsi
+     401106:	e8 51 03 00 00       	callq  40145c <read_six_numbers> # Six numbers.
+     40110b:	49 89 e6             	mov    %rsp,%r14
+   ```
+
+   Obviously and conventionally, the first argument is stored on the top of the current stack dereferenced by the stack pointer `%rsp`. To verify that, I enter a command as follows:
+
+   ```shell
+   (gdb)x/w $rsp  
+   0x7fffffffe0a0: 0x00000001  # It is 1. 
+   (gdb)x/w ($rsp + 0x4)
+   0x7fffffffe0a4: 0x00000002  # It is 2, of course. 
+   ```
+
    
-
-    
-
-   
-
-   
-
-   
-
-   
-
-   
-
-
-
