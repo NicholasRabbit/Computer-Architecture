@@ -963,10 +963,10 @@ Here is the assembly code of `phase_5(...)`.
 
    ```shell
    (gdb) x/s 0x40245e
-   0x40245e:       "flyers"  # Indices are: 9fe567
+   0x40245e:       "flyers"  # Indices of this word are: 9fe567
    ```
 
-   What we need to do is to find the indices of "flyers" in the string in (4.2). They are `9fe567`. It is easy to input numbers less than 10. How can I input "fe"? It is possible to input characters of which the suffices of the hexadecimal number is  `f` or `e`.  
+   What we need to do is to find the indices of "flyers" in the string in (4.2). They are `9fe567`. It is easy to input numbers less than 10. How can I input "fe"? It is possible to input characters of which the suffix of the hexadecimal number is  `f` or `e`.  
 
    ```txt
    o : 0x6f
@@ -977,23 +977,70 @@ Here is the assembly code of `phase_5(...)`.
 
 ##### Phase 6 
 
-1. After giving the first glance of the assembly code of `phase_6`, I concluded that the answer are six numbers. Hence, I input `1 2 3 4 6` to test. 
+1. After giving the first glance of the assembly code of `phase_6`, I concluded that the answer are six numbers. Hence, I input `1 2 3 4 5 6` to test. 
 
    ```assembly
      4010fc:	48 83 ec 50          	sub    $0x50,%rsp
+     # %r13 also deference to the first element of the input array. 
      401100:	49 89 e5             	mov    %rsp,%r13
      401103:	48 89 e6             	mov    %rsp,%rsi
      401106:	e8 51 03 00 00       	callq  40145c <read_six_numbers> # Six numbers.
      40110b:	49 89 e6             	mov    %rsp,%r14
    ```
-
+   
    Obviously and conventionally, the first argument is stored on the top of the current stack dereferenced by the stack pointer `%rsp`. To verify that, I enter a command as follows:
-
-   ```shell
+   
+      ```shell
    (gdb)x/w $rsp  
    0x7fffffffe0a0: 0x00000001  # It is 1. 
    (gdb)x/w ($rsp + 0x4)
    0x7fffffffe0a4: 0x00000002  # It is 2, of course. 
+   # Show 6 numbers starting at (%rsp).
+   (gdb)x/6wd $rsp
+      ```
+2. Keep on reading the segment of assembly code following `0x40110b`. 
+
+   ```assembly
+     40110b:	49 89 e6             	mov    %rsp,%r14
+     40110e:	41 bc 00 00 00 00    	mov    $0x0,%r12d
+      # (1) The value in %eax must be less than or equal to 5
+      #  after "40111b: sub $0x1,%eax"
+     401114:	4c 89 ed             	mov    %r13,%rbp
+     401117:	41 8b 45 00          	mov    0x0(%r13),%eax
+     40111b:	83 e8 01             	sub    $0x1,%eax
+     40111e:	83 f8 05             	cmp    $0x5,%eax
+     401121:	76 05                	jbe    401128 <phase_6+0x34>
+     401123:	e8 12 03 00 00       	callq  40143a <explode_bomb>
+     # %r12d is incremented by 1. 
+     401128:	41 83 c4 01          	add    $0x1,%r12d
+     # If "%r12d" is NOT equal to 6(or < 6), instructions started at 0x401132 
+     # will be executed.
+     40112c:	41 83 fc 06          	cmp    $0x6,%r12d
+     401130:	74 21                	je     401153 <phase_6+0x5f>
+     401132:	44 89 e3             	mov    %r12d,%ebx
+     
+     # An inner loop starts from here. 
+     401135:	48 63 c3             	movslq %ebx,%rax
+     401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax
+     40113b:	39 45 00             	cmp    %eax,0x0(%rbp)
+     40113e:	75 05                	jne    401145 <phase_6+0x51>
+     401140:	e8 f5 02 00 00       	callq  40143a <explode_bomb>
+     # The value in %ebx is from %r12d, so %r12d is compared with 5 after being added 1. 
+     401145:	83 c3 01             	add    $0x1,%ebx
+     401148:	83 fb 05             	cmp    $0x5,%ebx
+  # The inner loop ends here.
+     40114b:	7e e8                	jle    401135 <phase_6+0x41> 
+  
+     40114d:	49 83 c5 04          	add    $0x4,%r13
+  401151:	eb c1                	jmp    401114 <phase_6+0x20>
    ```
 
+   (1) Starting from `0x401114: mov %r13,%rbp` to `0x401121 jbe 401128` , we can infer that any elements in the array must observe the unsigned inequation `arr[i] - 1 <= 5` or the bomb will be detonated. 
    
+   (2) We can deduce that `%r12d` is used as the indices of the input array, 6 numbers, since it is initialised as 0 at `0x40110e` and is equal to 6 at `0x40112c`. If `%r12d` is NOT equal to 6(namely less than 6 since it is incremented by 1 from 0), the program will jump to `0x401153`, or it will execute the following instructions starting from `0x401132`. 
+   
+   (3) From `0x401132` to `0x40113b`, we can infer that `%r12d` is moved to `%ebx` and then to `%rax` as an index to fetch the element to be compared with the one dereferenced  by `%rbp` ; the content in `%rbp` is moved from `0x 401117: mov  %r13,%rbp`. Note that `%r13` will be incremented by 4 at `0x40114d: $0x4,%r13` next time. 
+   
+   (4) Let's delve into the instructions from `0x401135` to `0x40114b`. 
+   
+   It is obvious that these instructions compare the current element to the next one and they should not be equivalent to each other so the bomb won't be detonated. 
