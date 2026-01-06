@@ -998,6 +998,7 @@ Here is the assembly code of `phase_5(...)`.
    # Show 6 numbers starting at (%rsp).
    (gdb)x/6wd $rsp
       ```
+   
 2. Keep on reading the segment of assembly code following `0x40110b`. 
 
    ```assembly
@@ -1028,16 +1029,15 @@ Here is the assembly code of `phase_5(...)`.
      # The value in %ebx is from %r12d, so %r12d is compared with 5 after being added 1. 
      401145:	83 c3 01             	add    $0x1,%ebx
      401148:	83 fb 05             	cmp    $0x5,%ebx
-  # The inner loop ends here.
+     # The inner loop ends here.
      40114b:	7e e8                	jle    401135 <phase_6+0x41> 
-  
      40114d:	49 83 c5 04          	add    $0x4,%r13
-  401151:	eb c1                	jmp    401114 <phase_6+0x20>
+     401151:	eb c1                	jmp    401114 <phase_6+0x20>
    ```
-
-   (1) Starting from `0x401114: mov %r13,%rbp` to `0x401121 jbe 401128` , we can infer that any elements in the array must observe the unsigned inequation `arr[i] - 1 <= 5` or the bomb will be detonated. 
    
-   (2) We can deduce that `%r12d` is used as the indices of the input array, 6 numbers, since it is initialised as 0 at `0x40110e` and is equal to 6 at `0x40112c`. If `%r12d` is NOT equal to 6(namely less than 6 since it is incremented by 1 from 0), the program will jump to `0x401153`, or it will execute the following instructions starting from `0x401132`. 
+    (1) Starting from `0x401114: mov %r13,%rbp` to `0x401121 jbe 401128` , we can infer that any elements in the array must observe the unsigned inequation `arr[i] - 1 <= 5` or the bomb will be detonated. 
+   
+    (2) We can deduce that `%r12d` is used as the indices of the input array, 6 numbers, since it is initialised as 0 at `0x40110e` and is equal to 6 at `0x40112c`. If `%r12d` is NOT equal to 6(namely less than 6 since it is incremented by 1 from 0), the program will jump to `0x401153`, or it will execute the following instructions starting from `0x401132`. 
    
    (3) From `0x401132` to `0x40113b`, we can infer that `%r12d` is moved to `%ebx` and then to `%rax` as an index to fetch the element to be compared with the one dereferenced  by `%rbp` ; the content in `%rbp` is moved from `0x 401117: mov  %r13,%rbp`. Note that `%r13` will be incremented by 4 at `0x40114d: $0x4,%r13` next time. 
    

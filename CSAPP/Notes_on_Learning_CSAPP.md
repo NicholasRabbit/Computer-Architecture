@@ -693,7 +693,7 @@ The `leave` is equivalent to the following two instructions:
 ```assembly
 # %ebp now points the the bottom of currentstack, namely the called fuction.
 # This instruciton is to set the stack pointer %esp to the bottom of the current stack
-movel %ebp,%esp
+movl %ebp,%esp
 # "popl" always move the top value of the stack. %esp points to the top all the time.
 # Because %esp is at the bottom now, "popl %ebp" will move the value "old %ebp" 
 # which is %ebp of caller's to the register %ebp. The aim is to restore the stack pointer 
