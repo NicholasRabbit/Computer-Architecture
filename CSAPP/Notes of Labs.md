@@ -988,7 +988,7 @@ Here is the assembly code of `phase_5(...)`.
      40110b:	49 89 e6             	mov    %rsp,%r14
    ```
    
-   Obviously and conventionally, the first argument is stored on the top of the current stack dereferenced by the stack pointer `%rsp`. To verify that, I enter a command as follows:
+   Obviously and conventionally, the first argument is stored on the top of the current stack dereferenced by the stack pointer `%rsp`. To verify that, I enter some commands as follows:
    
       ```shell
    (gdb)x/w $rsp  
@@ -1031,16 +1031,92 @@ Here is the assembly code of `phase_5(...)`.
      401148:	83 fb 05             	cmp    $0x5,%ebx
      # The inner loop ends here.
      40114b:	7e e8                	jle    401135 <phase_6+0x41> 
+     
      40114d:	49 83 c5 04          	add    $0x4,%r13
      401151:	eb c1                	jmp    401114 <phase_6+0x20>
+     401153:	48 8d 74 24 18       	lea    0x18(%rsp),%rsi
    ```
    
-    (1) Starting from `0x401114: mov %r13,%rbp` to `0x401121 jbe 401128` , we can infer that any elements in the array must observe the unsigned inequation `arr[i] - 1 <= 5` or the bomb will be detonated. 
+    (1) Starting from `0x401114: mov %r13,%rbp` to `0x401121 jbe 401128` , we can infer that any elements in the array must observe the unsigned(`jbe`) inequation `arr[i] - 1 <= 5` or the bomb will be detonated. 
    
-    (2) We can deduce that `%r12d` is used as the indices of the input array, 6 numbers, since it is initialised as 0 at `0x40110e` and is equal to 6 at `0x40112c`. If `%r12d` is NOT equal to 6(namely less than 6 since it is incremented by 1 from 0), the program will jump to `0x401153`, or it will execute the following instructions starting from `0x401132`. 
+    (2) We can deduce that `%r12d` is used as the indices of the input array, 6 numbers, since it is initialised as 0 at `0x40110e` and is compared with 6 at `0x40112c`. If `%r12d` is NOT equal to 6(namely less than 6 since it is incremented by 1 from 0), the program will jump to `0x401153`, or it will execute the following instructions starting from `0x401132`. 
    
    (3) From `0x401132` to `0x40113b`, we can infer that `%r12d` is moved to `%ebx` and then to `%rax` as an index to fetch the element to be compared with the one dereferenced  by `%rbp` ; the content in `%rbp` is moved from `0x 401117: mov  %r13,%rbp`. Note that `%r13` will be incremented by 4 at `0x40114d: $0x4,%r13` next time. 
    
    (4) Let's delve into the instructions from `0x401135` to `0x40114b`. 
    
    It is obvious that these instructions compare the current element to the next one and they should not be equivalent to each other so the bomb won't be detonated. 
+   
+   N.B. There are 6 distinct numbers or the bomb will detonated. 
+   
+3. Since these six numbers hasn't detonated the bomb yet, let's keep on debugging. Set a break point at `0x401153`. 
+
+   ```assembly
+     # The program jumps here from 0x401130
+     # (gdb)break *0x401153 
+     401153:	48 8d 74 24 18       	lea    0x18(%rsp),%rsi 
+     401158:	4c 89 f0             	mov    %r14,%rax
+     40115b:	b9 07 00 00 00       	mov    $0x7,%ecx
+     401160:	89 ca                	mov    %ecx,%edx
+     # 7 - 1 and then 7 - 2...
+     401162:	2b 10                	sub    (%rax),%edx
+     401164:	89 10                	mov    %edx,(%rax)
+     401166:	48 83 c0 04          	add    $0x4,%rax
+     # %rsi stores the address as same as in 0x18(%rsp), See 0x401153.
+     # %rax is approaching 0x18(%rsp) by incrementing 0x4 everytime. 
+     40116a:	48 39 f0             	cmp    %rsi,%rax
+     40116d:	75 f1                	jne    401160 <phase_6+0x6c>
+  40116f:	be 00 00 00 00       	mov    $0x0,%esi
+   ```
+
+   (1) The content of current stack is as follows before the above instructions are executed. 
+   
+   ```txt
+   0x14(%rsp) 6
+   ...
+   0x4(%rsp)  2
+0x0(%rsp)  1
+   ```
+
+   The value of the stack deferenced by`0x18(%rsp)` is 0.
+
+   (2) As we know, `%r14` stores the same address of `%rsp` so that the first number (1 , namely arr[0] at`(%rsp)` is replaced by `7-1` and then 2 is replaced by `7-2` and so forth after these instructions from `0x401162` to `0x401166` are executed. 
+
+   (3) The address in `%rax`, which is from `%r14`, is incremented by 4 every loop and is compared with `%rsi`, which is load the address form`0x18(%rsp)`.
+
+   (4) Finally, the array becomes `{6, 5, 4, 3, 2, 1}` from `(%rsp)`  up to `0x14(%rsp)`.
+   
+4. Let's keep on analysing the following instructions from `0x40116f` to `0x4011a9`. 
+
+   ```assembly
+     40116f:	be 00 00 00 00       	mov    $0x0,%esi
+     401174:	eb 21                	jmp    401197 <phase_6+0xa3>
+     
+     401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx # An indirect move. 
+     40117a:	83 c0 01             	add    $0x1,%eax
+     40117d:	39 c8                	cmp    %ecx,%eax
+     40117f:	75 f5                	jne    401176 <phase_6+0x82>
+     401181:	eb 05                	jmp    401188 <phase_6+0x94>
+     401183:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+     401188:	48 89 54 74 20       	mov    %rdx,0x20(%rsp,%rsi,2)
+     40118d:	48 83 c6 04          	add    $0x4,%rsi
+     401191:	48 83 fe 18          	cmp    $0x18,%rsi
+     401195:	74 14                	je     4011ab <phase_6+0xb7>
+     401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx
+     40119a:	83 f9 01             	cmp    $0x1,%ecx
+     40119d:	7e e4                	jle    401183 <phase_6+0x8f>
+     40119f:	b8 01 00 00 00       	mov    $0x1,%eax
+     4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+     4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
+   ```
+
+   (1) Note that at `0x401176: mov 0x8(%rdx),%rdx` it is an indirect move. As an illustration, if the content of `%rax ` is `0x6032d0` after an instruction at`0x401183 mov $0x6032d0,%edx`, the value of `%edx` is `0x6032d8` for `0x8(%rdx)`. 
+
+   ```shell
+   (gdb)x/xw 0x6032d0
+   0x6032d0 <node1>:       0x0000014c  # 332
+   (gdb)x/xw 0x6032d8
+   0x6032d8 <node1+8>:     0x006032e0
+   ```
+
+   Don't add 8 to `0x6032d0` and move it to `%rdx` directly!
