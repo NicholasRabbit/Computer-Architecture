@@ -1066,7 +1066,7 @@ Here is the assembly code of `phase_5(...)`.
      # %rax is approaching 0x18(%rsp) by incrementing 0x4 everytime. 
      40116a:	48 39 f0             	cmp    %rsi,%rax
      40116d:	75 f1                	jne    401160 <phase_6+0x6c>
-  40116f:	be 00 00 00 00       	mov    $0x0,%esi
+    40116f:	be 00 00 00 00       	mov    $0x0,%esi
    ```
 
    (1) The content of current stack is as follows before the above instructions are executed. 
@@ -1094,6 +1094,7 @@ Here is the assembly code of `phase_5(...)`.
      
      401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx # An indirect move. 
      40117a:	83 c0 01             	add    $0x1,%eax
+     #Recall that `cmp` only update condition codes without altering any other registers.
      40117d:	39 c8                	cmp    %ecx,%eax
      40117f:	75 f5                	jne    401176 <phase_6+0x82>
      401181:	eb 05                	jmp    401188 <phase_6+0x94>
@@ -1109,14 +1110,57 @@ Here is the assembly code of `phase_5(...)`.
      4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
      4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
    ```
-
-   (1) Note that at `0x401176: mov 0x8(%rdx),%rdx` it is an indirect move. As an illustration, if the content of `%rax ` is `0x6032d0` after an instruction at`0x401183 mov $0x6032d0,%edx`, the value of `%edx` is `0x6032d8` for `0x8(%rdx)`. 
-
+   
+   (1) Note that at `0x401176: mov 0x8(%rdx),%rdx` it is an indirect move. As an illustration, if the content of `%rax ` is `0x6032d0` after executing the instruction at`0x401183 mov $0x6032d0,%edx`, the value of `%edx` is `0x6032d8` for `0x8(%rdx)`. The it moves the content at the address of  `0x6032d8`  to `%rdx`.
+   
    ```shell
    (gdb)x/xw 0x6032d0
-   0x6032d0 <node1>:       0x0000014c  # 332
+   0x6032d0 <node1>:       0x0000014c  # 0x14c = 332
    (gdb)x/xw 0x6032d8
    0x6032d8 <node1+8>:     0x006032e0
    ```
-
+   
    Don't add 8 to `0x6032d0` and move it to `%rdx` directly!
+   
+   (2) Let' track the flow of instructions starting at `0x40116f`. These following instructions follow the sequence of the process rather than the address of memory. 
+   
+   ```assembly
+   # Initilise %esi to 0 and jump unconditionaly to 0x401197
+   40116f:	be 00 00 00 00       	mov    $0x0,%esi
+   401174:	eb 21                	jmp    401197 <phase_6+0xa3>
+   ```
+   
+   After that, the program executes from `0x401197`.
+   
+   ```assembly
+   401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx
+   40119a:	83 f9 01             	cmp    $0x1,%ecx
+   40119d:	7e e4                	jle    401183 <phase_6+0x8f>
+   40119f:	b8 01 00 00 00       	mov    $0x1,%eax
+   4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+   4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
+   ```
+   
+   
+   
+5. Let's keep on analysing the following instructions.
+
+   ```assembly
+     # It moves `0x603320` to %rbx.
+     4011ab:	48 8b 5c 24 20       	mov    0x20(%rsp),%rbx
+     # Note that it is "lea" not "mov" so it moves the address directly to %rax.
+     4011b0:	48 8d 44 24 28       	lea    0x28(%rsp),%rax
+     4011b5:	48 8d 74 24 50       	lea    0x50(%rsp),%rsi
+     4011ba:	48 89 d9             	mov    %rbx,%rcx
+     4011bd:	48 8b 10             	mov    (%rax),%rdx
+     4011c0:	48 89 51 08          	mov    %rdx,0x8(%rcx)
+     4011c4:	48 83 c0 08          	add    $0x8,%rax
+     4011c8:	48 39 f0             	cmp    %rsi,%rax
+     4011cb:	74 05                	je     4011d2 <phase_6+0xde>
+     4011cd:	48 89 d1             	mov    %rdx,%rcx
+     4011d0:	eb eb                	jmp    4011bd <phase_6+0xc9>
+   ```
+
+   
+
+   
