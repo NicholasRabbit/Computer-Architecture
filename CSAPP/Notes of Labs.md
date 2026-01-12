@@ -1066,7 +1066,7 @@ Here is the assembly code of `phase_5(...)`.
      # %rax is approaching 0x18(%rsp) by incrementing 0x4 everytime. 
      40116a:	48 39 f0             	cmp    %rsi,%rax
      40116d:	75 f1                	jne    401160 <phase_6+0x6c>
-    40116f:	be 00 00 00 00       	mov    $0x0,%esi
+     40116f:	be 00 00 00 00       	mov    $0x0,%esi
    ```
 
    (1) The content of current stack is as follows before the above instructions are executed. 
@@ -1078,13 +1078,19 @@ Here is the assembly code of `phase_5(...)`.
 0x0(%rsp)  1
    ```
 
-   The value of the stack deferenced by`0x18(%rsp)` is 0.
+   The value of the stack dereferenced by`0x18(%rsp)` is 0.
 
    (2) As we know, `%r14` stores the same address of `%rsp` so that the first number (1 , namely arr[0] at`(%rsp)` is replaced by `7-1` and then 2 is replaced by `7-2` and so forth after these instructions from `0x401162` to `0x401166` are executed. 
 
    (3) The address in `%rax`, which is from `%r14`, is incremented by 4 every loop and is compared with `%rsi`, which is load the address form`0x18(%rsp)`.
 
    (4) Finally, the array becomes `{6, 5, 4, 3, 2, 1}` from `(%rsp)`  up to `0x14(%rsp)`.
+   
+   ```shell
+   (gdb)x/6wd $rsp
+   0x7fffffffe0a0: 6       5       4       3
+   0x7fffffffe0b0: 2       1
+   ```
    
 4. Let's keep on analysing the following instructions from `0x40116f` to `0x4011a9`. 
 
@@ -1125,7 +1131,7 @@ Here is the assembly code of `phase_5(...)`.
    (2) Let' track the flow of instructions starting at `0x40116f`. These following instructions follow the sequence of the process rather than the address of memory. 
    
    ```assembly
-   # Initilise %esi to 0 and jump unconditionaly to 0x401197
+   #(2.1). Initialise "%esi" with 0 and unditionally jump to "0x401197"
    40116f:	be 00 00 00 00       	mov    $0x0,%esi
    401174:	eb 21                	jmp    401197 <phase_6+0xa3>
    ```
@@ -1133,27 +1139,70 @@ Here is the assembly code of `phase_5(...)`.
    After that, the program executes from `0x401197`.
    
    ```assembly
+   # (2.2) Recall that "%rsi(%esi)" is 0 now, therefore, this instruction moves 
+   # the ($rsp + 0*1),6, to "%ecx".
    401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx
+   # (2.3) compare 6 with 1: 6 - 1. 
+   # N.B. Only condtinal codes are updated and no registers are altered by "cmp". 
+   # "%ecx" is still 6. 
    40119a:	83 f9 01             	cmp    $0x1,%ecx
+   # (2.4) Since 6 is not less than or equal to 1, it won't jump to 0x401183.
    40119d:	7e e4                	jle    401183 <phase_6+0x8f>
+   # (2.5) It moves an immidiate 1 to "$eax" and "0x6032d0" to "%edx". 
    40119f:	b8 01 00 00 00       	mov    $0x1,%eax
    4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+   # (2.6) Unconditionally jump to "0x401176".
    4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
    ```
    
+   From `0x401176`
    
+   ```assembly
+   # (2.7) Copy the data at the address of (0x8 + 0x6032d0) to "%rdx". See (2.5).
+   # The data is "0x006032e0". 
+   401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx # An indirect move. 
+   # (2.8) Increment "%eax" by 1. Compare it with "%ecx" which is now 6. When they are
+   # equivalent to each other, "%rdx" is 0x603320.
+   # Don's add (0x8*5) + 0x6032d0 directly when it increments 1 to 6. The instructions
+   # alternates between dereference and arithmetic. 
+   40117a:	83 c0 01             	add    $0x1,%eax
+   40117d:	39 c8                	cmp    %ecx,%eax
+   40117f:	75 f5                	jne    401176 <phase_6+0x82>
    
-5. Let's keep on analysing the following instructions.
+   401181:	eb 05                	jmp    401188 <phase_6+0x94>
+   401183:	ba d0 32 60 00       	mov    $0x6032d0,%edx
+   
+   401188:	48 89 54 74 20       	mov    %rdx,0x20(%rsp,%rsi,2) # The sacle is 2, not 1.
+   40118d:	48 83 c6 04          	add    $0x4,%rsi
+   401191:	48 83 fe 18          	cmp    $0x18,%rsi
+   401195:	74 14                	je     4011ab <phase_6+0xb7>
+   ```
+   
+   ```shell
+   # Examine the content at 0x6032d8
+   (gdb)x/wx (0x6032d0 + 0x8)
+   0x6032d8 <node1+8>:     0x006032e0
+   ```
+   
+   The state of memory has been as shown in [state of memeory](.\labs\labs_of_CSAPP3e\2_Bomb_Lab\bomb/stack frame of phase 6 of bomb.xlsx) by now. 
+   
+5. Now comes the hardest part of the phase 6. Let's keep on analysing the following instructions. 
 
    ```assembly
-     # It moves `0x603320` to %rbx.
+     # (1) It moves `0x603320`(when the first element is 6) to %rbx.
      4011ab:	48 8b 5c 24 20       	mov    0x20(%rsp),%rbx
-     # Note that it is "lea" not "mov" so it moves the address directly to %rax.
+     # Note that it is "lea" not "mov" so it copies the address directly to %rax.
      4011b0:	48 8d 44 24 28       	lea    0x28(%rsp),%rax
+     # It should not exceed 0x50(%rsp). 
      4011b5:	48 8d 74 24 50       	lea    0x50(%rsp),%rsi
+     # (2) Copy 0x603320 to "%rcx".
      4011ba:	48 89 d9             	mov    %rbx,%rcx
+     # Indirectly move (%rax), 0x603310, to "%rdx" 
+     # and then move it to 0x8(%rcx), which is also an indirect movement. 
      4011bd:	48 8b 10             	mov    (%rax),%rdx
      4011c0:	48 89 51 08          	mov    %rdx,0x8(%rcx)
+     
+     # Add 0x8 to 0x28(%rsp). It is 0x30(%rsp).
      4011c4:	48 83 c0 08          	add    $0x8,%rax
      4011c8:	48 39 f0             	cmp    %rsi,%rax
      4011cb:	74 05                	je     4011d2 <phase_6+0xde>
@@ -1161,6 +1210,24 @@ Here is the assembly code of `phase_5(...)`.
      4011d0:	eb eb                	jmp    4011bd <phase_6+0xc9>
    ```
 
-   
+6. The last part of the instructions. 
+
+   ```assembly
+     4011d2:	48 c7 42 08 00 00 00 	movq   $0x0,0x8(%rdx)
+     4011da:	bd 05 00 00 00       	mov    $0x5,%ebp
+     4011df:	48 8b 43 08          	mov    0x8(%rbx),%rax
+     4011e3:	8b 00                	mov    (%rax),%eax
+     4011e5:	39 03                	cmp    %eax,(%rbx)
+     4011e7:	7d 05                	jge    4011ee <phase_6+0xfa>
+     4011e9:	e8 4c 02 00 00       	callq  40143a <explode_bomb>
+     4011ee:	48 8b 5b 08          	mov    0x8(%rbx),%rbx
+     4011f2:	83 ed 01             	sub    $0x1,%ebp
+     4011f5:	75 e8                	jne    4011df <phase_6+0xeb>
+     4011f7:	48 83 c4 50          	add    $0x50,%rsp
+   ```
+
+   In the final stage, the instruction (`4011c8: cmp %rsi,%rax`) compares `%rsi(477), %rax(443)` which are the second to the last and the last one; whereas, `443-477 = -34` is less than 0, the bomb will be detonated. 
+
+   Thus, I guess that these numbers are increase from `0x6032d0 ` to `0x603320`. Since the array is `{6, 5, 4, 3, 2, 1} ` which corresponds `{332, 168, 924, 691, 477, 443}`, respectively, I should adjust the array to `{3, 4, 5, 6, 1, 2}` which is generated from `7 - {1, 2, 3, 4, 5, 6}(the original input)`. Subsequently, the original array should be adjusted to `{4,3,2,1,6,5}`. Oh! It is such a complicated bomb. 
 
    
