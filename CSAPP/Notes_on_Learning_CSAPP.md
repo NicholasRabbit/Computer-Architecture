@@ -1027,11 +1027,11 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 ![1763428539504](note-images/1763428539504.png)
 
-(1) A register identifier is set into `srcA` or `srcB`(See Figure 4.4 in page 374) so CPU(processor) knows which value of a register to output. As an illustration, when `srcA` is set to 1(which represents `%ecx`), the register file will read the value in it and output the content in `%ecx` as `valA`. Typically, there are two operands in an instruction of machine-level programming language, such as `movl %ecx, %eax`, so there are two input register identifiers: `srcA` and `srcB`. An operating system instructs register files when an instruction is executed for the next instruction of a program. 
+(1) A register identifier is set into `srcA` or `srcB`(See Figure 4.4 in page 374) so CPU(processor) knows which value of a register is to output. As an illustration, when `srcA` is set to 1(which represents `%ecx`), the register file will read the value in it and output the content in `%ecx` as `valA`. Typically, there are two operands in an instruction of machine-level programming language, such as `movl %ecx, %eax`, so there are two input register identifiers: `srcA` and `srcB`. An operating system instructs register files when an instruction is executed for the next instruction of a program. 
 
-(2) It is the same with `dstW` and `valW`. CPU will access the register file with a register identifier in `dstW` and the value to write into this register in `valW`. To illustrate, when `subl $0x8, %esp` is executed, `dstW` is set to 4 and `valW` is set to `0x8`. Eventually, when the *clock* rises, the value in `%esp` will be updated.
+(2) It is the same with `dstW` and `valW`. CPU will access the register file with a register identifier in `dstW` and the value to write into this register in `valW`. To illustrate, when `subl $0x8, %esp` is executed, `dstW` is set to 4(represents `%esp`) and `valW` is set to `0x8`. Eventually, when the *clock* rises, the value in `%esp` will be updated.
 
-(3) Attention should be paid is that writing and reading can happen simultaneously, when CPU is reading a register which is being written, the value it gets will changed with a slightly delay. 
+(3) Attention should be paid is that writing and reading can happen simultaneously, when CPU is reading and writing the same register it can see slightly transition from the old value to the new one. 
 
 **There is a random-access memory for storing program data.**
 
@@ -1041,7 +1041,7 @@ The register file is one type of random-access memory(RAM), but it is in a CPU. 
 
 (2) Writing in "Data memory" is as same as operation in register files. First of all, the "clock" is set to 1 and the value at the "address" will be updated to that in "data in".
 
-(3) "Date memory" is in so-called "memory", namely a piece of physical bar of memory.
+(3) "Data memory" is in so-called "memory", namely a piece of physical bar of memory.
 
 #### 4.3 Sequential Y86 Implementations
 
@@ -1113,7 +1113,7 @@ In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte v
 2. The order of two instructions in Write back stage of `popl rA` shouldn't be changed. 
 
    > R[%esp] $\leftarrow$ valE
->
+   >
    > R[rA] $\leftarrow$ valM
 
    As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
@@ -1148,11 +1148,9 @@ In the sequence of stages of `call Dest`, the address of the instruction which f
 
 To implement SEQ, we make use of combinational logic  and two forms of memory devices: clocked registers (the program counter and the condition code register) and random access memories (RAM: including the register file, the instruction memory and the data memory.)
 
-Note that instruction memory is treated as part of combinational logic since it is only used to read instructions. 
-
 Combinational logic: 
 
-Combinational logic consists of ALUs, instruction memories..
+Combinational logic consists of ALUs. Note that instruction memory is treated as part of combinational logic since it is only used to read instructions. 
 
 The data memory is written only when an `rmmovl, pushl, or call` instruction is called since they all need  to access data memory.
 
@@ -1171,6 +1169,22 @@ Program counter, condition code register, register file, and data memory are sta
 (4) Elaboration of Figure 4.25 Tracing Two cycles of execution by SEQ.
 
 State of program counter, condition code register, register file, and data memory are only updated when the next cycle begins. In other words, the updated values have been already generated at the "End of cycle 3", but they have NOT been moved into these state elements until the beginning of cycle 4. (Read the third paragraph in page 414 and the last two paragraphs in page 415.)
+
+(5)  In a sequential processor architecture, how does a processor know that the combinational have finished and are ready to generate output when the clock rises, since different instructions such as arithmetic operation, Boolean, shift and so forth need various picoseconds? 
+
+> An answer for Google AI.
+>
+> In a synchronous sequential processor architecture, the processor relies on a carefully engineered design where the clock signal is used to determine when the outputs of the combinational logic are ready. The key mechanism that makes this work, despite varying instruction execution times, is the **worst-case timing analysis** [1]. 
+>
+> Here is how the system ensures correct operation:
+>
+> - **Fixed Clock Period:** The processor is designed with a fixed clock period that is long enough to accommodate the *slowest possible* operation among all the different instructions [1].
+> - **Worst-Case Analysis:** During the design phase, engineers analyze every possible data path (arithmetic, boolean, shift, memory access, etc.) and identify the "critical path"—the path with the longest delay [1]. This delay, plus a safety margin (setup time), dictates the minimum clock period.
+> - **Clock Edge Triggering:** A flip-flop (or register), a basic memory element in the processor, has an input (D) and an output (Q). When the clock signal transitions (typically on the rising edge), the flip-flop captures whatever value is present at its input at that exact moment and holds it until the next clock edge [1].
+> - **Combinational Logic Completion:** The combinational logic (the actual circuits that perform operations like addition, shifting, etc.) is given the entire clock cycle to complete its task. Although some instructions might finish much faster than the allotted time, their results simply arrive at the input of the next stage of flip-flops early and wait there until the clock edge arrives to be captured [1].
+> - **Safety Margin:** The clock period includes a safety margin to account for manufacturing variations, temperature changes, and other environmental factors, ensuring that even under non-ideal conditions, the slowest instruction will complete within the cycle [1]. 
+>
+> Essentially, the processor doesn't dynamically "know" when an operation has finished. Instead, the design guarantees that *all* operations will be finished and stable before the next clock edge arrives to read the result [1]. This strict timing discipline allows complex, multi-stage operations to be broken down into sequential steps that synchronize with the fixed rhythm of the clock. 
 
 #### 4.4  General Principles of Pipelining
 
