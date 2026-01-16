@@ -1,6 +1,6 @@
 ### Errors of Installing Y86 Simulators
 
-When run `make` in `../sim` in CentOS 7, there are some errors occurring. 
+(1) When run `make` in `../sim` in CentOS 7, there are some errors occurring. 
 
 1. **"/usr/bin/ld: cannot find -lfl"**
 
@@ -23,7 +23,21 @@ When run `make` in `../sim` in CentOS 7, there are some errors occurring.
    yum install flex-devel
    ```
 
-   
 
-2. 
+(2) After installing `flex`, when I was trying to run a command to invoke GUI mode in the directory of `y86-code` as it is written in "simguide", an errors occurs.
+
+```shell
+# Run this command in 'y86-code'
+../seq/ssim  -t -g asum.yo
+Error in startup script: couldn't read file "seq.tcl": no such file or directory
+```
+
+Whereas, there isn't any problem when it is running in `./sim/seq/` where the program `ssim` is.
+
+```shell
+# In ./sim/seq/
+./ssim -t -g ../y86-code/asum.yo 
+```
+
+Note that GUI mode cannot be invoked in a SSH client, such as Putty. 
 

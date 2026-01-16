@@ -1172,7 +1172,7 @@ State of program counter, condition code register, register file, and data memor
 
 (5)  In a sequential processor architecture, how does a processor know that the combinational have finished and are ready to generate output when the clock rises, since different instructions such as arithmetic operation, Boolean, shift and so forth need various picoseconds? 
 
-> An answer for Google AI.
+> An answer from Google AI.
 >
 > In a synchronous sequential processor architecture, the processor relies on a carefully engineered design where the clock signal is used to determine when the outputs of the combinational logic are ready. The key mechanism that makes this work, despite varying instruction execution times, is the **worst-case timing analysis** [1]. 
 >
