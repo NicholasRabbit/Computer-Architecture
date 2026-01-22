@@ -725,3 +725,30 @@ int srcB=[
 
 Note that `cmovXX` is derived from `rrmovl`, therefore, all of the operands are registers. 
 
+### Practice Problem 4.26
+
+A. In order to maximise the throughput, we should minimise the latency of each stages. The register should be added after stage C. After that, the combinational logic consisting of A, B, and C has latency of 170 ps and the combinational logic including of D, E, and F has latency of 130 ps. 
+
+The throughput is:  1/190 * 1000/1 $\approx$ 5.26 GIPS. 
+
+The latency is 190 * 2 = 380 ps. 
+
+B. The first register should be inserted after block B and the second should be inserted after block D. 
+
+The throughput is: 1/(110 + 20) * 1000/1 $\approx$ 7.69 GIPS. 
+
+The lantency is: (110 + 20) * 3 = 390 ps. 
+
+C. The first register should be inserted after block A, the second is inserted after block C and the last one is inserted after D. As a result, the maximum delay of every stages is 90 + 20 = 110 ps(B + C). 
+
+The throughput is: 1/(90 + 20) * 1000/1 $\approx$ 9.09 GIPS. 
+
+The lantency is: (90 + 20) * 4 = 440 ps. 
+
+D. The minimum number of stages with maximum throughput is 5 stages. We should insert registers after every block except for block E and F, which are in the fifth stage. 
+
+Since the minimum latency of each single stage is 80 ps, namely the block A, it is implausible to achieve less latency than that. Hence, Combining E and F generates the same latency and the sum of latency of any other two blocks exceeds 80 ps. 
+
+The throughput is: 1/(80 + 20) * 1000/1 = 10 GIPS. 
+
+The lantency is: (80 + 20) * 5 = 500 ps. 

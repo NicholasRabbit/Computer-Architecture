@@ -672,7 +672,7 @@ cmove (%edx), %eax
 
 There are two steps after the `call` is executed. First, it push the return address onto the top of stack; second, it jumps to the address of the called function. N.B. the return address is the address of the instruction immediately following the `call`.  See page 255. 
 
-See the sequence of stages of `call` and `ret` in Page 4.8 and Practice Problem 4.16 to know more details of these instructions. 
+See the sequence of stages of `call` and `ret` in page 406 and Practice Problem 4.16 to know more details of these instructions. 
 
 (2) `ret` 
 
@@ -680,9 +680,9 @@ There is not any arguments/operands in this instruction.
 
 The `ret` instruction also includes two operations:
 
-1. The first is to `pop` an address off the stack, presumably the address is the return address in the caller which a previous `call` instruction `push` on the stack. 
+1. First of all, the machine instructs `pop` to get the value on the top of the current stack, which is the address of an instruction following the called function in the caller's function.
 
-2. The second is to jump to this location. 
+2. Then jump to this address. 
 
 (3) `leave` 
 
@@ -1017,6 +1017,10 @@ In conclusion, we manage to populate data to registers for variables in the orig
 
 #### 4.2 Logic Design and the Hardware Control Language(HCL)
 
+General Notes: 
+
+1. Verilog is a Hardware Description Language(HDL); Hardware Control Language can be translated into HDL. 
+
 ##### 4.2.5 Memory and Clocking
 
 **What is a register file?**
@@ -1193,3 +1197,21 @@ State of program counter, condition code register, register file, and data memor
 (1) Why is the throughput 8.13 GIPS? (Page 427)
 
 The reason is when I1 is in stage C, I2 is in stage B and I3 is in stage A so that there are three different stages of one instruction are performed per 100 + 20 picoseconds. According to the equation of throughput in page 426, the result is 8.13 GIPS. 
+
+
+
+##### 4.4.3 Limitations of Pipelining 
+
+**Nonuniform Partitioning** 
+
+Notes of Figure 4.36
+
+(1) "The sum of delays through all of the stages remains 300 ps. " 
+
+> 300 = 50 + 150 + 100 
+
+(2) Why is the delay 510 ps and the throughput is approximately 5.88 GIPS? 
+
+The reason is that faster combinational logics, A and C, have to wait B (150 ps). Hence, the total delay is "(150 + 20) * 3 = 510". 
+
+1/(150 + 20) * 1000/1 $\approx$ 5.88 GIPS .
