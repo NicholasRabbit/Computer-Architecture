@@ -1198,7 +1198,7 @@ State of program counter, condition code register, register file, and data memor
 
 The reason is when I1 is in stage C, I2 is in stage B and I3 is in stage A so that there are three different stages of one instruction are performed per 100 + 20 picoseconds. According to the equation of throughput in page 426, the result is 8.13 GIPS. 
 
-
+Note that the denominator is the time of each stage(100+20), but not the total delay(360).
 
 ##### 4.4.3 Limitations of Pipelining 
 
@@ -1215,3 +1215,15 @@ Notes of Figure 4.36
 The reason is that faster combinational logics, A and C, have to wait B (150 ps). Hence, the total delay is "(150 + 20) * 3 = 510". 
 
 1/(150 + 20) * 1000/1 $\approx$ 5.88 GIPS .
+
+
+
+**Diminishing Returns of Deep Pipeling**
+
+1. Where does the "8.33" come from in page 431?
+
+   See page 427. It is the throughput of the three-stage pipelined computatoin hardware.
+
+2. Why does it say "In our new design, this delay consumes 28.6% of the total clock period"?
+
+   Since we have doubled the stages from 3 to 6, the throughput is not as two times as that of three-stage pipeline. The reason is that we add extra pipeline registers; they are six in total, each of which consumes 20 picoseconds, therefore, they are (20*6) / 420 = 28.6% of the total period. 

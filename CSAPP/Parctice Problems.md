@@ -752,3 +752,12 @@ Since the minimum latency of each single stage is 80 ps, namely the block A, it 
 The throughput is: 1/(80 + 20) * 1000/1 = 10 GIPS. 
 
 The lantency is: (80 + 20) * 5 = 500 ps. 
+
+### Practice Problem 4.27
+
+A. The latency is `300 + 20*k`. The throughput is `1/(300/k + 20) * 1000/1`.
+
+B. 
+
+
+
