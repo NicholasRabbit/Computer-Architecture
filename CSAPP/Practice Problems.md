@@ -757,7 +757,7 @@ The lantency is: (80 + 20) * 5 = 500 ps.
 
 A. The latency is `300 + 20*k`. The throughput is `1/(300/k + 20) * 1000/1`.
 
-B. 
+B. ${1 \over {300 \over k} + 20} \times {1000 \over 1} = {1000k \over {300 + 20k}}$. When k is approaching infinity, the throughput is ${1000 \over 20} = 50$, meanwhile, the latency is also infinite. 
 
 
 
