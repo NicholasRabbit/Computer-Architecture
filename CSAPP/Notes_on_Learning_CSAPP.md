@@ -1176,6 +1176,8 @@ State of program counter, condition code register, register file, and data memor
 
 (5)  In a sequential processor architecture, how does a processor know that the combinational have finished and are ready to generate output when the clock rises, since different instructions such as arithmetic operation, Boolean, shift and so forth need various picoseconds? 
 
+Answer One: 
+
 > An answer from Google AI.
 >
 > In a synchronous sequential processor architecture, the processor relies on a carefully engineered design where the clock signal is used to determine when the outputs of the combinational logic are ready. The key mechanism that makes this work, despite varying instruction execution times, is the **worst-case timing analysis** [1]. 
@@ -1188,7 +1190,11 @@ State of program counter, condition code register, register file, and data memor
 > - **Combinational Logic Completion:** The combinational logic (the actual circuits that perform operations like addition, shifting, etc.) is given the entire clock cycle to complete its task. Although some instructions might finish much faster than the allotted time, their results simply arrive at the input of the next stage of flip-flops early and wait there until the clock edge arrives to be captured [1].
 > - **Safety Margin:** The clock period includes a safety margin to account for manufacturing variations, temperature changes, and other environmental factors, ensuring that even under non-ideal conditions, the slowest instruction will complete within the cycle [1]. 
 >
-> Essentially, the processor doesn't dynamically "know" when an operation has finished. Instead, the design guarantees that *all* operations will be finished and stable before the next clock edge arrives to read the result [1]. This strict timing discipline allows complex, multi-stage operations to be broken down into sequential steps that synchronize with the fixed rhythm of the clock. 
+> Essentially, the processor doesn't dynamically "know" when an operation has finished. Instead, the design guarantees that *all* operations will be finished and stable before the next clock edge arrives to read the result [1]. This strict timing discipline allows complex, multi-stage operations to be broken down into sequential steps that synchronise with the fixed rhythm of the clock. 
+
+Answer Two:
+
+Processor architects divide an instruction execution into a large number of  ridiculously simple steps so that they can decide the maximum time of each steps. Read the last paragraph in page 431 of CSAPP 2e. 
 
 #### 4.4  General Principles of Pipelining
 
@@ -1216,8 +1222,6 @@ The reason is that faster combinational logics, A and C, have to wait B (150 ps)
 
 1/(150 + 20) * 1000/1 $\approx$ 5.88 GIPS .
 
-
-
 **Diminishing Returns of Deep Pipeling**
 
 1. Where does the "8.33" come from in page 431?
@@ -1227,3 +1231,23 @@ The reason is that faster combinational logics, A and C, have to wait B (150 ps)
 2. Why does it say "In our new design, this delay consumes 28.6% of the total clock period"?
 
    Since we have doubled the stages from 3 to 6, the throughput is not as two times as that of three-stage pipeline. The reason is that we add extra pipeline registers; they are six in total, each of which consumes 20 picoseconds, therefore, they are (20*6) / 420 = 28.6% of the total period. 
+
+##### 4.4.4 Pipelining A System with Feedback
+
+1. Figure 4.38 demonstrates the danger if we introduce feedback to pipeling, because the updated value of Instruction 1 is used by Instruction 4. That wreaks havoc ! They are distinct instructions. 
+
+
+
+#### 4.5 Pipelined Y86 Implementations 
+
+##### 4.5.1 SEQ+: Rearranging the Computation Stages 
+
+1. What difference between SEQ and SEQ+ on PC ?
+
+   In SEQ, the value of PC is updated at the end of an clock cycle, namely at the last stages of an instruction. Note that the new value of PC has been already computed at the end of the cycle even though it has not been updated to the PC register, but it will be update at the beginning of next clock cycle. (See Figure 4.25).
+
+   Whereas, in SEQ+, the computation of new PC is move to the next clock cycle(it then becomes the current one). Since we have the same data, such as conditional codes and icode, as in previous clock cycle, the combinational logic will generate the same output with them at the beginning of the current clock cycle. 
+
+   Tips: 
+
+   `pIcode` and `pCnd` are an acronyms for "previous icode" and "previous conditional code", respectively. 
