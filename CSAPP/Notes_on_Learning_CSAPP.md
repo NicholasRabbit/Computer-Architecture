@@ -1251,3 +1251,11 @@ The reason is that faster combinational logics, A and C, have to wait B (150 ps)
    Tips: 
 
    `pIcode` and `pCnd` are an acronyms for "previous icode" and "previous conditional code", respectively. 
+
+##### 4.5.2 Inserting Pipeline Registers
+
+Tips: 
+
+1. Note that "register file" is the register file in the Decode stage, in which there are processor registers such as `%eax, %edx` and so forth and they will be updated at the end of every instruction; they are not pipeline registers. 
+2. "rounded boxes" are different from "rounded rectangles". See the explanation of Figure 4.23. 
+
