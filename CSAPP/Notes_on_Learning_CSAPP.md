@@ -1019,7 +1019,17 @@ In conclusion, we manage to populate data to registers for variables in the orig
 
 General Notes: 
 
-1. Verilog is a Hardware Description Language(HDL); Hardware Control Language can be translated into HDL. 
+1. Hardware Control Language(HDL) and Hardware Control Language(HCL)
+
+   HDL can not necessarily be translated into HCL since they are not used to do so. Here is an analogy between HDL and HCL:
+
+   Think of building a CPU like a car.
+
+   HDL = engineering drawings of engine, gears, wiring
+
+   HCL = rules for when to press brake or accelerator
+
+   
 
 ##### 4.2.5 Memory and Clocking
 
@@ -1242,7 +1252,7 @@ The reason is that faster combinational logics, A and C, have to wait B (150 ps)
 
 ##### 4.5.1 SEQ+: Rearranging the Computation Stages 
 
-1. What difference between SEQ and SEQ+ on PC ?
+1. What difference between SEQ and SEQ+ in terms of PC(program counter) ?
 
    In SEQ, the value of PC is updated at the end of an clock cycle, namely at the last stages of an instruction. Note that the new value of PC has been already computed at the end of the cycle even though it has not been updated to the PC register, but it will be update at the beginning of next clock cycle. (See Figure 4.25).
 

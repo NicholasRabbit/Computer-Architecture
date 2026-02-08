@@ -11,7 +11,8 @@ TTY is short for teletypewriter. When Y86 simulator is run in TTY mode, it print
 (1) After installing all the tools, see "Errors When Installing Simulators", we can execute some example object files from `y86-code` as follows. See 3.1 of the "simguide" of CSAPP-2e.
 
 ```shell
-# Note that excute the follwing command in the directory of '/y86-code'.
+# Note that excute the follwing command in the directory of '/y86-code'. 
+# The following command causes errors, see ""Errors When Installing Simulators"".
 Unix > ../seq/ssim -t < asum.yo
 ```
 
