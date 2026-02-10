@@ -639,7 +639,15 @@ For example, when we use `addl` instruction to perform the equivalent of the C c
 
 ##### 3.6.6 Conditional Move Instructions
 
-Why the the assembly code is invalid implementation of `cread(...)`(Page 245)?
+(1) `cmovl`  will move data if a specific condition holds. Note that `l`is short for `less` not `long word`.
+
+(2) Why does the code based on "conditional data transfer" can outperform the code based on "conditional control transfers"?
+
+See Figure 3.16 and its illustration. 
+
+The reason is modern processors achieve high performance through pipelining. See the assembly code in Figure 3.16(c), the compiler generates all the possible outcomes of a conditional branch. The processor achieves high performance by overlapping the steps of successive instructions. As can be in the assembly in Figure 3.16(c), the every stage of a pipeline processor is full of instructions, it doesn't have to always  to predict. If a processor doesn't predict correctly, there will be serious penalty and, presumably, much clock cycles are wasted. 
+
+(3) Why the the assembly code is invalid implementation of `cread(...)`(Page 245)?
 
 ```c
 int cread(int *xp) {
@@ -1268,4 +1276,8 @@ Tips:
 
 1. Note that "register file" is the register file in the Decode stage, in which there are processor registers such as `%eax, %edx` and so forth and they will be updated at the end of every instruction; they are not pipeline registers. 
 2. "rounded boxes" are different from "rounded rectangles". See the explanation of Figure 4.23. 
+
+##### 4.5.3 Rearranging and Relabelling Signals 
+
+1. In PIPE-, `dstE` and `dstM` are carried to the last pipeline register W so that the `valE` and `valM` won't be written to registers with the signals(also `dstE` and `dstM`) from other instructions. 
 
