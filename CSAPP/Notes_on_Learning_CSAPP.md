@@ -1281,3 +1281,8 @@ Tips:
 
 1. In PIPE-, `dstE` and `dstM` are carried to the last pipeline register W so that the `valE` and `valM` won't be written to registers with the signals(also `dstE` and `dstM`) from other instructions. 
 
+##### 4.5.4 Next PC Prediction
+
+1. Conditional code is generated in "Execute Stage", so we will not whether or not the branch will be taken when an instruction is fetched in the "Fetch Stage" until several cycles later.
+2. "*Branch prediction*" is nearly used by nearly all processors. 
+3. Review 3.6.6, especially the penalty of misprediction. 
