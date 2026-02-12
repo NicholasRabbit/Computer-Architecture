@@ -1286,3 +1286,11 @@ Tips:
 1. Conditional code is generated in "Execute Stage", so we will not whether or not the branch will be taken when an instruction is fetched in the "Fetch Stage" until several cycles later.
 2. "*Branch prediction*" is nearly used by nearly all processors. 
 3. Review 3.6.6, especially the penalty of misprediction. 
+
+
+
+##### 4.5.5  Pipeline Hazards
+
+1. Aside: Condition Code register
+
+   Since condition codes are all written by integer operations in execute stage, they are used by conditional moves in execute stage and  conditional jumps in execute stage, therefore, condition codes have been definitely generated when the following instructions use them. There will be no hazards. 
