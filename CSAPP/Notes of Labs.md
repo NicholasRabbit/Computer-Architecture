@@ -39,7 +39,9 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 ### 3, Laboratory
 
-#### Data Labs
+Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
+
+#### 1) Data Labs
 
 ##### 1, tMin
 
@@ -480,7 +482,7 @@ unsigned floatPower2(int x) {
 
    
 
-#### Bomb Lab
+#### 2) Bomb Lab
 
 ##### **How to do the bomb lab?**
 
@@ -1230,4 +1232,40 @@ Here is the assembly code of `phase_5(...)`.
 
    Thus, I guess that these numbers are increase from `0x6032d0 ` to `0x603320`. Since the array is `{6, 5, 4, 3, 2, 1} ` which corresponds `{332, 168, 924, 691, 477, 443}`, respectively, I should adjust the array to `{3, 4, 5, 6, 1, 2}` which is generated from `7 - {1, 2, 3, 4, 5, 6}(the original input)`. Subsequently, the original array should be adjusted to `{4,3,2,1,6,5}`. Oh! It is such a complicated bomb. 
 
-   
+#### 3) Attack Lab
+
+(1) What is the attack lab?
+
+It includes two programs with vulnerability and we should generate five attacks to exploit their security weakness.
+
+(2) Prerequisite 
+
+Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab. 
+
+(3) Tips
+
+1. Save the `targetk.tar` to a protected directory. 
+
+(4) Errors
+
+1. When executing `./ctarget` in CentOS 7. The following error occurred: 
+
+   `FAILED: Initialization error: Running on an illegal host [localhost.localdomain]`
+
+   Why does it occur ?
+
+   The reason is that we can not connect the course's specific grading server network, and my local machine is not recognised. 
+
+   How to solve it ? 
+
+   Add an option `-q` after the executable file. It is the same with `rtarget`. 
+
+   ```shell
+   ./ctarget -q  # -q instructs not to send results to the grading server. 
+   ```
+
+   See [resolving issues](.\Tutorials\Others\Resolving Issues of CSAPP Labs.md) and [page 4 of "attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf)
+
+(5) How to do the attack lab? 
+
+If we type a long string, the bounds of arrays will be overrun. Whereas, we should not input meaningless strings to cause buffer overflow only, but do something more interesting. 
