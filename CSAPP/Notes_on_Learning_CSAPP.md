@@ -1294,3 +1294,12 @@ Tips:
 1. Aside: Condition Code register
 
    Since condition codes are all written by integer operations in execute stage, they are used by conditional moves in execute stage and  conditional jumps in execute stage, therefore, condition codes have been definitely generated when the following instructions use them. There will be no hazards. 
+
+##### 4.5.7 Avoiding Data Hazards by Forwarding
+
+(1) Elaboration of Figure 4.51
+
+Why can a PIPE- guarantee that in the decode stage of `0x00c addl %ead, %eax` it can generate the correct value of `valB`  from the ALU in the previous "execute stage" of `0x006 irmovl $3, %eax`? 
+
+The reason is that the instruction of `0x00c` need the `valB` by the end of the current clock for its next stage: "execute stage", namely if the `valB` is correct when the next clock rises to move to this "execute stage", there won't be any hazards. Apparently, the output of the ALU in `0x006` will definitely be correct as the next clock rises.
+
