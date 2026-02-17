@@ -1281,6 +1281,10 @@ Tips:
 
 1. In PIPE-, `dstE` and `dstM` are carried to the last pipeline register W so that the `valE` and `valM` won't be written to registers with the signals(also `dstE` and `dstM`) from other instructions. 
 
+2. What is the "Select A" in PIPE- used for ? 
+
+   See the second paragraph in page 440. 
+
 ##### 4.5.4 Next PC Prediction
 
 1. Conditional code is generated in "Execute Stage", so we will not whether or not the branch will be taken when an instruction is fetched in the "Fetch Stage" until several cycles later.
@@ -1294,6 +1298,11 @@ Tips:
 1. Aside: Condition Code register
 
    Since condition codes are all written by integer operations in execute stage, they are used by conditional moves in execute stage and  conditional jumps in execute stage, therefore, condition codes have been definitely generated when the following instructions use them. There will be no hazards. 
+
+##### 4.5.6 Avoiding Data Hazards by Stalling
+
+1. In Figure 4.48, the angled arrows means that bubbles replaces the stages following the "Decode Stage", therefore, the stalled "Decode Stage" doesn't continue and just repeat. 
+2. Note that "bubble" doesn't hold the stages of all instructions, but only the instructions after it.  
 
 ##### 4.5.7 Avoiding Data Hazards by Forwarding
 
