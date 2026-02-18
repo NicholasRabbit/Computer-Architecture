@@ -1234,19 +1234,45 @@ Here is the assembly code of `phase_5(...)`.
 
 #### 3) Attack Lab
 
-(1) What is the attack lab?
+**(1) What is the attack lab?**
 
 It includes two programs with vulnerability and we should generate five attacks to exploit their security weakness.
 
-(2) Prerequisite 
+**(2) Prerequisite** 
 
-Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab. 
+Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab. (As a matter of fact, it is a lab of CSAPP 3e.)
 
-(3) Tips
+**(3) Tips**
+
+*General Tips:*
 
 1. Save the `targetk.tar` to a protected directory. 
 
-(4) Errors
+2. `./ctarget -i psol.txt`: supply input from a file, rather than from standard input. 
+
+3. Note that it is an little-endian system. 
+
+4. We can convert hexadecimal numbers to raw and write it to one end of a pipeline; programs like `./ctarget` can read it from the other end. As an illustration, 
+
+   ```shell
+   Unix> ./hex2raw ctarget12.txt | ./ctarget 
+   ```
+
+*Tips of " Part II: Return-Oriented Programming"*
+
+1. "Gadgets" are followed by the instruction `ret`, namely the `ret` is after them. Byte `0xc3` encodes the `ret` instruction. See "5 Part II: Return-Oriented Programming" of  ["attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf)
+
+2. An elaboration of the last paragraph of page 9   ["attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf)
+
+   ```assembly
+   0000000000400f15 <setval_210>:
+   400f15: c7 07 d4 48 89 c7 movl $0xc78948d4,(%rdi)
+   400f1b: c3 retq
+   ```
+
+   Although `c7 07 d4 48 89 c7` encodes `movl $0xc78948d4,(%rdi)` and  `d4 48 89 c7` represents the immediate `$0xc78948d4`, the byte sequence starts from  `48 89 c7` represents `movq %rax, %rdi`. They are followed by `c3` which encodes `retq`. Subsequently, they form a "gadget". We can exploit the vulnerability of this code by carrying out an attack. 
+
+**(4) Errors**
 
 1. When executing `./ctarget` in CentOS 7. The following error occurred: 
 
@@ -1266,6 +1292,6 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab.
 
    See [resolving issues](.\Tutorials\Others\Resolving Issues of CSAPP Labs.md) and [page 4 of "attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf)
 
-(5) How to do the attack lab? 
+**(5) How to do the attack lab?** 
 
 If we type a long string, the bounds of arrays will be overrun. Whereas, we should not input meaningless strings to cause buffer overflow only, but do something more interesting. 
