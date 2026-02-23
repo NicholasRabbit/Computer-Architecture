@@ -170,7 +170,13 @@ One important thing about little endian is when we are reading the machine-level
 For example: 
 
 ```shell
-40054b:	bf 04 06 40 00       	mov    $0x400604,%edi
+0x40054b:	bf 04 06 40 00       	mov    $0x400604,%edi
+# The addresses of each byte:
+0x40054b: bf     # Donn't read the number from "bf", but from "00" at 0x40054f.
+0x40054c: 04
+0x40054d: 06
+0x40054e: 40
+0x40054f: 00
 ```
 
 Suppose that `40054b` is the address of an integer number(4 bytes), we should write the bytes conversely 
@@ -178,9 +184,9 @@ like `40 06 04 bf ` so that we can read it like what we do in math class.
 
 **Big endian**: It is the opposite of little endian.
 
-Note: See "[Analysis of Storage]("..\C-Code\26_AssemblyLanguage_And_Storage\Analysis of Storage.md")" for more about address, little endian and big endian.
+Note: See "[Analysis of Storage]("..\C-Code\src\26_AssemblyLanguage_And_Storage\Analysis of Storage.md")" for more about address, little endian and big endian.
 
-**N.B.** See `CSAPP/code/code_examples_in_the_book/chapter_2/` which verifies the "endian" of a machine with the help of a C programme.
+**N.B.** See `CSAPP/code/code_examples_in_the_book/chapter_2/show_bytes_and_endian.c` which verifies the "endian" of a machine with the help of a C programme.
 
 ##### 2.1.6  Introduction to Boolean Algebra
 
@@ -627,7 +633,7 @@ The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times
   addl $4, %esp
   ```
 
-  
+- `nop` is articulated as `no op`, which is short for `no operation`. Note that the program counter will be incremented by 1 even though there are not any other operation. 
 
 #### 3.6 Control
 
@@ -688,9 +694,8 @@ There is not any arguments/operands in this instruction.
 
 The `ret` instruction also includes two operations:
 
-1. First of all, the machine instructs `pop` to get the value on the top of the current stack, which is the address of an instruction following the called function in the caller's function.
-
-2. Then jump to this address. 
+1. First of all, the machine instructs `pop` to get the value on the top of the current stack, which is the address of an instruction following the called function in the caller's function. The return address will be stored into the Program Counter
+2. Then jump to this address and execute the instruction. 
 
 (3) `leave` 
 

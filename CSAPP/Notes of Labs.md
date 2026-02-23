@@ -1240,22 +1240,30 @@ It includes two programs with vulnerability and we should generate five attacks 
 
 **(2) Prerequisite** 
 
-Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab. (As a matter of fact, it is a lab of CSAPP 3e.)
+Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since I am reading the second edition. (As a matter of fact, it is a lab of CSAPP 3e.)
 
 **(3) Tips**
 
 *General Tips:*
 
-1. Save the `targetk.tar` to a protected directory. 
+1. Save the `targetk.tar` to a protected directory; use `chmod` to limit the access of this lab from other users. 
 
 2. `./ctarget -i psol.txt`: supply input from a file, rather than from standard input. 
 
 3. Note that it is an little-endian system. 
 
-4. We can convert hexadecimal numbers to raw and write it to one end of a pipeline; programs like `./ctarget` can read it from the other end. As an illustration, 
+4. We can convert hexadecimal numbers to raw and write it to one end of a pipeline; programs like `./ctarget` can read it from the other end.  
 
+   How to generate "raw" input with `hex2raw`?
+   
+   1) Write the hexadecimal, such as byte-code instruction like `48 89 c7`  or `30 31 32 33`,  into a text file named `exploit.txt` or others. Note that the hex characters you pass to `hex2raw` should be separated by white space (blanks or newline).
+   
+   2) Execute `./hex2raw < exploit.txt > exploit_raw.txt`. Then the hexadecimal value will be converted to coordinated strings as in the ASCII table.
+   
+   As an illustration,  the following instruction uses a pipeline to input "exploit string" to `./ctarget`.
+   
    ```shell
-   Unix> ./hex2raw ctarget12.txt | ./ctarget 
+   Unix> ./hex2raw < ctarget12.txt | ./ctarget 
    ```
 
 *Tips of " Part II: Return-Oriented Programming"*
@@ -1270,7 +1278,7 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab. (As 
    400f1b: c3 retq
    ```
 
-   Although `c7 07 d4 48 89 c7` encodes `movl $0xc78948d4,(%rdi)` and  `d4 48 89 c7` represents the immediate `$0xc78948d4`, the byte sequence starts from  `48 89 c7` represents `movq %rax, %rdi`. They are followed by `c3` which encodes `retq`. Subsequently, they form a "gadget". We can exploit the vulnerability of this code by carrying out an attack. 
+   Although `c7 07 d4 48 89 c7` encodes `movl $0xc78948d4,(%rdi)` and  `d4 48 89 c7` represents the immediate `$0xc78948d4`, the byte sequence starts from `0x400f18` is  `48 89 c7` , which represents `movq %rax, %rdi`. They are followed by `c3` in the next line which encodes `retq`. Subsequently, they form a "gadget". We can exploit the vulnerability of this code by carrying out an attack. 
 
 **(4) Errors**
 
