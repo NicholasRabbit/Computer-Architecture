@@ -807,7 +807,7 @@ char *gets(char *s){}
 
 2) The addresses of the elements in an array ascend its indices / indexes. Namely, the bigger an index is, the higher the address is. So in page 292 the `%edx, %ebp...` are corrupted sequentially. 
 
-But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 6. Why is it `-12(%ebp)` in `leal -12(%ebp), %ebx`? See my analyses. N.B. there are 4 bytes in each row in a stack.
+But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 6. Why is it `-12(%ebp)` in `leal -12(%ebp), %ebx`? See my analyses. N.B. there are 4 bytes in each row of a stack memory.
 
 ![1745913271621](note-images/1745913271621.png)
 

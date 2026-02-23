@@ -1,3 +1,11 @@
+## Note
+
+Note that homework problems of each chapter have not yet been done.
+
+
+
+## Chapter 1
+
 ### Practice problem 1.1
 
 A.  T(new) = 20h 
@@ -401,11 +409,27 @@ c g a e h b d f
 
 ### Practice Problem 3.43
 
-N.B. the hexadecimal numbers for 0 to 9 range from `0x30` to `0x39`. 
+N.B. the hexadecimal numbers for characters from '0' to '9' range from `0x30` to `0x39`. 
 
 Don't forget that there is always an terminating `null` at the end of a char array.
 
-To be reviewed and analysed later. 
+The machine is little-endian.
+
+See [the attachment](.\Tutorials\Attachment of Practice Problems\Practice Problem-3.43.xlsx) of the answer of this problem.
+
+A. The address of `buf` is stored at `-0x14(%ebp)`. 
+
+B. Note that the hexadecimal of characters from '0' to '9' are 0x30 to 0x39.
+
+Although the address of the array `buf` has been move to `(%ebp)` at line 9, it is used as an arguments. The characters from the standard input are stored at the `buf` started at `0x14(%ebp)`. 
+
+Don't forget the last terminal `'\0'` of the array. As a result there are 25 characters in total. 
+
+C. It is trying to return `0x8048600` since the least significant byte of the return address has been corrupted. 
+
+D. `%ebx, %esi, %edi and %ebp` have been corrupted when  `getline` returns. 
+
+E. There is always an extra `\0` at the end of an array, therefore, the arguments of `malloc` should be added by 1.  Besides, the code should check whether the return value `result` is `NULL` or not. 
 
 ### Practice Problem 3.44
 
