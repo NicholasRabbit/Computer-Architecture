@@ -1252,19 +1252,27 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
 
 3. Note that it is an little-endian system. 
 
-4. We can convert hexadecimal numbers to raw and write it to one end of a pipeline; programs like `./ctarget` can read it from the other end.  
+4. How to generate "raw" input with `hex2raw`?
 
-   How to generate "raw" input with `hex2raw`?
-   
    1) Write the hexadecimal, such as byte-code instruction like `48 89 c7`  or `30 31 32 33`,  into a text file named `exploit.txt` or others. Note that the hex characters you pass to `hex2raw` should be separated by white space (blanks or newline).
    
    2) Execute `./hex2raw < exploit.txt > exploit_raw.txt`. Then the hexadecimal value will be converted to coordinated strings as in the ASCII table.
+   
+   3) We can add comment to input file of `./hex2raw` within ` /* comments */ `; Note there are spaces around each `/*`. 
+   
+   4) We can convert hexadecimal numbers to raw and write it to one end of a pipeline; programs like `./ctarget` can read it from the other end.  
    
    As an illustration,  the following instruction uses a pipeline to input "exploit string" to `./ctarget`.
    
    ```shell
    Unix> ./hex2raw < ctarget12.txt | ./ctarget 
    ```
+
+5. The address incorporated in your attack string should be one of the following destination: 
+   - The address for instructions: `touch1`, `touch2` or `touch3`.
+   - The address of your injected code.
+   - The address of your gadgets from the gadget farm. 
+6. Your exploit string should NOT consist of `0x0a` since it represents `\n`  so the `Gets(...)` will assume that you intend to terminate the string. 
 
 *Tips of " Part II: Return-Oriented Programming"*
 
@@ -1279,6 +1287,8 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
    ```
 
    Although `c7 07 d4 48 89 c7` encodes `movl $0xc78948d4,(%rdi)` and  `d4 48 89 c7` represents the immediate `$0xc78948d4`, the byte sequence starts from `0x400f18` is  `48 89 c7` , which represents `movq %rax, %rdi`. They are followed by `c3` in the next line which encodes `retq`. Subsequently, they form a "gadget". We can exploit the vulnerability of this code by carrying out an attack. 
+   
+3. Use `gcc -Og ` to compile `farm.c` and then disassemble the object file to look for "gadgets".  
 
 **(4) Errors**
 
