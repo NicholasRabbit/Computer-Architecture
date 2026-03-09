@@ -165,6 +165,8 @@ Little endian and big endian.
 
 **Little endian**: The least significant byte is stored in the place with the  smallest address and the most significant byte is stored in the place with the biggest address. The rest bytes are stored sequentially.
 
+Stacks increase from higher address to lower. 
+
 One important thing about little endian is when we are reading the machine-level program representations the least significant byte is on the left and the most significant is on the right and that is contrary to the normal way that we read numbers in real world. We should used to write the machine-level program from the right side to the left so that it is easy to read.
 
 For example: 
@@ -172,11 +174,11 @@ For example:
 ```shell
 0x40054b:	bf 04 06 40 00       	mov    $0x400604,%edi
 # The addresses of each byte:
-0x40054b: bf     # Donn't read the number from "bf", but from "00" at 0x40054f.
-0x40054c: 04
+0x40054b: bf   	# bf is an instruction
+0x40054c: 04	# 0x 00 40 06 04	 	higher
 0x40054d: 06
 0x40054e: 40
-0x40054f: 00
+0x40054f: 00	#						lower
 ```
 
 Suppose that `40054b` is the address of an integer number(4 bytes), we should write the bytes conversely 
@@ -704,13 +706,15 @@ There is not any arguments in this instruction, either.
 The `leave` is equivalent to the following two instructions:
 
 ```assembly
-# %ebp now points the the bottom of currentstack, namely the called fuction.
-# This instruciton is to set the stack pointer %esp to the bottom of the current stack
+# 1. Before the instruction, %ebp points to the the bottom of the called function's 
+# stack,as it always does, where the "old %ebp" is stored.
+# After this instruciton, %esp is pointing to the bottom now.
 movl %ebp,%esp
-# "popl" always move the top value of the stack. %esp points to the top all the time.
-# Because %esp is at the bottom now, "popl %ebp" will move the value "old %ebp" 
-# which is %ebp of caller's to the register %ebp. The aim is to restore the stack pointer 
-# to the caller's statck.
+
+# 2. "popl" always moves the top value of the stack where %esp points to its operand 
+# register, so %ebp now has the value of the caller's frame pointer and the caller's 
+# stack is restored.
+# By convention, %esp decrements by 4 and then points to the top of the caller's stack.
 popl %ebp
 ```
 
