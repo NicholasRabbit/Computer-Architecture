@@ -15,6 +15,7 @@ void show_bytes(pointer start, size_t len)
 	size_t i;
 	/*
 	 * Since 'start' has been cast to 'char *', "start + i" will increment 1 byte each time.
+	 * Hence, we can check the address of each byte of a hexadecimal number. 
 	 * */
 	for (i = 0; i < len; i++) 
 		printf("%p\t0x%.2x\n", start + i, start[i]);	

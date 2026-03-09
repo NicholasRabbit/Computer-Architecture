@@ -1,7 +1,7 @@
 # include <stdio.h>
 
 /**
- * Though I don't completely understand the following code because of c syntax,
+ * Though I don't completely understand the following code because of C syntax,
  * the intention of the author is clearly for me. More elaboration will be added 
  * in the near future.
  *
@@ -37,7 +37,7 @@ void show_pointer(void *x)
 	show_bytes((byte_pointer)&x, sizeof(void *));
 }
 
-void test_show_bytes(int val)
+void show_all_bytes(int val)
 {
 	int ival = val;
 	float fval = (float)ival;
