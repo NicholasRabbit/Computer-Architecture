@@ -830,6 +830,10 @@ I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still ca
 
 #### 3.13 x86-64: Extending IA32 to 64 bits
 
+Notes: 
+
+1. Conventionally, `%rip` in x86-64 or `%eip`  in IA 32 hold the value of PC, namely program counter. 
+
 ##### 3.13.3 Accessing Information
 
 (1) An explanation of two sentences in Page 310.
@@ -842,7 +846,21 @@ I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still ca
 
 For an instance, `mulq %rdx` generates the result of `%rdx` * `%rax`. See page 313.
 
+##### 3.13.4 Control
 
+**Argument Passing**
+
+1. Arguments are passed in specific orders. See Figure 3.40.
+
+   ```assembly
+   1		2		3		4		5		6
+   %rdx 	%rsi	%rdx	%rcx	%r8		%r9 	# 64
+   %edi  	%esi	%edx	%ecx	%r8d	%9d		# 32
+   %di		%si										# 16
+   												# 8
+   ```
+
+   
 
 ### 4. Processor Architecture
 
