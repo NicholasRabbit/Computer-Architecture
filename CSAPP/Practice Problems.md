@@ -611,9 +611,13 @@ ret
 
 ### Practice Problem 4.6
 
+Embed assembly code to C.
+
 See `CASPP/code/pratice_problems`
 
 ### **Practice Problem 4.7**
+
+Embed assembly code to C.
 
 See `CASPP/code/pratice_problems`
 

@@ -639,6 +639,10 @@ The result is `0x3f 00 00 00`; its bit representation is `0011 1111 0000(6 times
 
 - `nop` is articulated as `no op`, which is short for `no operation`. Note that the program counter will be incremented by 1 even though there are not any other operation. 
 
+- `push` and `pop`. 
+
+  **N.B.** Each `push` or `pop` increases or decreases 4 bytes in a x86 machine, but 8 bytes in a x86-64 machine.
+
 #### 3.6 Control
 
 ##### 3.6.1 Condition Codes

