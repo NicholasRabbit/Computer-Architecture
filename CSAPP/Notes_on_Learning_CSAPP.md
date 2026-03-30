@@ -18,15 +18,16 @@ If you have trouble with Chapter 7 Linking, I recommend reading the book Program
 
 ![1715072855978](note-images/1715072855978.png)
 
-gcc commands
+gcc commands: 
 
-````shell`
+```shell
 # commands
+
 # 1, hello.i
 gcc -E hello.c -o hello.i / cpp hello.c -o hello.i # preprocessing 
 
 # 2, hello.s
-gcc -S hello.i  # translated into hello.s which is a assembly programme
+gcc -S hello.i  # translated into hello.s which is a assembly programme\
 # Or
 gcc -S hello.c # skip the preprocess
 
@@ -36,7 +37,6 @@ gcc -c hello.s -o hello.o  # "hello.o" is a relocatable object program.
 as hello.s -o hello.o
 # Or
 gcc -c hello.c -o hello.o  # skip some steps
-
 # 4, hello  
 gcc hello.o -o hello # executable object program
 ```
@@ -60,7 +60,7 @@ In the low level of the computer system shifting bits is quite faster than arith
 
 Truncating a number is like a module operation.
 
-​```txt
+```txt
 # 4 bits overflow so the most significant number is truncated.
 1 1101 : 27 --> 1101 (11)
   1101 : 11   #27 % 16 = 11
@@ -830,11 +830,13 @@ But in the assembly in Page 291, compiler computes `buf` by `-12(%ebp)` in line 
 
 ##### 3.12.1 Thwarting Buffer Overflow Attacks
 
-Why can it be cracked by enumerating $2^{15}=32,768$ starting address for the randomisation over *n*=$2^{23}$ if we set up a 256 bytes nop sled? (Page 296)
+1. Why can it be cracked by enumerating $2^{15}=32,768$ starting address for the randomisation over *n*=$2^{23}$ if we set up a 256 bytes nop sled? (Page 296)
 
-I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still can't understand that statement. 
+   I find the following equation, $256=2^8$ and $2^{23}-2^{15}=2^8$, but I still can't understand that statement. 
 
+2. Canary
 
+   [Stack canary](.\Tutorials\Others\Stack Canary.md)
 
 #### 3.13 x86-64: Extending IA32 to 64 bits
 
