@@ -8,9 +8,7 @@ My notes are written when reading the second edition of Computer Systems: A Prog
 
 [Tips on learning CS 15-213](https://csdiy.wiki/en/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80/CSAPP/#descriptions)
 
-```txt
-If you have trouble with Chapter 7 Linking, I recommend reading the book Programmer's Self-Cultivation, subtitled link. load and library. This book can complete our understanding of program linking, and I believe after reading this book you will have a deeper comprehension of program linking, ELF files, and dynamic libraries. It is highly recommended to be read as a supplementary material after reading CSAPP and having a certain understanding of computer systems.
-```
+> If you have trouble with Chapter 7 Linking, I recommend reading the book Programmer's Self-Cultivation, subtitled link. load and library. This book can complete our understanding of program linking, and I believe after reading this book you will have a deeper comprehension of program linking, ELF files, and dynamic libraries. It is highly recommended to be read as a supplementary material after reading CSAPP and having a certain understanding of computer systems.
 
 ### Chapter 1. Tour of Computer Systems
 
@@ -657,7 +655,7 @@ For example, when we use `addl` instruction to perform the equivalent of the C c
 
 To illustrate, `cmovl %edx, %eax` moves the content in `%edx` to `%eax` if `%edx` < `%eax`(signed). 
 
-(2) Why does the code based on "conditional data transfer" can outperform the code based on "conditional control transfers"?
+(2) Why does the code based on "conditional data transfer" can outperform the code based on "conditional control transfer"?
 
 See Figure 3.16 and its illustration. 
 

