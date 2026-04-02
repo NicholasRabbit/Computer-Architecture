@@ -789,3 +789,8 @@ B. ${1 \over {300 \over k} + 20} \times {1000 \over 1} = {1000k \over {300 + 20k
 
 
 
+### Practice Problem 4.28
+
+Why does the solution of problem 4.28 say that "we cannot yet determine whether the data memory will generate an error signal for this instruction" ? 
+
+The reason is that in a pipelined processor the previous is in the decode stage when the current instruction is in the fetch stage. It doesn't like that in a SEQ in which the next instruction is going to be executed only if the memory and write back stage are completed.  

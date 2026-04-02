@@ -1960,3 +1960,5 @@ Linux> ./hex2raw < ./part_1/exploit_lv3_optimised2.txt > ./part_1/exploit_lv3_op
 ```
 
 Finally, the problem is tackled. 
+
+In conclusion, when you want to corrupt a stack in a program, it is better to store your exploit code at higher address like that in the stack of `test`.
