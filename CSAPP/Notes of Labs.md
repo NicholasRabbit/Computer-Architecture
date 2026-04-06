@@ -1518,8 +1518,8 @@ pushq 0x4017ec  # The position of "touch2"  	 !! Immediate operands should be wi
 retq
 
 # The correct code: 
-mov  $0x59b997fa, %rdi  # Don't forget "$" before immediate operands.
-pushq $0x4017ec
+mov  $0x59b997fa, %rdi  # Don't forget to prefix a "$" before immediate operands.
+pushq $0x4017ec			# The position of "touch2"
 retq
 ```
 
@@ -1649,7 +1649,7 @@ What does this phase ask us to do?
 
 1. Inject code as an input string of `ctarget` and let `getbuf` transfer control to my exploit code.
 
-2. In my exploit code, transfer control to `touch3` and then pass my cookie as string to the function. 
+2. In my exploit code, transfer control to `touch3` and then pass my cookie as string to it. 
 
    Note that the cookie `0x59b997fa` should be a string without the hexadecimal prefix, namely `59b997fa` should be in a string format. We can find the byte representation of it in ASCII. 
 
@@ -2052,4 +2052,6 @@ Step 3: The second gadget moves `%rax` to `rdx`. Its address should be on the th
 Step 4: Transfer control to `touch2`, therefore, its address should be on the fourth higher row.
 
 Great ! It is correct. 
+
+##### Phase 5 (Level 3 touch3)
 
