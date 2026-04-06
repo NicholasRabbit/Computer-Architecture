@@ -41,7 +41,7 @@ Step 5: Run `./driver.pl` to grade your work automatically.
 
 Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
 
-#### 1) Data Labs
+### 1) Data Labs
 
 ##### 1, tMin
 
@@ -482,7 +482,7 @@ unsigned floatPower2(int x) {
 
    
 
-#### 2) Bomb Lab
+### 2) Bomb Lab
 
 ##### **How to do the bomb lab?**
 
@@ -1232,9 +1232,9 @@ Here is the assembly code of `phase_5(...)`.
 
    Thus, I guess that these numbers are increase from `0x6032d0 ` to `0x603320`. Since the array is `{6, 5, 4, 3, 2, 1} ` which corresponds `{332, 168, 924, 691, 477, 443}`, respectively, I should adjust the array to `{3, 4, 5, 6, 1, 2}` which is generated from `7 - {1, 2, 3, 4, 5, 6}(the original input)`. Subsequently, the original array should be adjusted to `{4,3,2,1,6,5}`. Oh! It is such a complicated bomb. 
 
-#### 3) Attack Lab
+### 3) Attack Lab
 
-##### Preparation 
+#### Preparation 
 
 **(1) What is the attack lab?**
 
@@ -1326,7 +1326,7 @@ Read section 3.12 and 3.12.1 of CSAPP 2e as reference material of this lab since
 
 If we type a long string, the bounds of arrays will be overrun. Whereas, we should not input meaningless strings to cause buffer overflow only, but do something more interesting. 
 
-##### **Part I: Code Injection Attacks**
+#### Part I: Code Injection Attacks
 
 ##### Phase 1 (Level 1  touch1)
 
@@ -1975,7 +1975,7 @@ In conclusion, when we want to corrupt a stack in a program, it is better to sto
   4017bd:	c3                   	retq   			# Then it returns to my exploit code.
 ```
 
-##### Part II: Return-Oriented Programming 
+#### Part II: Return-Oriented Programming 
 
 ##### Phase 4 (Level 2 touch2)
 
@@ -2021,5 +2021,35 @@ To test whether the above approaches work or not, I make use of two gadgets. Not
 8 ec 17 40 00 00 00 00 00     /* The address of touch2.  */
 ```
 
-The program transfer control to `touch2`. Currently, the argument is not correct in the test. 
+At last, the program transfer control to `touch2`. Currently and of course, the argument is not correct in the test. 
+
+2.4) Now it is time to find out gadgets we need. 
+
+2.4.1) There is only one argument in `touch2(val)` , therefore, we should look for an instruction which has the destination register of `%rdi`, which is the firs argument by convention. 
+
+We have tested one in 2.3, which is `movq %rax, %rdi (48 89 c7)` in `adval_273`. Let's use it for now. 
+
+2.4.2) What we should do next is to move the cookie to `%rax`. After reading the assembly code of gadgets farms demarcated by `start_farm` and `mid_farm`, I realise that it is extremely difficult to find a gadget using the cookie ,`0x59b997fa`, as its source operand. Can it be popped to `$rax` ? Yes. 
+
+`popq %rax` is encoded as `58`. Let's search for a gadget which is`58` followed by `c3`. There is one, `58 90 c3` in `adval_219`; `90` encodes `nop` so it can be ignored. 
+
+```assembly
+ 927 00000000004019a7 <addval_219>:
+ 928   4019a7:   8d 87 51 73 58 90       lea    -0x6fa78caf(%rdi),%eax
+ 929   4019ad:   c3
+```
+
+The address starts at `58` is `0x4019ab`. 
+
+2.4.3) Creating my exploit code.
+
+Step 1: `getbuf` transfers control to the first gadget, which is  at `0x4019ab`. It should be on the top of the stack of `test`.
+
+Step 2: Since instruction in the first gadget is `popq`, the content on the top of the stack should currently be the cookie, which should be on the next higher row of the address of the first gadget.
+
+Step 3: The second gadget moves `%rax` to `rdx`. Its address should be on the third higher row. 
+
+Step 4: Transfer control to `touch2`, therefore, its address should be on the fourth higher row.
+
+Great ! It is correct. 
 
