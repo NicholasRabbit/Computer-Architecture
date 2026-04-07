@@ -1359,8 +1359,34 @@ In `0x18: mrmovl 0(%edx), %eax`, when clock rises in cycle 7, it is in the "Exec
 
 ##### 4.5.9 Exception Handling 
 
-(1) In the second paragraph of page 456, it said, "In terms of the machine-language program, the instruction in the memory stage should appear to execute before one in the fetch stage."
+**Terminology**
 
-It means that one instruction in the memory stage will be completely executed before another instruction in the fetch stage; apparently and of course, the fetch stage is the first stage and the memory stage is the fourth stage. 
+- excepting instruction: the instruction which causes an exception.
 
-(2) In assembly code the end of page 456, `0xfffffffc = 0x0 - 0x4` because when `push` is being executed, the stack decreases by 4 at first. 
+**Notes**
+
+1. What are the subtleties of exception handling ? 
+
+   There are three subtleties.
+
+   1) First, exceptions of multiple instructions in a pipeline might occur simultaneously. 
+
+   The basic rule is to handle the exception which is on the farthest stage of a pipeline. Since in a pipeline the instruction which is at memory stage must be executed earlier than the one in the fetch stage, the processor must report the very first exception so that the program can be stopped immediately. In other word, the first excepting instruction will reach he memory stage, first.
+
+   2) The second subtlety is the exception of an instruction which is executed due to wrong prediction. The instruction is cancelled later, therefore, it is pointless to raise an exception caused by this instruction. 
+
+   3) The third subtlety is that the "Conditional Code" can be altered by later instruction when an excepting instruction is being executed. That is not allowed. 
+
+   How does a processor deal with these subtleties ? 
+
+   For the first subtlety, when multiple stages encounter exceptions simultaneously, the information will be stored in status fields(stat) of each pipeline register. All the instructions will keep on executing. Before the excepting instruction reach the write back stack, the processor disable any following instructions to alter Conditional Code or memory. As the excepting instruction is the furthest along the stage, it will reach the write back stage first. Then the processor will stop the whole process and clear the  program. 
+
+   To handle the second subtlety, if an instruction is fetched and then cancelled due to misprediction, the exception will be cancelled as well so that it will reach the memory stage. 
+
+   For the third one, as that in the first subtlety, any instruction following the excepting instruction is not allowed to alter any Conditional code or other programmer-visible state. 
+
+2. In the second paragraph of page 456, it said, "In terms of the machine-language program, the instruction in the memory stage should appear to execute before one in the fetch stage."
+
+   It means that one instruction in the memory stage will be completely executed before another instruction in the fetch stage; apparently and of course, the fetch stage is the first stage and the memory stage is the fourth stage. 
+
+3. In assembly code the end of page 456, `0xfffffffc = 0x0 - 0x4` because when `push` is being executed, the stack decreases by 4 at first. 
