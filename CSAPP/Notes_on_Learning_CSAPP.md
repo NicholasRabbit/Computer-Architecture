@@ -1072,6 +1072,8 @@ General Notes:
 
    HCL = rules for when to press brake or accelerator
 
+   Verilog is a HDL. 
+   
    
 
 ##### 4.2.5 Memory and Clocking
@@ -1175,7 +1177,7 @@ In Figure 4.19, valC $\leftarrow$ $M_4[PC+2]$ indicates that to get the 4-byte v
 
    As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
 
-   See practice problem 4.7 and 4.17. 
+   See practice problem 4.7 and 4.14. 
 
 **(5) Three control transfer instructions: `jXX`, `call`, and `ret`**
 
@@ -1390,3 +1392,40 @@ In `0x18: mrmovl 0(%edx), %eax`, when clock rises in cycle 7, it is in the "Exec
    It means that one instruction in the memory stage will be completely executed before another instruction in the fetch stage; apparently and of course, the fetch stage is the first stage and the memory stage is the fourth stage. 
 
 3. In assembly code the end of page 456, `0xfffffffc = 0x0 - 0x4` because when `push` is being executed, the stack decreases by 4 at first. 
+
+##### 4.5.10 Pipeline Stage Implementations 
+
+**Decode and Write-Back Stage**
+
+1) Implementation of the  forwarding`valA`  and use it in the "Decode Stage".  
+
+What we are discussing is to forward `valA` for an instruction in the "Decode Stage". Namely how to get the `valA` earlier at this stage (Decode Stage) of an instruction from values in stages of previous instructions, so that the processor doesn't have to wait until the last stage of the previous instruction is finished as in a SEQ. 
+
+1.1) First of all, `D_valP` is merged with `D_valA` to reduce the amount the state in the pipeline register for the later stage. Since only `call` or `jXX` need `valP` in the PC update stage, it is easy to add logic to implement that. 
+
+As can be seen in Figure 4.56, `valP` in the pipeline register D is merged with `valA ` and other forwarding values into the `Sel+Fwd A` logic. 
+
+2.2) The HCL description of the `d_valA`  for the next pipeline is as follows: 
+
+```assembly
+int d_valA = [
+    D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
+  	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction
+  	d_srcA == M_dstM : v_valM; 	#Forware valM from memory
+  	d_srcA == M_dstE : M_valE; 	#Forware valE from memory
+  	d_srcA == W_dstM : W_valM; 	#Forware valM from write back
+  	d_srcA == W_dstE : W_valE; 	#Forware valE from write back
+  	1 : d_rvalA; # Use the value read from the register file
+];
+```
+
+Note the order the code can not be altered, because if there are multiple instructions updating the same register which is being forwarded in the Decode stage of the following instruction, the value in the earlier stage should be chosen. Let's take an example in the book to explain. 
+
+```assembly
+0x000: irmovl $10, %edx
+0x006: irmovl $3, %edx
+0x00c: rrmovl	%edx, %eax
+0x00e: halt
+```
+
+In the decode stage of the instruction at `0x00c`, it needs to forward the value in `%edx`. Whereas, there are two instructions at `0x000` and `0x006` modifying the register. The processor should choose the value in the earlier stage, which the instruction `0x006: irmovl $3, %edx` is at. It is the closest instruction to the instruction `0x00c: rrmovl	%edx, %eax` which is forwarding now. 
