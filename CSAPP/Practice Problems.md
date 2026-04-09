@@ -818,3 +818,36 @@ int f_stac = [
 
 
 
+### Practice Problem 4.30
+
+Paraphrase the question and answer it:
+
+```assembly
+1 irmovl $5, %edx 
+2 irmovl $0x100,%esp 
+3 rmmovl %edx,0(%esp)
+4 popl %esp
+5 rrmovl %esp,%eax
+```
+
+It asks us to reverse the third and fourth cases in the in the HCL description for forwarding `d_valA`. What does it happen to the `rrmovl %esp, %eax` instruction in line 5. 
+
+```assembly
+int d_valA = [
+    D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
+  	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction
+  	d_srcA == M_dstM : v_valM; 	#Forware valM from memory  	(the third case)
+  	d_srcA == M_dstE : M_valE; 	#Forware valE from memory	(the fourth case)
+  	d_srcA == W_dstM : W_valM; 	#Forware valM from write back	(five)
+  	d_srcA == W_dstE : W_valE; 	#Forware valE from write back	(six)
+  	1 : d_rvalA; # Use the value read from the register file
+];
+```
+
+As in the answer of problem 4.7, writing `valM` to `dstM` has higher priority than `valE` to `dstE` by convention. If these two cases are reversed, the `popl %esp` instruction in line 5 will move `valE`, which is the incremented value of `%esp` to the operand: `%esp`. That violates the convention set by the processor. 
+
+By the way, there is a load-use hazard when `5 rrmovl %esp, %eax` is forwarding in its decode stage, because `4 popl %esp` is at the execute stage. It would stall for one cycle until the `4 popl` enters into the memory stage. Then both `valE` and `valM` are computed. 
+
+### Practice Problem 4.31
+
+If the five and six cases were reversed, `W_valE` will precede `W_valM`. Then the error occurring is like that in problem 4.30. If we add two `nop` between line 4 and 5 in the assembly code in problem 4.30. `rrmovl %esp, %eax` will use `W_valE` instead of `W_valM`; that is a wrong priority. 

@@ -1419,6 +1419,8 @@ int d_valA = [
 ];
 ```
 
+The HCL will be executed from the first case. If one case is taken, the following cases won't execute. If the `icode` is in `call, jXX`, `d_valA` will be assigned `D_valP`, which is the incremented PC. If the first operand is as same as the `e_dstE` in the previous instruction, for example, `0x00c: rrmovl	%edx, %eax` uses `%edx` which is the `e_dstE(%edx)` of the execute stage in `0x006: irmovl $3, %edx`. `d_srcA(%edx) == e_dstE(%edx)`, therefore, this case will be taken. 
+
 Note the order the code can not be altered, because if there are multiple instructions updating the same register which is being forwarded in the Decode stage of the following instruction, the value in the earlier stage should be chosen. Let's take an example in the book to explain. 
 
 ```assembly
