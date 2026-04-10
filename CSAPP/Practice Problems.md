@@ -836,7 +836,7 @@ It asks us to reverse the third and fourth cases in the in the HCL description f
 int d_valA = [
     D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
   	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction
-  	d_srcA == M_dstM : v_valM; 	#Forware valM from memory  	(the third case)
+  	d_srcA == M_dstM : m_valM; 	#Forware valM from memory  	(the third case)
   	d_srcA == M_dstE : M_valE; 	#Forware valE from memory	(the fourth case)
   	d_srcA == W_dstM : W_valM; 	#Forware valM from write back	(five)
   	d_srcA == W_dstE : W_valE; 	#Forware valE from write back	(six)
@@ -851,3 +851,22 @@ By the way, there is a load-use hazard when `5 rrmovl %esp, %eax` is forwarding 
 ### Practice Problem 4.31
 
 If the five and six cases were reversed, `W_valE` will precede `W_valM`. Then the error occurring is like that in problem 4.30. If we add two `nop` between line 4 and 5 in the assembly code in problem 4.30. `rrmovl %esp, %eax` will use `W_valE` instead of `W_valM`; that is a wrong priority. 
+
+### Practice Problem 4.32
+
+My answer is :
+
+```assembly
+int d_valB = [
+	D_icode in {ICALL, IRET} : d_valB;  # This case is not needed, because there is no register as the operand-d_srcB.
+	d_srcB == e_dstE : e_valE;
+	d_srcB == M_dstM : m_valM;
+	d_srcB == M_dstE : M_valE;
+	d_srcB == W_dstM : W_valM;
+	d_srcB == W_dstE : W_valE;
+	1 : d_valB;
+];
+```
+
+
+

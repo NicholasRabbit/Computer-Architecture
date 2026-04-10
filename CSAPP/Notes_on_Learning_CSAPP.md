@@ -1411,7 +1411,7 @@ As can be seen in Figure 4.56, `valP` in the pipeline register D is merged with 
 int d_valA = [
     D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
   	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction
-  	d_srcA == M_dstM : v_valM; 	#Forware valM from memory
+  	d_srcA == M_dstM : m_valM; 	#Forware valM from memory
   	d_srcA == M_dstE : M_valE; 	#Forware valE from memory
   	d_srcA == W_dstM : W_valM; 	#Forware valM from write back
   	d_srcA == W_dstE : W_valE; 	#Forware valE from write back
