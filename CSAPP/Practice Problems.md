@@ -717,7 +717,7 @@ We can get conditional code in the Execute stage and use it as a condition to te
 | Memory     |                                                              |
 | Write Back | if (Cnd) R[rB] $\leftarrow$ valE                             |
 
-Could I write "R[rB] $\leftarrow$ Cnd ? valE : valB" as the example  of `jxx Dest` in Figure 4.21? To be proved.
+Below is my answer. Could I write "R[rB] $\leftarrow$ Cnd ? valE : valB" as the example  of `jxx Dest` in Figure 4.21? To be proved.
 
 | Stage      | `cmovXX rA, rB`                                              |
 | ---------- | ------------------------------------------------------------ |
@@ -816,6 +816,17 @@ int f_stac = [
 ]
 ```
 
+### Practice Problem 4.29
+
+```assembly
+int d_dstE = [
+	D_icode in {IIRMOVL, IRRMOVL, IOPL} : D_rB;
+	D_icode in {IPUSHL, IPOPL, IRET, ICALL} : RESP;
+	1 : RNONE;	# Don't write any register. 
+
+];
+```
+
 
 
 ### Practice Problem 4.30
@@ -858,7 +869,7 @@ My answer is :
 
 ```assembly
 int d_valB = [
-	D_icode in {ICALL, IRET} : d_valB;  # This case is not needed, because there is no register as the operand-d_srcB.
+	D_icode in {ICALL, IRET} : d_valB;  # This case is not needed, because these instructions haven't srcB as operands. 
 	d_srcB == e_dstE : e_valE;
 	d_srcB == M_dstM : m_valM;
 	d_srcB == M_dstE : M_valE;
@@ -868,5 +879,46 @@ int d_valB = [
 ];
 ```
 
+### Practice Problem 4.33
 
+The second case in the HCL code for `d_valA` , which is in the forwarding code of Decode Stage, is as follows: 
+
+```assembly
+int d_valA = [
+    D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
+  	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction. (The second case.)
+  	# ...
+  	1 : d_rvalA; # Use the value read from the register file
+];
+```
+
+Note that `e_dstE` is the register ID computed by ALU and it is not necessarily as same as `E_dstE` in the pipeline register E, because some conditional move will not be taken. See the `e_Cnd`  in Figure 4.58. If the condition is not taken, `e_dstE` will be `RNONE`. If we use `E_dstE` as it said in the question, the forwarding value by following instructions will be incorrect. 
+
+Let me use the answer of this problem as an example to explain what will happen. 
+
+```assembly
+1 irmovl $123, %eax
+2 irmovl $321, %edx
+3 xorl %ecx, %ecx		# CC = 100, Zero Flag is 1, namely the result is 0.
+4 cmovne %eax, %edx	# Not taken; not transfered.
+5 addl %edx, %edx
+```
+
+Normally and by the rule, `xorl` instruction set the Conditional Code to 100 so the zero flag is 1. Thus, `comvne %eax, %edx` will not move and the `e_dstE` will be set to `RNONE`. The `%edx` will NOT be altered, the forward value from line 2 is the correct one: `0x321`. 
+
+If we use `E_dstE` in the pipeline register of Execute Stage of `4 cmovne %eax, %edx`, because, as aforementioned, the processor forwards value in matched registers from the nearest previous instruction. The decode stage of `5 addl %edx, %edx`  doesn't forward instruction in line, but line 4. 
+
+The HCL of altered design  is as follows: 
+
+```assembly
+# Altered HCL code
+int d_valA = [
+    D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
+  	d_srcA == E_dstE : e_valE; # It is altered to E_dstE.
+  	# ...
+  	1 : d_rvalA; # Use the value read from the register file
+];
+```
+
+When the decode stage in `addl %edx, %edx` is forwarding, the processor finds that the `E_dstE` of  `cmovne %eax, %edx`  equals to its `d_srcA(%edx)`, so it takes the value regardless of the condition will be taken or not. Then it generates the wrong result: `0x123 + 0x321 = 0x444`.
 

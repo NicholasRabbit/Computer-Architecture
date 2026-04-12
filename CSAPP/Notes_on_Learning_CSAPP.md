@@ -653,7 +653,14 @@ For example, when we use `addl` instruction to perform the equivalent of the C c
 
 (1) `cmovl`  will move data if a specific condition holds. Note that `l`is short for `less` not `long word`.
 
-To illustrate, `cmovl %edx, %eax` moves the content in `%edx` to `%eax` if `%edx` < `%eax`(signed). 
+To illustrate, `cmovl %edx, %eax` moves the content in `%edx` to `%eax` if `%edx` < `%eax`(signed) (**Wrong!!!**). 
+
+**N.B.** Conditional instructions don't compare the source and destination; they use flags from previous comparison(conditional code). As an illustration, 
+
+```assembly
+comp %edx, %ecx
+cmovl %eax, %ebx  # move %eax to %ebx only if %ecx < %edx. Don't compare %eax with %ebx.
+```
 
 (2) Why does the code based on "conditional data transfer" can outperform the code based on "conditional control transfer"?
 
@@ -1417,6 +1424,7 @@ int d_valA = [
   	d_srcA == W_dstE : W_valE; 	#Forware valE from write back
   	1 : d_rvalA; # Use the value read from the register file
 ];
+# The register IDs and values on the right of "==" are all forwarded from previous instructions. 
 ```
 
 The HCL will be executed from the first case. If one case is taken, the following cases won't execute. If the `icode` is in `call, jXX`, `d_valA` will be assigned `D_valP`, which is the incremented PC. If the first operand is as same as the `e_dstE` in the previous instruction, for example, `0x00c: rrmovl	%edx, %eax` uses `%edx` which is the `e_dstE(%edx)` of the execute stage in `0x006: irmovl $3, %edx`. `d_srcA(%edx) == e_dstE(%edx)`, therefore, this case will be taken. 
