@@ -805,7 +805,7 @@ B. ${1 \over {300 \over k} + 20} \times {1000 \over 1} = {1000k \over {300 + 20k
 
 Why does the solution of problem 4.28 say that "we cannot yet determine whether the data memory will generate an error signal for this instruction" ? 
 
-The reason is that in a pipelined processor the previous stage is the decode stage when the current instruction is in the fetch stage. It doesn't like that in a SEQ in which the next instruction is going to be executed only if the memory and write back stage are completed.  Thus, it said "we cannot yet determine..."
+The reason is that in a pipelined processor the previous stage is the decode stage when the current instruction is in the fetch stage. It doesn't like that in a SEQ in which the next instruction is going to be executed only if the whole stages, including the memory and write back stage, are completed.  Thus, it said "we cannot yet determine..."
 
 ```txt
 int f_stac = [
@@ -921,4 +921,27 @@ int d_valA = [
 ```
 
 When the decode stage in `addl %edx, %edx` is forwarding, the processor finds that the `E_dstE` of  `cmovne %eax, %edx`  equals to its `d_srcA(%edx)`, so it takes the value regardless of the condition will be taken or not. Then it generates the wrong result: `0x123 + 0x321 = 0x444`.
+
+### Practice Problem 4.34
+
+My wrong answer is as follows:
+
+```assembly
+int m_stat = [
+	# It is "M_icode", furthermore, there is no need to test it.
+	W_icode == IHALT : SHLT;	
+	dmem_error : SADR;
+	# m_stat only needs to receive the passing value from previous pipepline registers.
+	1 : SAOK;
+];
+```
+
+The correct answer is :
+
+```assembly
+int m_stat = [
+	dmem_error : SADR;
+	1: M_stat;
+];
+```
 
