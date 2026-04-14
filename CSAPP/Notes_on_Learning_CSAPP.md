@@ -1439,3 +1439,21 @@ Note the order the code can not be altered, because if there are multiple instru
 ```
 
 In the decode stage of the instruction at `0x00c`, it needs to forward the value in `%edx`. Whereas, there are two instructions at `0x000` and `0x006` modifying the register. The processor should choose the value in the earlier stage, which the instruction `0x006: irmovl $3, %edx` is at. It is the closest instruction to the instruction `0x00c: rrmovl	%edx, %eax` which is forwarding now. 
+
+##### 4.5.11 Pipeline Control Logic
+
+**Desired Handling of Special Control Cases**
+
+1) Read Figure 4.64 with Figure 4.60, 4.61, 4.62
+
+<img src="note-images/1776201339547.png" alt="1776201339547" style="zoom: 67%;" />
+
+1.1) For the "Processing `ret`", we can see that when `D_icode, E_icode or M_code` equals to `IRET`, three bubbles are injected in Figure 4.60. Once the `ret` enter into the write back stage, the following instructions continue. 
+
+<img src="note-images/1776201625216.png" alt="1776201625216" style="zoom: 50%;" />
+
+**Detecting Special Control Conditions**
+
+(1) "Detecting a load/use hazards involves checking the instruction type(`mrmovl` or `popl`) of the instruction in the execute stage and comparing its destination register with the source registers of the instruction in the decode stage".
+
+> When one of the instructions (`mrmovl` or `popl`)  is in the execute stage, the processor should check whether its destination register is as same as with the source registers of the following instructions in decode stage. If they are equivalent, there must be load/use hazards, therefore, the following instructions must stall. 
