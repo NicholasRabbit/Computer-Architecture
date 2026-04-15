@@ -1457,3 +1457,19 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 (1) "Detecting a load/use hazards involves checking the instruction type(`mrmovl` or `popl`) of the instruction in the execute stage and comparing its destination register with the source registers of the instruction in the decode stage".
 
 > When one of the instructions (`mrmovl` or `popl`)  is in the execute stage, the processor should check whether its destination register is as same as with the source registers of the following instructions in decode stage. If they are equivalent, there must be load/use hazards, therefore, the following instructions must stall. 
+
+**Pipeline Control Mechanism** 
+
+(1) Explanation of Figure 4.66. 
+
+<img src="note-images/1776295123862.png" alt="1776295123862" style="zoom: 50%;" />
+
+What do "stall, bubble, normal and so forth" mean in each row ? 
+
+Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the Figure 4.52 Hardware Structure of PIPE, the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor knows it is the instruction`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Now the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction and bubble for the decode stage. 
+
+Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises(See Figure 4.65). 
+
+<img src="note-images/1776296092560.png" alt="1776296092560" style="zoom: 50%;" />
+
+It is the same with other two conditions. 
