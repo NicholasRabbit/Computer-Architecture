@@ -1454,7 +1454,7 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 **Detecting Special Control Conditions**
 
-(1) "Detecting a load/use hazards involves checking the instruction type(`mrmovl` or `popl`) of the instruction in the execute stage and comparing its destination register with the source registers of the instruction in the decode stage".
+(1) "Detecting a load/use hazards involves checking the instruction type(`mrmovl` or `popl`) of the instruction in the execute stage and comparing its destination register with the source registers of the instruction in the decode stage". Page 470.
 
 > When one of the instructions (`mrmovl` or `popl`)  is in the execute stage, the processor should check whether its destination register is as same as with the source registers of the following instructions in decode stage. If they are equivalent, there must be load/use hazards, therefore, the following instructions must stall. 
 
@@ -1472,4 +1472,13 @@ Note that these "normal"s in "E, M and W" are not really normal instruction, but
 
 <img src="note-images/1776296092560.png" alt="1776296092560" style="zoom: 50%;" />
 
-It is the same with other two conditions. 
+It is the same with two of other conditions. 
+
+**Combinations of Control Conditions**
+
+(1) What is this part about ? 
+
+As can be seen in Figure 4.65, there are three special control conditions. We assumed that only one special condition will arise in the pipeline processor. Whereas, multiply special conditions may arise simultaneously when instructions are executing. As an illustration, a mistpredicted `jump` transfers control to a `ret`, but the `ret` should not execute. In this scenario, it is a combination of special conditions. How does a pipeline processor deal with that ?
+
+
+
