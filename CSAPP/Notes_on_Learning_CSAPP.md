@@ -1432,13 +1432,13 @@ The HCL will be executed from the first case. If one case is taken, the followin
 Note the order the code can not be altered, because if there are multiple instructions updating the same register which is being forwarded in the Decode stage of the following instruction, the value in the earlier stage should be chosen. Let's take an example in the book to explain. 
 
 ```assembly
-0x000: irmovl $10, %edx
-0x006: irmovl $3, %edx
+0x000: irmovl 	$10, %edx
+0x006: irmovl 	$3, %edx
 0x00c: rrmovl	%edx, %eax
 0x00e: halt
 ```
 
-In the decode stage of the instruction at `0x00c`, it needs to forward the value in `%edx`. Whereas, there are two instructions at `0x000` and `0x006` modifying the register. The processor should choose the value in the earlier stage, which the instruction `0x006: irmovl $3, %edx` is at. It is the closest instruction to the instruction `0x00c: rrmovl	%edx, %eax` which is forwarding now. 
+In the decode stage of the instruction at `0x00c`, it needs to forward the value in `%edx`. Whereas, there are two instructions at `0x000` and `0x006` modifying the register. The processor should choose the value in the earlier stage, which the instruction `0x006: irmovl $3, %edx` is at. It is the closest instruction to the instruction `0x00c: rrmovl	%edx, %eax` in which `%edx` should be forwarded from previous instructions.
 
 ##### 4.5.11 Pipeline Control Logic
 
@@ -1466,9 +1466,9 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 What do "stall, bubble, normal and so forth" mean in each row ? 
 
-Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the Figure 4.52 Hardware Structure of PIPE, the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor knows it is the instruction`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Now the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction and bubble for the decode stage. 
+Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the "Figure 4.52 Hardware Structure of PIPE", the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor doesn't know it is the instruction until the`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Then the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction, bubble for the decode stage and normal for the rest of pipeline registers. 
 
-Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises(See Figure 4.65). 
+Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises. The input for "Decode Stage" of `0x21 rrmovl..` is a "bubble", so the "E, M, and W" are "normal" bubbles. (See Figure 4.65). 
 
 <img src="note-images/1776296092560.png" alt="1776296092560" style="zoom: 50%;" />
 
@@ -1478,7 +1478,52 @@ It is the same with two of other conditions.
 
 (1) What is this part about ? 
 
-As can be seen in Figure 4.65, there are three special control conditions. We assumed that only one special condition will arise in the pipeline processor. Whereas, multiply special conditions may arise simultaneously when instructions are executing. As an illustration, a mistpredicted `jump` transfers control to a `ret`, but the `ret` should not execute. In this scenario, it is a combination of special conditions. How does a pipeline processor deal with that ?
+As can be seen in Figure 4.65, there are three special control conditions. We assumed that only one special condition will arise in the pipeline processor. Whereas, multiply special conditions may arise simultaneously when instructions are executing. As an illustration, a mistpredicted `jump` transfers control to a `ret`, but the `ret` should not execute. In this scenario, it is a combination of special conditions. 
+
+How does a pipeline processor deal with that when multiple special conditions arise ?
+
+As an illustration,  here is the answer of problem 4.35:
+
+```assembly
+# Code to generate a combination of not-taken branch and ret
+	irmovl Stack, %esp
+	irmovl rtnp,%eax
+	pushl %eax   	# Set up return pointer
+	xorl %eax,%eax  # Set Z condition code
+	jne target		# Not taken (First part of combination)
+	irmovl $1,%eax	# Should execute this
+	halt
+target: ret			# Second part of combination
+	irmovl $2,%ebx  # Should not execute this
+	halt	
+
+rtnp:
+irmovl $3,%edxhalt # Should not execute this
+·pos 0x40
+Stack:
+```
+
+By the rule of pipeline processor, it always predict the jump target will be taken. Thus, the `target: ret` will enter the pipeline. When `jne target` is at the "Execute stage", `ret` is at the "Decode stage". Then the processor detects that the `ret` is a "special control condition", and now `jne` is at the "Execute stage" so the pipeline control logic detects the "Mispredicted branch". See Figure 4.67: Combination A. Two special control conditions arise simultaneously. 
+
+Do we need to alter our pipeline design or it can handle it ?
+
+See the "Combination" of "Processing ret" and "Mispredicted branch" at page 473. 
+
+```txt
+stall	bubble
+0		0		normal
+1		0		stall
+0		1		bubble
+```
+
+Since `normal & stall = stall`, when two special control conditional arise simultaneously, we get the "Combination":
+
+```txt
+				F		D		E		M		W
+Combiantion		stall	bubble	bubble	normal	normal
+```
+
+As a result, the mispredicted branch, `ret` which is at the decode stage, is replaced with a bubble. Whereas, the instruction of the `ret` is in the "Fetch stage". The `valP` of `jXX` is `PC + 5` by default if the condition doesn't hold, so the `ret` will be replaced by the instruction at `PC+5`. In conclusion, our pipeline processor handles it correctly without being altered or adding extra logic. 
 
 
 

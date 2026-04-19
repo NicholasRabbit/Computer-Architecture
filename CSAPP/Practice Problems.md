@@ -945,3 +945,26 @@ int m_stat = [
 ];
 ```
 
+### Practice Problem 4.35
+
+We need write an assembly-language program to test whether "Actions for pipeline control logic" in Figure 4.66 of a pipeline processor can handle multiple special control conditions, namely a combination of "Mispredict branch" and "Processing ret". See the note of this section. 
+
+```assembly
+# Code to generate a combination of not-taken branch and ret
+	irmovl Stack, %esp
+	irmovl rtnp,%eax
+	pushl %eax   	# Set up return pointer
+	xorl %eax,%eax  # Set Z condition code
+	jne target		# Not taken (First part of combination)
+	irmovl $1,%eax	# Should execute this
+	halt
+target: ret			# Second part of combination
+	irmovl $2,%ebx  # Should not execute this
+	halt	
+
+rtnp:
+irmovl $3,%edxhalt # Should not execute this
+·pos 0x40
+Stack:
+```
+
