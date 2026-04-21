@@ -1442,6 +1442,8 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 ##### 4.5.11 Pipeline Control Logic
 
+**N.B.** There is one pipeline where a sequence of instructions is in different stages. See Figure 4.60 below, when the first instruction at `0x000` is executing, it will enter into the "Fetch Stage". Then it enters into the "Decode stage" in the next cycle. Don't be confused by the squares which are all blue in a row, an instruction can NOT be at all stages simultaneously. It depicted different stages. 
+
 **Desired Handling of Special Control Cases**
 
 1) Read Figure 4.64 with Figure 4.60, 4.61, 4.62
@@ -1466,7 +1468,7 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 What do "stall, bubble, normal and so forth" mean in each row ? 
 
-Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the "Figure 4.52 Hardware Structure of PIPE", the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor doesn't know it is the instruction until the`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Then the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction, bubble for the decode stage and normal for the rest of pipeline registers. 
+Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the "Figure 4.52 Hardware Structure of PIPE", the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor doesn't know it is the instruction until the`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Then the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction(`ret` has gone through the "Fetch stage"), bubble for the decode stage(when the next clock rises, `ret` has entered into the Execute Stage. *I guess. To be verified.*) and normal for the rest of pipeline registers. 
 
 Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises. The input for "Decode Stage" of `0x21 rrmovl..` is a "bubble", so the "E, M, and W" are "normal" bubbles. (See Figure 4.65). 
 
@@ -1516,14 +1518,14 @@ stall	bubble
 0		1		bubble
 ```
 
-Since `normal & stall = stall`, when two special control conditional arise simultaneously, we get the "Combination":
+Since `(00 && 10)normal & stall = stall`, when two special control conditional arise simultaneously, we get the "Combination":
 
 ```txt
 				F		D		E		M		W
 Combiantion		stall	bubble	bubble	normal	normal
 ```
 
-As a result, the mispredicted branch, `ret` which is at the decode stage, is replaced with a bubble. Whereas, the instruction of the `ret` is in the "Fetch stage". The `valP` of `jXX` is `PC + 5` by default if the condition doesn't hold, so the `ret` will be replaced by the instruction at `PC+5`. In conclusion, our pipeline processor handles it correctly without being altered or adding extra logic. 
+As a result, the mispredicted branch, `ret` which is at the decode stage, is replaced with a bubble. Whereas, the instruction of the `ret` has already been  in the "Fetch stage". It is stalled, now. Whereas, the `valP` of `jXX` is `PC + 5` by default if the condition doesn't hold, so the `ret` will be replaced by the instruction at `PC+5`. In conclusion, our pipeline processor handles it correctly without being altered or adding extra logic. 
 
 
 

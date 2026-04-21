@@ -947,6 +947,8 @@ int m_stat = [
 
 ### Practice Problem 4.35
 
+**NB:** Note that both 4.35 and 4.36 ask us to write assembly-language code to cause the combination A and B in Figure 4.67, because they don't arise very often. We need write to test whether the control logic of the pipeline processor can handle it correctly.
+
 We need write an assembly-language program to test whether "Actions for pipeline control logic" in Figure 4.66 of a pipeline processor can handle multiple special control conditions, namely a combination of "Mispredict branch" and "Processing ret". See the note of this section. 
 
 ```assembly
@@ -967,4 +969,33 @@ irmovl $3,%edxhalt # Should not execute this
 ·pos 0x40
 Stack:
 ```
+
+### Practice Problem 4.36
+
+Sadly, I can't write an appropriate to cause "Combination B" to arise. The code below is the correct answer and I am trying to assimilate it. 
+
+```assembly
+# Test instruction that modifies %esp followed by ret
+    irmovl mem, %ebx
+    mrmovl 0(%ebx),%esp # Sets %esp to point to return point 
+    ret 	# Returns to return point
+    halt 	#
+rtnpt:	irmovl $5,%esi
+		halt 	# Return point
+·pos 0x40
+mem:	.long stack		# Holds desired stack pointer
+·pos 0x50
+stack:
+.long rtnpt	# Top of stack: Holds return point
+```
+
+*Explanation of terminology:* 
+
+`mem` holds the address of `stack`, and `stack` holds the address of  `rtnpt`. If we use a form of reference to show that, it is: `(mem) -> stack; (stack) -> rtnpt`. 
+
+Thus, `irmovl mem, %ebx` moves the value of `stack` to `%ebx`. Since `(stack) -> rtnpt`, `0(%ebx) -> rtnpt`.  
+
+*Why can't the Y86 pipeline control logic operate correctly if "Combination B" arises ?* 
+
+When `mrmovl 0(%ebx),%esp` is at the Execute Stage, `ret` is at the Decode Stage so it needs the value of `%esp`. However, the value of `%esp` will not be known until the Memory Stage of `mrmovl...`. `ret` must be stalled for one cycle. The control logic of Combination B at the Decode Stage is `bullble + stall`, which means the Decode Stage will be added a "bubble". That's not IA32 needs because `ret` has to enter the Decode Stage from Fetch Stage and one cycle is wasted. 
 
