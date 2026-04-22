@@ -999,3 +999,54 @@ Thus, `irmovl mem, %ebx` moves the value of `stack` to `%ebx`. Since `(stack) ->
 
 When `mrmovl 0(%ebx),%esp` is at the Execute Stage, `ret` is at the Decode Stage so it needs the value of `%esp`. However, the value of `%esp` will not be known until the Memory Stage of `mrmovl...`. `ret` must be stalled for one cycle. The control logic of Combination B at the Decode Stage is `bullble + stall`, which means the Decode Stage will be added a "bubble". That's not IA32 needs because `ret` has to enter the Decode Stage from Fetch Stage and one cycle is wasted. 
 
+### Practice Problem 4.37
+
+From Figure 4.64, 4.66 and 4.67,  we know the pipeline register D only stall for "load/use hazard".
+
+```txt
+bool D_stall = 
+	# load/use hazard
+	E_icode in {IMRMOVL, IPOPL} && E_dstM in {d_srcA, d_srcB};
+```
+
+### Practice Problem 4.38
+
+We know that pipeline register E is added with a bubble when there are "load/use hazard" and "Mispredicted branch" from Figure 4.64, 4.66 and 4.67. 
+
+```txt
+bool E_bubble = 
+	# load/use hazard
+	(E_icode in {IMRMOVL, IPOPL} && E_dstM in {d_srcA, d_srcB})
+	# or Mispredicted branch
+	(E_icode = IJXX && !e_cnd)
+```
+
+### Practice Problem 4.39
+
+This problem is rather difficult. Let's analyses and do it one small step by one.
+
+First of all, what instructions invoke the `set_cc`? 
+
+Only the `IOPL` can cause the Condition Code to be altered. 
+
+When will `IOPL` invoke the `set_cc` ? 
+
+From Figure 4.18, we know that "Condition Code"  is set at the "Execute Stage" of `OPl`. However, it can NOT update the CC when there is an previous excepting instruction at the "Memory Stage" or "Write Stage" due to the constraints of IA32. 
+
+Thus, my answer is: 
+
+```txt
+bool set_cc = 
+	E_icode == IOPL &&
+	m_stat == SAOK && W_stat == SAOK; 
+```
+
+The answer from the book.
+
+```txt
+bool set_cc = 
+	E_icode == IOPL &&
+	!m_stat in {SADR, SINS, SHLT} && !m in {SADR, SINS, SHLT};
+```
+
+Are they equivalent to each other? 
