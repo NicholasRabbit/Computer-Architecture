@@ -1380,7 +1380,7 @@ In `0x18: mrmovl 0(%edx), %eax`, when clock rises in cycle 7, it is in the "Exec
 
    1) First, exceptions of multiple instructions in a pipeline might occur simultaneously. 
 
-   The basic rule is to handle the exception which is on the farthest stage of a pipeline. Since in a pipeline the instruction which is at memory stage must be executed earlier than the one in the fetch stage, the processor must report the very first exception so that the program can be stopped immediately. In other word, the first excepting instruction will reach he memory stage, first.
+   The basic rule is to handle the exception which is on the farthest stage of a pipeline. Since in a pipeline the instruction which is at memory stage must be executed earlier than the one in the fetch stage, the processor must report the very first exception so that the program can be stopped immediately. In other word, the first excepting instruction will reach he memory stage before other following instructions.
 
    2) The second subtlety is the exception of an instruction which is executed due to wrong prediction. The instruction is cancelled later, therefore, it is pointless to raise an exception caused by this instruction. 
 
@@ -1468,11 +1468,13 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 What do "stall, bubble, normal and so forth" mean in each row ? 
 
-Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the "Figure 4.52 Hardware Structure of PIPE", the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor doesn't know it is the instruction until the`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Then the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction(`ret` has gone through the "Fetch stage"), bubble for the decode stage(when the next clock rises, `ret` has entered into the Execute Stage. *I guess. To be verified.*) and normal for the rest of pipeline registers. 
+1.1) Let's take "Processing `ret`" as an example,  when `ret` is executing, as can be seen the "Figure 4.52 Hardware Structure of PIPE", the address of `ret` is retrieved from the "Instruction memory" in the Fetch Stage of the instruction `ret`. The processor doesn't know it is the instruction until the`ret` in the Decode Stage. Whereas, the "Predict PC", normally the next instruction `0x21 rrmovl $edx, %ebx`, is fetched into the pipeline register of the Fetch Stage, see Figure 4.61 below. Then the processor will set the pipeline control logic to "stall" at the fetch stage of next instruction(`ret` has gone through the "Fetch stage"), bubble for the decode stage(when the next clock rises, `ret` has entered into the Execute Stage. *I guess. To be verified.*) and normal for the rest of pipeline registers. 
 
-Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises. The input for "Decode Stage" of `0x21 rrmovl..` is a "bubble", so the "E, M, and W" are "normal" bubbles. (See Figure 4.65). 
+1.2) Note that these "normal"s in "E, M and W" are not really normal instruction, but the value of input from "D", because when the logic is set to "normal", the pipeline register will set the value of its output to that of its input when the clock rises. The input for "Decode Stage" of `0x21 rrmovl..` is a "bubble", so the "E, M, and W" are "normal" bubbles. (See Figure 4.65). 
 
 <img src="note-images/1776296092560.png" alt="1776296092560" style="zoom: 50%;" />
+
+1.3) **Note** that the pipeline control logic comes to effect only when the `ret` has passed through a stage. To illustrate, when `ret` has passed through the Fetch Stage, a "stall" will be set to this stage on the next cycle; when `ret` has passed through the Decode  Stage, a "bubble" will be injected to this stage on the next cycle. 
 
 It is the same with two of other conditions. 
 

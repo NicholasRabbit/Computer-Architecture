@@ -1050,3 +1050,22 @@ bool set_cc =
 ```
 
 Are they equivalent to each other? 
+
+### Practice Problem 4.40
+
+Since the Memory Stages of the three conditions are all "normal" in Figure 4.66, how can we know when the processor injects a bubble to the Memory Stage? 
+
+When there is an exception, a bubble will be injected to the memory stage. Once an excepting instruction has passed through the Memory Stage or the Write Back Stage, a bubble is being injected to the Memory Stage. Hence, the answer is:
+
+```txt
+bool M_bubble = 
+	m_stat in {SADR, SINS, SHLT} || W_stat in {SADR, SINS, SHLT};
+```
+
+For `W_stall`, when an excepting instruction reaches the Write Back Stage, this stage should be stalled and then the instruction should be cancelled. Attention should be paid is that the Memory Stage should not be stalled, or the excepting instruction will not enter into the Write Back Stage. 
+
+```txt
+bool W_stall = 
+	W_stat in {SADR, SINS, SHLT};
+```
+
