@@ -3,7 +3,7 @@
 /*
  * gcc command is
  * >gcc -m32 -S pop_test.c   # to generate assembly code
- * >gcc -32 -Wall pop_test.c -o test_pop.out  # to generate an executable file.
+ * >gcc -m32 -Wall pop_test.c -o test_pop.out  # to generate an executable file.
  *
  * */
 
