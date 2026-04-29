@@ -2055,3 +2055,186 @@ Great ! It is correct.
 
 ##### Phase 5 (Level 3 touch3)
 
+This phase involves multiple gadget farms. To be continued. 
+
+### 4) Arch Lab
+
+>  CSAPP2e
+
+##### Part A: 
+
+What does this part require us to do? 
+
+Write Y86 programs in `.../sim/misc`, namely Y86 assembly code such as `sum.ys`, to implement the functions in `examples.c`. 
+
+How to do it?
+
+1) In `sim/misc`, write a Y86 assembly code, such as `sum.ys`, by imitating that in Figure 4.7.
+
+2) Compile it with the YAS assembler with `make sum.yo `. This command will locate `sum.ys` with the suffix of `.ys`  automatically and assemble it. In fact, `./yas  sum.ys` is executed. 
+
+3) Then we can test the `sum.yo` with SEQ simulator:  `./seq/ssim`.
+
+###### (1) sum.ys  
+
+Iteratively sum linked list elements. 
+
+The C code of the linked list and the function, `sum_list`,  is as follows: 
+
+```c
+/* linked list element */
+typedef struct ELE {
+	int val;
+	struct ELE *next;
+} *list_ptr;
+
+/* sum_list - Sum the elements of a linked list */
+int sum_list(list_ptr ls) {
+	int val = 0;
+	while (ls) {
+		val += ls->val; 
+        ls = ls->next;
+	}
+	return val;
+}
+```
+
+We should the the linked list as shown in the Y86 assembly code.
+
+```assembly
+# Sample linked list
+.align 4
+ele1:
+    .long 0x00a
+    .long ele2
+ele2:
+    .long 0x0b0
+    .long ele3
+ele3:
+    .long 0xc00
+    .long 0
+```
+
+1.1) The first question is: when writing Y86 assembly code, how to deference another structure with the second element in a structure? 
+
+Use pointer arithmetic. As an illustration, if we use `0x4(%esp)` to deference `struct ELE ele1 = {0x00a, xxx}` and `0x4(%esp)` also points to the first element: `val`, we use `0x8(%esp)` to deference `ele2`, because the length of each element is 4 bytes. 
+
+The reason is that all the addresses of arrays, structures, and other data in Y86 are chunks of 4-byte binary digits. We can do arithmetic for them. Furthermore, since they are all aligned by 4 bytes, it is easy to iterate elements in heterogeneous data structures. 
+
+1.2) Let's start writing a Y86 assembly code for `sum_list`.
+
+1.2.1) Initiate the stack and the linked list, which is represented by structures.
+
+`misc/sum.ys`
+
+```assembly
+  1         .pos 0
+  2 init:   irmovl Stack, %esp  # Set up stack pointer.
+  3         irmovl Stack, %ebp  # Set up base pointer.
+  4         call Main
+  5         halt
+  6
+  7     # Sample linked list. The linked list of 3 elements.
+  8     .align 4
+  9     ele1:
+ 10             .long 0x00a
+ 11             .long ele2
+ 12     ele2:
+ 13             .long 0x0b0
+ 14             .long ele3
+ 15     ele3:
+ 16             .long 0xc00
+ 17             .long 0
+ 18
+ 19     Main:   pushl %ebp  # Save the base pointer
+ 20             rrmovl %esp, %ebp   # Set the base pointer of the function: Main. Now the stack pointer and the base pointer of "Main" is at 0x100.
+ 21             irmovl
+
+ 28         .pos 0x100
+ 29 Stack:
+```
+
+Assemble it with `make sum.yo`  to generate the following Y86 object code. 
+
+`sum.yo: `
+
+```assembly
+  1   0x000:              |         .pos 0
+  2   0x000: 30f400010000 | init:   irmovl Stack, %esp
+  3   0x006: 30f500010000 |         irmovl Stack, %ebp
+  4                       |
+  5   0x00c:              |     .align 4
+  6   0x00c:              |     ele1:
+  7   0x00c: 0a000000     |             .long 0x00a
+  8   0x010: 14000000     |             .long ele2
+  9   0x014:              |     ele2:
+ 10   0x014: b0000000     |             .long 0x0b0
+ 11   0x018: 1c000000     |             .long ele3
+ 12   0x01c:              |     ele3:
+ 13   0x01c: 000c0000     |             .long 0xc00
+ 14   0x020: 00000000     |             .long 0
+ 15                       |
+ 16   0x100:              |         .pos 0x100
+ 17   0x100:              | Stack:
+```
+
+We can find that from the address of `0x00c` to `0x20`, a linked list have been generated from the assembly code of sample linked list. 
+
+1.2.2) Write`Main` and `Sum`
+
+```assembly
+		.pos 0
+init:	irmovl Stack, %esp	# Set up stack pointer.
+		irmovl Stack, %ebp	# Set up base pointer.
+		call Main
+		halt
+
+	# The linked list of 3 elements.
+	.align 4
+	ele1: 
+			.long 0x00a
+			.long ele2
+	ele2: 
+			.long 0x0b0
+			.long ele3
+	ele3: 
+			.long 0xc00
+			.long 0
+
+	Main:	pushl %ebp	# Save the base pointer
+			rrmovl %esp, %ebp	# Set the base pointer of the function: Main. Now the stack pointer and the base pointer of "Main" is at 0x100.
+			irmovl ele1, %edx	# Move the linked list to %edx.
+			pushl %edx			# Push the linked list.
+			call Sum			# Note there is an implicit "push" after "call", therefore the stack will decrease by 4.
+			rrmovl %ebp, %esp
+			popl %ebp			# Reset the stack
+			ret
+
+
+	Sum:	pushl %ebp			# Save the caller's frame pointer
+			rrmovl %esp, %ebp	
+			xorl %eax, %eax			# val = 0
+32.         mrmovl 0x8(%ebp), %ecx		# get *list_ptr
+
+	Loop:	mrmovl (%ecx), %esi		# get ls->val
+			addl %esi, %eax			# val += ls->val
+			mrmovl 0x4(%ecx), %edx	# get the pointer of the next element.
+			rrmovl %edx, %ecx
+			andl %ecx, %ecx			# test if the next is 0
+			jne Loop				# If it is NOT 0, keep on looping
+	
+	End:	rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+		.pos 0x100
+Stack:
+
+```
+
+Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call`. 
+
+
+
+
+

@@ -703,6 +703,13 @@ There are two steps after the `call` is executed. First, it push the return addr
 
 See the sequence of stages of `call` and `ret` in page 406 and Practice Problem 4.16 to know more details of these instructions. 
 
+```assembly
+0x008	call Sum
+0x00c	rrmovl %eax, %ebx # The address of this instruction will be pushed to the stack.
+```
+
+
+
 (2) `ret` 
 
 There is not any arguments/operands in this instruction. 
@@ -891,11 +898,65 @@ In a pipeline processor, the execution of an instruction is divided into several
 
 In IA 32 and Y86, instructions of conditional moves is executed implicitly. As an illustration, `cmovle %eax, %ebx` computes `%ebx - %eax`; it is not like `subl %eax, %ebx` that we can read. The computation of `cmovle`  is done in ALU automatically and Conditional Codes(CC) are updated simultaneously.  Consequently, in this problem, we can retrieve the value after any conditional moves. 
 
-##### 4.1.4  Y86 Programs
+##### 4.1.5  Y86 Programs
 
-What is the "array" used for in Figure 4.7 ?
+(1) Explanation of Figure 4.7
 
-It is the total volume of a program, including stacks and instructions. (That was concluded by me and has not been verified.)
+1.1) What is the "array" used for in Figure 4.7 ?
+
+It is just a typical and normal array in which each elements have 4 bytes even though it is declared with `.long`. Note the previous conclusion is WRONG! 
+
+> It is the total volume of a program, including stacks and instructions. (That was concluded by me and has not been verified. Wrong!)
+
+1.2) Why is the address of the `Start` is at `0x8(%ebp)` instead of `0x4(%ebp)` in line 29 of the function `SUm`, since there is only one push(`pushl %edx`) before `call Sum`?
+
+The reason is the `call Sum` will push the address of the following instruction to the stack before transferring control to the `Sum`, therefore, it pushes 2 times and it is `0x8(%ebp)`.
+
+(2) Clarification of Figure 4.8. 
+
+2.1) The first instruction is as follows:
+
+```assembly
+0x000: 30f400010000		| init: irmovl Stack, %esp
+```
+
+`30` is `irmovl`
+
+`f` is an invalid register ID
+
+`4` is `%esp`.
+
+Note that the last 4 bytes of `00010000` is NOT `0x1000`, but `00_01_00_00`. Since it is a little-endian machine, the number is `0x00_00_01_00`, namely `0x100`.
+
+2.1)  How does the CPU know the value of Stack is `0x100` when it isn't assigned until line 50?
+
+```assembly
+  1 /* $begin code-yso */
+  2 /* $begin code-ysa */
+  3 # Execution begins at address 0
+  4     .pos 0
+  5 init:   irmovl Stack, %esp      # Set up stack pointer
+  6     irmovl Stack, %ebp      # Set up base pointer
+ 
+/* ... */
+ 
+ 49 # The stack starts here and grows to lower addresses
+ 50     .pos 0x100
+ 51 Stack:
+ 52 /* $end code-ysa */
+ 53 /* $end code-yso */
+```
+
+This is Y86 assembly code and it is not for the CPU to read directly, but for the Y86 assembler(a compiler). 
+
+`.pos 0` instructs the compiler to generate machine-level code starting at the address of `0x0`. This is the starting address of all Y86 programs. The byte code of `irmovl Stack, %esp` will be put here:`0x0`. When the instructions at line 50 and 51 are compiled, the `Stack` will be replaced by `0x100`  so that the CPU can "know" the value before it reads from the first instruction at `0x000`. We can see `0x100` is replace `Stack` in  the machine-level code in Figure 4.8. 
+
+```assembly
+  4   0x000:              |     .pos 0
+  5   0x000: 30f400010000 | init:   irmovl Stack, %esp      # Set up stack pointer
+```
+
+
 
 ##### 4.1.6 Some Y86 Instruction Details
 
