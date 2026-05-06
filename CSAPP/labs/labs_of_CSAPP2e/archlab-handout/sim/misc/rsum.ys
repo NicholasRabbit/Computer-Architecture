@@ -1,0 +1,52 @@
+			.pos 0
+init:		irmovl Stack, %esp	# Set up stack pointer
+			irmovl Stack, %ebp	# Set up base pointer
+			call Main
+			halt
+		
+	# A linked list of 3 elements.
+	.align 4
+	ele1:	
+			.long 0x00a
+			.long ele2
+	ele2:	
+			.long 0x0b0
+			.long ele3
+
+	ele3:	.long 0xc00
+			.long 0
+
+	Main:	pushl %ebp
+			rrmovl %esp, %ebp
+			irmovl ele1, %edi
+			pushl %edi				# Store the argument and then pass it to Rsum.
+			call Rsum
+			rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+	Rsum:	pushl %ebp
+			rrmovl %esp, %ebp
+			mrmovl 0x8(%ebp), %edi	# Get the argument "list_ptr ls", which is a pointer.
+			andl %edi, %edi
+			je return_zero			# if (!ls) return 0
+
+			mrmovl (%edi), %ebx
+			pushl %ebx				# push ls->val
+			
+			mrmovl 0x4(%edi), %edi 	# get ls->next.
+			pushl %edi				# Store ls-next at the top of the stack. Since it is a recursive function, we should write instruction to pass an argument.
+			call Rsum
+			popl %edi				# When the last recursive function returns, the argument is on the top of the stack and it is should be popped out.
+			popl %ebx
+			addl %ebx, %eax
+			jmp End
+
+	return_zero: xorl %eax, %eax
+
+	End:	rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+		.pos 0x100
+Stack: 

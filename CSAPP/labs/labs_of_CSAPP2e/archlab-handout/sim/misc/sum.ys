@@ -4,7 +4,7 @@ init:	irmovl Stack, %esp	# Set up stack pointer.
 		call Main
 		halt
 
-	# The linked list of 3 elements.
+	# A linked list of 3 elements.
 	.align 4
 	ele1: 
 			.long 0x00a
@@ -18,7 +18,7 @@ init:	irmovl Stack, %esp	# Set up stack pointer.
 
 	Main:	pushl %ebp	# Save the base pointer
 			rrmovl %esp, %ebp	# Set the base pointer of the function: Main. Now the stack pointer and the base pointer of "Main" is at 0x100.
-			irmovl ele1, %edx	# Move the linked list to %edx.
+			irmovl ele1, %edx	# Move the linked list to %edx and pass it as an argument later.
 			pushl %edx			# Push the linked list.
 			call Sum			# Note there is an implicit "push" after "call", therefore the stack will decrease by 4.
 			rrmovl %ebp, %esp
@@ -29,11 +29,11 @@ init:	irmovl Stack, %esp	# Set up stack pointer.
 	Sum:	pushl %ebp			# Save the caller's frame pointer
 			rrmovl %esp, %ebp	
 			xorl %eax, %eax			# val = 0
-			mrmovl 0x8(%ebp), %ecx		# get *list_ptr
+			mrmovl 0x8(%ebp), %ecx		# get "list_ptr"
 
 	Loop:	mrmovl (%ecx), %esi		# get ls->val
 			addl %esi, %eax			# val += ls->val
-			mrmovl 0x4(%ecx), %edx	# get the pointer of the next element.
+			mrmovl 0x4(%ecx), %edx	# get the pointer of the next element: ls->next
 			rrmovl %edx, %ecx
 			andl %ecx, %ecx			# test if the next is 0
 			jne Loop				# If it is NOT 0, keep on looping
