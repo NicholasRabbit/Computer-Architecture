@@ -2180,7 +2180,7 @@ Assemble it with `make sum.yo`  to generate the following Y86 object code.
 
 We can find that from the address of `0x00c` to `0x20`, a linked list have been generated from the assembly code of sample linked list. 
 
-1.2.2) Write`Main` and `Sum`
+1.2.2) Write assembly code for`Main` and `Sum`
 
 ```assembly
 		.pos 0
@@ -2232,9 +2232,160 @@ Stack:
 
 ```
 
-Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call`. 
+Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call Sum`. 
 
+1.2.3) Then generate an object model of `sum.ys` by `make sum.yo`, note that the suffix is `.yo`, not `.ys`. Run it in the SEQ simulator. 
 
+```shell
+# In `sim/seq`
+./ssim -t -g ../misc/sum.yo
+```
+
+The content in `%eax` is `0xcba`, therefore, my Y86 assembly code is correct. 
+
+###### (2) rum.ys
+
+The C code of `rsum_list`: 
+
+```c
+/* rsum_list - Recursive version of sum_list */
+int rsum_list(list_ptr ls)
+{
+    if (!ls)
+		return 0;
+    else {
+        int val = ls->val;
+        int rest = rsum_list(ls->next);
+        return val + rest;
+    }
+}
+```
+
+2.1) My Y86 code is as follows(wrong): 
+
+```assembly
+			.pos 0
+init:		irmovl Stack, %esp	# Set up stack pointer
+			irmovl Stack, %ebp	# Set up base pointer
+			call Main
+			halt
+		
+	# A linked list of 3 elements.
+	.align 4
+	ele1:	
+			.long 0x00a
+			.long ele2
+	ele2:	
+			.long 0x0b0
+			.long ele3
+
+	ele3:	.long 0xc00
+			.long 0
+
+	Main:	pushl %ebp
+			rrmovl %esp, %ebp
+			irmovl ele1, %ebx
+			pushl %ebx				# Store the argument and then pass it to Rsum.
+			call Rsum
+			rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+	Rsum:	pushl %ebp
+			rrmovl %esp, %ebp
+			pushl %ebx				# Save the callee save register. 
+			irmovl $4, %edi
+			subl %edi, %esp
+			mrmovl 0x8(%ebp), %ebx	# Get the argument "list_ptr ls", which is a pointer.
+			mrmovl (%ebx), %ecx		# Get the ls->val
+			irmovl $0, %eax			# Initialise the value to 0.
+			mrmovl 0x4(%ebx), %esi	# get ls->next.
+			rrmovl %esi, %ebx
+			andl %ebx, %ebx			# If next is 0, the target is taken. 
+			je End 
+			rmmovl %ebx, (%esp)		# Store ls-next at the top of the stack. Since it is a recursive function, we should write instruction to pass an argument.
+42.         rrmovl %ecx, %eax
+			call Rsum
+			addl %ecx, %eax
+
+	End:	irmovl $4, %edi
+			addl %edi, %esp 
+			popl %ebx
+			popl %ebp
+			ret
+			
+		.pos 0x100
+Stack: 
+```
+
+This Y86 assembly code is wrong because the value in the register `%eax` is `0x1800`(= `0xc00 + 0xc00`). Apparently, the `%eax`, which should have stored the sum of called recursive functions, is modified every time. 
+
+So I replace the code in line 42 with the following code: 
+
+```assembly
+42. mrmovl (%ebx), %ecx
+```
+
+The result in `%eax` is `0xcb0` now, it is not correct but closed. We should find out why `0x00a` is not added. 
+
+To be analysed. 
+
+The correct assembly code is as follows: 
+
+```assembly
+			.pos 0
+init:		irmovl Stack, %esp	# Set up stack pointer
+			irmovl Stack, %ebp	# Set up base pointer
+			call Main
+			halt
+		
+	# A linked list of 3 elements.
+	.align 4
+	ele1:	
+			.long 0x00a
+			.long ele2
+	ele2:	
+			.long 0x0b0
+			.long ele3
+
+	ele3:	.long 0xc00
+			.long 0
+
+	Main:	pushl %ebp
+			rrmovl %esp, %ebp
+			irmovl ele1, %edi
+			pushl %edi				# Store the argument and then pass it to Rsum.
+			call Rsum
+			rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+	Rsum:	pushl %ebp
+			rrmovl %esp, %ebp
+			mrmovl 0x8(%ebp), %edi	# Get the argument "list_ptr ls", which is a pointer.
+			andl %edi, %edi
+			je return_zero			# if (!ls) return 0
+
+			mrmovl (%edi), %ebx
+			pushl %ebx				# push ls->val
+			
+			mrmovl 0x4(%edi), %edi 	# get ls->next.
+			pushl %edi				# Store ls-next at the top of the stack. Since it is a recursive function, we should write instruction to pass an argument.
+			call Rsum
+			popl %edi				# When the last recursive function returns, the argument is on the top of the stack and it is should be popped out.
+			popl %ebx
+			addl %ebx, %eax
+			jmp End
+
+	return_zero: xorl %eax, %eax
+
+	End:	rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+		.pos 0x100
+Stack: 
+```
 
 
 
