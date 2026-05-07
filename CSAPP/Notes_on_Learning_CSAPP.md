@@ -705,7 +705,14 @@ See the sequence of stages of `call` and `ret` in page 406 and Practice Problem 
 
 ```assembly
 0x008	call Sum
-0x00c	rrmovl %eax, %ebx # The address of this instruction will be pushed to the stack.
+# The address of this instruction will be pushed to the stack.
+# Hence, the first arugment passed to "Sum" is at "0x8(%ebp)", not "0x4(%ebp)".
+0x00c	rrmovl %eax, %ebx 
+
+Sum:	pushl %ebp			# Save the caller's frame pointer
+			rrmovl %esp, %ebp	
+			xorl %eax, %eax			# val = 0
+32.         mrmovl 0x8(%ebp), %ecx		# get *list_ptr
 ```
 
 
@@ -738,7 +745,45 @@ movl %ebp,%esp
 popl %ebp
 ```
 
+##### 3.7.5 Recursive Procedures
 
+1) Analysis of the recursive assembly code. 
+
+The C code for recursive factorial program
+
+```c
+int rfact(int n)
+{
+    int result;
+    if (n <= 1)
+        result = 1;
+    else
+        result = n + rfact(n - 1);
+    return result;
+}
+```
+
+1.1) In assembly code of Figure 3.26, why does it allocate 4 bytes on stack in line 5?
+
+<img src="note-images/1777521070677.png" alt="1777521070677" style="zoom:50%;" />
+
+The reason is to prepare stack to store argument to the next recursive function. 
+
+After allocating 4 bytes on stack at line 5 and then `movl %eax, (%esp)`, the argument of the next recursive function, `rfact`, is moved to `%esp`. 
+
+This argument is received by the next called  recursive function at `8(%ebp)` at line 6. When dealing with recursive functions, consider them are different functions instead of the same one so that it is easy to understand. 
+
+Let's analyse the recursive assembly code of  x86 . Assume that `n = 2` so that it is much easier to go through these instructions. See the [analyses](.\Tutorials\Others\Analysis of Figure 3.26-recursive factorial program.xlsx).
+
+1.2) Suppose that `n = 1` now, because `n` is at `%ebp + 8`; there are 4 steps as follows: 
+
+1. In line 6, the argument `n = 1` is moved to `%ebx`.
+
+2. Then move 1 to `%eax`, which is the return value. 
+
+3. In line 9, the target, `.L53`, is taken and then the `%ebx`, which stores `n = 1`, is restored from stack in line 16.
+
+4. Finally, it returns to line 13 to multiply `n * rfact(n - 1)`, namely `imull %ebx, %eax`.  `n` is stored in `%ebx`, `rfact(n-1)` is stored in `%eax`
 
 #### 3.8 Array Allocation and Access
 
