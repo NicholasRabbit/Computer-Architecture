@@ -1637,3 +1637,35 @@ As a result, the mispredicted branch, `ret` which is at the decode stage, is rep
 
 
 
+### 5 Optimising Program Performance
+
+#### 5.1 Capabilities and Limitations of Optimising Compilers
+
+1) Why can't a compiler generate efficient code for `twiddle1` as same as that of `twiddle2`? 
+
+```c
+void twiddle1(int *xp, int *yp)
+{
+    *xp += *yp;
+    *xp += *yp;
+}
+void twiddle1(int *xp, int *yp)
+{
+    *xp += 2* *yp;
+}
+```
+
+There is a scenario in which `xp` and `yp` are equivalent so that 
+
+```c
+*xp += *xp;    // *xp is doubled 
+*xp += *xp;	   // it is double again, so the result is 4 times of the original *xp. 
+```
+
+Whereas, for `*xp += 2* *xp (*xp = *xp + 2* *xp)`, it is increased by the factor of 3. The compiler doesn't whether `xp = yp` or not, so it can generate code for `twiddle1` as efficient as that of `twiddle2`
+
+In conclusion: 
+
+Attention should be paid is that *memory aliasing*, namely two pointers deference the same position in memory. We naturally think that `xp` and `yp` are distinct and overlook the possibility that they might be equal. If they are equal, the result of can be unexpected. See problem 5.1. 
+
+When we write code with ambiguity of memory aliasing, it is difficult for a compiler to optimise. Subsequently, the optimisation is blocked. 
