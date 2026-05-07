@@ -1075,3 +1075,8 @@ If the successful rate is 65%, the condition frequency is 35%. As a result, we g
 
 $0.20 \times 0.35 \times 2 = 0.14$
 
+## Chapter 5 
+
+### Practice Problem 5.1
+
+The result is 0. 

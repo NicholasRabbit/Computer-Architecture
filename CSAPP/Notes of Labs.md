@@ -2061,6 +2061,18 @@ This phase involves multiple gadget farms. To be continued.
 
 >  CSAPP2e
 
+Tips:
+
+1) Use `andl %ecx, %ecx` to test whether the value is 0 or not. Don't use `xorl %ecx, %ecx` because it sets the register to 0. 
+
+2) Y86 operations, `OPL`, can't operate immediate and only can be applied on registers. 
+
+```assembly
+andl $4, %esp	# Wrong!
+```
+
+
+
 ##### Part A: 
 
 What does this part require us to do? 
@@ -2215,6 +2227,9 @@ init:	irmovl Stack, %esp	# Set up stack pointer.
 			rrmovl %esp, %ebp	
 			xorl %eax, %eax			# val = 0
 32.         mrmovl 0x8(%ebp), %ecx		# get *list_ptr
+			# add test before loop. (I forgot before.)
+			andl %ecx, %ecx
+			je End
 
 	Loop:	mrmovl (%ecx), %esi		# get ls->val
 			addl %esi, %eax			# val += ls->val
@@ -2387,5 +2402,77 @@ init:		irmovl Stack, %esp	# Set up stack pointer
 Stack: 
 ```
 
+###### (3) copy.ys
 
+1) `0x00a ^ 0x0b0 ^ 0xc00 = 0xcba`. Hence, the return value in `%eax` should be `0xcba`. 
+
+2) The length of the array is 3.
+
+3) Before the loop, a test should be applied to check if the `len` is 0. I forgot to add it in the  loop of`sum.ys`. 
+
+```assembly
+		.pos 0
+init:	irmovl Stack, %esp	# Set up stack pointer
+		irmovl Stack, %ebp	# Set up base pointer
+		call Main
+		halt
+
+		.align 4
+	# Source block
+	src:	.long 0x00a
+			.long 0x0b0
+			.long 0xc00
+
+	# Destination block
+	dest:	.long 0x111
+			.long 0x222
+			.long 0x333
+
+
+	Main:	pushl %ebp	
+			rrmovl %esp, %ebp
+			irmovl $3, %edi		# The length is 3.
+			pushl %edi
+			irmovl dest, %esi
+			pushl %esi
+			irmovl src, %ebx
+			pushl %ebx
+			call copy_block
+			rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+	copy_block:		pushl %ebp
+			rrmovl %esp, %ebp
+
+			mrmovl 0x8(%ebp), %ebx		# Get src
+			mrmovl 0xc(%ebp), %esi		# Get dest
+			mrmovl 0x10(%ebp), %edi		# Get len
+
+			irmovl $0, %eax		# result = 0
+			andl %edi, %edi		# First of all, set condition codes and then test if it is 0.
+			je	End						
+			
+	Loop:	mrmovl (%ebx), %ecx
+			rmmovl %ecx, (%esi)
+			xorl %ecx, %eax
+
+			irmovl $4, %edx
+			addl %edx, %ebx		# src++
+			addl %edx, %esi		# dest++
+
+			irmovl $1, %edx
+			subl %edx, %edi		# len--
+			andl %edi, %edi	
+			jg Loop
+
+	End:	rrmovl %ebp, %esp
+			popl %ebp
+			ret
+
+# The stack starts here and grows to lower addresses
+		.pos 0x100
+Stack: 
+
+```
 
