@@ -30,6 +30,8 @@ init:	irmovl Stack, %esp	# Set up stack pointer.
 			rrmovl %esp, %ebp	
 			xorl %eax, %eax			# val = 0
 			mrmovl 0x8(%ebp), %ecx		# get "list_ptr"
+			andl %ecx, %ecx			# First of al, test the condition.
+			je End
 
 	Loop:	mrmovl (%ecx), %esi		# get ls->val
 			addl %esi, %eax			# val += ls->val

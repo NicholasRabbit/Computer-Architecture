@@ -1,0 +1,65 @@
+  0x000:              | 		.pos 0
+  0x000: 30f400010000 | init:	irmovl Stack, %esp	# Set up stack pointer
+  0x006: 30f500010000 | 		irmovl Stack, %ebp	# Set up base pointer
+  0x00c: 802c000000   | 		call Main
+  0x011: 00           | 		halt
+                      | 
+  0x014:              | 		.align 4
+                      | 	# Source block
+  0x014: 0a000000     | 	src:	.long 0x00a
+  0x018: b0000000     | 			.long 0x0b0
+  0x01c: 000c0000     | 			.long 0xc00
+                      | 
+                      | 	# Destination block
+  0x020: 11010000     | 	dest:	.long 0x111
+  0x024: 22020000     | 			.long 0x222
+  0x028: 33030000     | 			.long 0x333
+                      | 
+                      | 
+  0x02c: a05f         | 	Main:	pushl %ebp	
+  0x02e: 2045         | 			rrmovl %esp, %ebp
+  0x030: 30f703000000 | 			irmovl $3, %edi		# The length is 3.
+  0x036: a07f         | 			pushl %edi
+  0x038: 30f620000000 | 			irmovl dest, %esi
+  0x03e: a06f         | 			pushl %esi
+  0x040: 30f314000000 | 			irmovl src, %ebx
+  0x046: a03f         | 			pushl %ebx
+  0x048: 8052000000   | 			call copy_block
+  0x04d: 2054         | 			rrmovl %ebp, %esp
+  0x04f: b05f         | 			popl %ebp
+  0x051: 90           | 			ret
+                      | 
+  0x052: a05f         | 	copy_block:		pushl %ebp
+  0x054: 2045         | 			rrmovl %esp, %ebp
+                      | 
+  0x056: 503508000000 | 			mrmovl 0x8(%ebp), %ebx		# Get src
+  0x05c: 50650c000000 | 			mrmovl 0xc(%ebp), %esi		# Get dest
+  0x062: 507510000000 | 			mrmovl 0x10(%ebp), %edi		# Get len
+                      | 
+  0x068: 30f000000000 | 			irmovl $0, %eax		# result = 0
+  0x06e: 6277         | 			andl %edi, %edi		# First of all, set condition codes and then test if it is 0.
+  0x070: 739c000000   | 			je	End						
+                      | 			
+  0x075: 501300000000 | 	Loop:	mrmovl (%ebx), %ecx
+  0x07b: 401600000000 | 			rmmovl %ecx, (%esi)
+  0x081: 6310         | 			xorl %ecx, %eax
+                      | 
+  0x083: 30f204000000 | 			irmovl $4, %edx
+  0x089: 6023         | 			addl %edx, %ebx		# src++
+  0x08b: 6026         | 			addl %edx, %esi		# dest++
+                      | 
+  0x08d: 30f201000000 | 			irmovl $1, %edx
+  0x093: 6127         | 			subl %edx, %edi		# len--
+  0x095: 6277         | 			andl %edi, %edi	
+  0x097: 7675000000   | 			jg Loop
+                      | 
+  0x09c: 2054         | 	End:	rrmovl %ebp, %esp
+  0x09e: b05f         | 			popl %ebp
+  0x0a0: 90           | 			ret
+                      | 
+                      | 
+                      | 
+                      | 
+                      | # The stack starts here and grows to lower addresses
+  0x100:              | 		.pos 0x100
+  0x100:              | Stack: 
