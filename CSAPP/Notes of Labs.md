@@ -2476,3 +2476,172 @@ Stack:
 
 ```
 
+
+
+##### Part B
+
+**(1) What is the task of this part?**
+
+1) The SEQ processor doesn't implement `iddl` or `leave`, so this task asks us to do it. 
+
+`iaddl` adds a constant value to a register directly. 
+
+`leave` is equivalent to: 
+
+```assembly
+movl %ebp, %esp
+popl %ebp
+```
+
+2) SEQ processor consists of 6 stages and can't compute `iaddl` or `leave` now. What we need to do is to add HCL code in these stages in `seq-full.hcl` to support these two new instructions. 
+
+**(2) How to do it?**
+
+**iaddl**
+
+1) An example: `iaddl $1, %eax`
+
+For `iaddl`, we should refer to the descriptions of `OPL` and `irmovl` in Figure 4.18 and the outline of  the Hardware structure of SEQ in Figure 4.23. 
+
+2) We can know that `iaddl` is interpreted to `c0` in problem 4.48 and it has been added after `POPL` in `seq-full.hcl`, therefore, we don't have to do it. Presumably, the instruction is encoded as `c0` since `POPL` is `b0`.  It is not allowed to modify "Symbolic representation of Y86 Instruction Codes". 
+
+```txt
+C 0 F rB 0 0 0 0
+```
+
+```hcl
+ 41 # Instruction code for iaddl instruction
+ 42 intsig IIADDL   'I_IADDL'
+ 43 # Instruction code for leave instruction
+ 44 intsig ILEAVE   'I_LEAVE'
+```
+
+Note it is `IIADDL` with double `I`. 
+
+**3) Modify the HCL code stage by stage.** 
+
+**Fetch Stage:** 
+
+Add `IIADDL`  to the code for generate `instr_valid`. 
+
+```hcl
+110 bool instr_valid = icode in
+111     { INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
+112            IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL}; 
+```
+
+Apparently, `iaddl` needs register IDs, so add it 
+
+```hcl
+114 # Does fetched instruction require a regid byte?
+115 bool need_regids =
+116     icode in { IRRMOVL, IOPL, IPUSHL, IPOPL,
+117              IIRMOVL, IRMMOVL, IMRMOVL,IIADDL };
+118
+
+```
+
+It needs `valC`, too. 
+
+```hcl
+119 # Does fetched instruction require a constant word?
+120 bool need_valC =
+121     icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+```
+
+**Decode Stage:**
+
+`iaddl` doesn't need `rA`, but uses `rB` as the destination register ID, therefore add it to the code for `srcB`.
+
+```hcl
+132 ## What register should be used as the B source?
+133 int srcB = [
+134     icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL } : rB;
+135     icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+136     1 : RNONE;  # Don't need register
+137 ];
+```
+
+We need `rB` as the`dstE`.
+
+```hcl
+139 ## What register should be used as the E destination?
+140 int dstE = [
+141     icode in { IRRMOVL } && Cnd : rB;
+142     icode in { IIRMOVL, IOPL, IIADDL } : rB;
+143     icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+144     1 : RNONE;  # Don't write any register
+145 ];
+```
+
+
+
+**Execute Stage:**
+
+Operation: `valE = valB + valC`
+
+From the Hardware structure of SEQ in Figure 4.23, we can see that `aluA` should be `valC`. 
+
+```hcl
+155 ## Select input A to ALU
+156 int aluA = [
+157     icode in { IRRMOVL, IOPL } : valA;
+158     icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : valC;  # add here
+159     icode in { ICALL, IPUSHL } : -4;
+160     icode in { IRET, IPOPL } : 4;
+161     # Other instructions don't need ALU
+162 ];
+};
+```
+
+`valB` is needed, too. 
+
+```hcl
+164 ## Select input B to ALU
+165 int aluB = [
+166     icode in { IRMMOVL, IMRMOVL, IOPL, ICALL,
+167               IPUSHL, IRET, IPOPL, IIADDL } : valB;
+168     icode in { IRRMOVL, IIRMOVL } : 0;
+169     # Other instructions don't need ALU
+170 ];
+```
+
+We don't have to ALU function, because it is `ALUADD` by default. 
+
+```hcl
+# No modifiction for `alufun`
+172 ## Set the ALU function
+173 int alufun = [
+174     icode == IOPL : ifun;
+175     1 : ALUADD;
+176 ];
+```
+
+But condition code should be set as it is an operation. 
+
+```hcl
+178 ## Should the condition codes be updated?
+179 bool set_cc = icode in { IOPL, IIADDL }
+```
+
+**Memory Stage:**
+
+No code to modify.
+
+**Write Back Stage:** 
+
+Write back to `rB`: `R[rB] <- valE`.
+
+`dstE` has been set in Decode Stage. 
+
+=======
+
+**(3) Test `iiaddl`**
+
+```shell
+make VERSION=full
+./ssim -t ../y86-code/asumi.yo
+```
+
+`%eax` is `0xabcd`. It's correct! Great. 
+

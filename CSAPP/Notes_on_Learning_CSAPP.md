@@ -533,9 +533,7 @@ $E=e-bias$($e$ is the exponent).
 
 **Case 1: Normalised Values**
 
-1) Single precision(Float)
-
-The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=-126,  254 - 127 = 127)
+1) Single precision(Float)The bias is $bias = 2^{k-1} -1$, since $k$ is 8, the $bias$ is 127. Since $e$ is neither 0 nor 255, so $E$ is in range $-126\leq{e}\leq127$. (1-127=-126,  254 - 127 = 127)
 
 It is the same in double precision.
 
