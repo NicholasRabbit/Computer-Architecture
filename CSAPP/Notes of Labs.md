@@ -2520,6 +2520,35 @@ Note it is `IIADDL` with double `I`.
 
 **3) Modify the HCL code stage by stage.** 
 
+Write the computations of each stage by referring to `irmovl` and `OPL`.
+
+```txt
+# iaddl V, rB
+# c 0 f rB 0 0 0 0
+
+Fetch 
+icode : ifun <- M1[PC]
+rA : rB <- M1[PC + 1]
+valC <- M4[PC + 2]
+valP <- PC + 6
+
+Decode 
+valB <- R[rB]	# It needs rB only. 
+
+Execute
+valE <- valB + valC
+
+Memory	# No computation in memory stage.
+
+Write back
+R[rB] <- valE
+
+PC update
+PC <- valP
+```
+
+
+
 **Fetch Stage:** 
 
 Add `IIADDL`  to the code for generate `instr_valid`. 
