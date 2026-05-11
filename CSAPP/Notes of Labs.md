@@ -2480,7 +2480,7 @@ Stack:
 
 ##### Part B
 
-**(1) What is the task of this part?**
+**What is the task of this part?**
 
 1) The SEQ processor doesn't implement `iddl` or `leave`, so this task asks us to do it. 
 
@@ -2489,15 +2489,15 @@ Stack:
 `leave` is equivalent to: 
 
 ```assembly
-movl %ebp, %esp
+rrmovl %ebp, %esp
 popl %ebp
 ```
 
 2) SEQ processor consists of 6 stages and can't compute `iaddl` or `leave` now. What we need to do is to add HCL code in these stages in `seq-full.hcl` to support these two new instructions. 
 
-**(2) How to do it?**
+**How to do it?**
 
-**iaddl**
+###### **(1) iaddl**
 
 1) An example: `iaddl $1, %eax`
 
@@ -2512,13 +2512,11 @@ C 0 F rB 0 0 0 0
 ```hcl
  41 # Instruction code for iaddl instruction
  42 intsig IIADDL   'I_IADDL'
- 43 # Instruction code for leave instruction
- 44 intsig ILEAVE   'I_LEAVE'
 ```
 
 Note it is `IIADDL` with double `I`. 
 
-**3) Modify the HCL code stage by stage.** 
+**Modify the HCL code stage by stage.** 
 
 Write the computations of each stage by referring to `irmovl` and `OPL`.
 
@@ -2661,16 +2659,214 @@ No code to modify.
 
 Write back to `rB`: `R[rB] <- valE`.
 
-`dstE` has been set in Decode Stage. 
+`dstE` has been set in Decode Stage. So there is no logic of "Write Back" in `sel-full.hcl`.
 
-=======
+############ 
 
-**(3) Test `iiaddl`**
+**Test `iiaddl`**
 
 ```shell
+make clean
 make VERSION=full
 ./ssim -t ../y86-code/asumi.yo
 ```
 
 `%eax` is `0xabcd`. It's correct! Great. 
+
+###### **(2) leave**
+
+Since `leave` is also added in "Symbolic representation of Y86 Instruction Codes", I don't need to do it any more. Its instruction code is `D0`.
+
+```txt
+43 # Instruction code for leave instruction
+44 intsig ILEAVE   'I_LEAVE'
+```
+
+`REBP` has been already declared. 
+
+```txt
+51 intsig REBP     'REG_EBP'       # Frame Pointer
+```
+
+
+
+First of all, write computations of each stage of `leave` by referring `popl`. 
+
+`leave` is equivalent to: 
+
+```assembly
+rrmovl %ebp, %esp
+popl %ebp
+```
+
+```txt
+# leave 
+Fetch 
+icode : ifun <- M1[PC]
+
+valP <- PC + 1  # Note it is "PC + 1", not 2, because there is no operand.
+
+Decode
+valA <- R[%ebp]
+valB <- R[%ebp]
+
+Execute
+valE <- valB + 4	# %esp should bd increased by 4 after "popl %ebp".
+
+Memory
+valM <- M4[valA]	# Read memory. Get the old verison of %ebp.
+
+Write back
+R[%esp] <- valE	   # Increment %esp by 4; it is pointing to the end of the caller's stack
+R[%ebp] <- valM	# Restore the caller's stack. 
+
+PC update
+PC <- valP 
+```
+
+Then add HCL the `seq-full.hcl` to support `leave`. 
+
+**Fetch Stage**
+
+```txt
+110 bool instr_valid = icode in
+111     { INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
+112            IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL, ILEAVE }; 
+```
+
+It needs neither register ids nor `valC`. 
+
+**Decode Stage**
+
+It needs `%ebp` as `srcA` to get `valA` .
+
+```txt
+125 ## What register should be used as the A source?
+126 int srcA = [
+127     icode in { IRRMOVL, IRMMOVL, IOPL, IPUSHL  } : rA;
+128     icode in { IPOPL, IRET } : RESP;
+129     icode in { ILEAVE } : REBP;  	# %ebp as srcA
+130     1 : RNONE; # Don't need register
+131 ];
+];
+```
+
+It also needs `%ebp` as `srcB` to get `valB` .
+
+
+```txt
+133 ## What register should be used as the B source?
+134 int srcB = [
+135     icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL } : rB;
+136     icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+137     icode in { ILEAVE } : REBP;  	# %ebp as srcB
+138     1 : RNONE;  # Don't need register
+139 ];
+```
+
+The `dstE` for `valE` is `%esp`.
+
+```txt
+141 ## What register should be used as the E destination?
+142 int dstE = [
+143     icode in { IRRMOVL } && Cnd : rB;
+144     icode in { IIRMOVL, IOPL, IIADDL } : rB;
+145     icode in { IPUSHL, IPOPL, ICALL, IRET, ILEAVE } : RESP;  # add ILEAVE here. 
+146     1 : RNONE;  # Don't write any register
+147 ];
+```
+
+The `dstM` for `valM` should be `%ebp` in order to restore the caller's stack. 
+
+```txt
+149 ## What register should be used as the M destination?
+150 int dstM = [
+151     icode in { IMRMOVL, IPOPL } : rA;
+152     icode in { ILEAVE } : REBP;			# When it is "ILEAVE", return REBP.
+153     1 : RNONE;  # Don't write any register
+154 ];
+```
+
+**Execute Stage**
+
+It needs a constant value, 4, as one operand and `valB` as the other. 
+
+```txt
+157
+158 ## Select input A to ALU
+159 int aluA = [
+160     icode in { IRRMOVL, IOPL } : valA;
+161     icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : valC;
+162     icode in { ICALL, IPUSHL } : -4;
+163     icode in { IRET, IPOPL, ILEAVE } : 4;  # add ILEAVE here.
+164     # Other instructions don't need ALU
+165 ];
+166
+167 ## Select input B to ALU
+168 int aluB = [
+169     icode in { IRMMOVL, IMRMOVL, IOPL, ICALL,
+170               IPUSHL, IRET, IPOPL, IIADDL, ILEAVE } : valB;		# add ILEAVE here.
+171     icode in { IRRMOVL, IIRMOVL } : 0;
+172     # Other instructions don't need ALU
+173 ];
+```
+
+There is no need to add logic to `alufun` or `set_cc`. 
+
+**Memory Stage**
+
+```txt
+ ## Set read control signal
+187 bool mem_read = icode in { IMRMOVL, IPOPL, IRET, ILEAVE };
+188
+189 ## Set write control signal
+190 bool mem_write = icode in { IRMMOVL, IPUSHL, ICALL };
+191
+192 ## Select memory address
+193 int mem_addr = [
+194     icode in { IRMMOVL, IPUSHL, ICALL, IMRMOVL } : valE;
+195     icode in { IPOPL, IRET, ILEAVE } : valA;
+196     # Other instructions don't need address
+197 ];
+```
+
+N.B. Don't add `ILEAVE` to `int mem_data` since it needs to read instead of write to memory. 
+
+**PC update**
+
+Update PC with the `valP` in the Fetch Stage. 
+
+##############
+
+**Test  `ileave`**
+
+```shell
+make clean
+make VERSION=full
+./ssim -t ../y86-code/asuml.yo
+```
+
+**Note of test: **
+
+1) Run benchmark program to make sure the added code not inject error to the original instructions
+
+```shell
+# In sim/y86-code
+make testssim
+```
+
+2) Regression test
+
+```shell
+# In the directory of "sim/ptest".
+cd ../ptest
+# Test every instructions except for "iaddl" and "leave".
+make SIM=../seq/
+# Test "iaddl"
+make SIM=../seq/ TFLAGS=-i
+# Test "leave"
+make SIM=../seq/ TFLAGS=-l
+# Test both of them.
+make SIM=../seq/ TFLAGS=-il
+```
 
