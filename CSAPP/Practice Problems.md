@@ -1080,3 +1080,13 @@ $0.20 \times 0.35 \times 2 = 0.14$
 ### Practice Problem 5.1
 
 The result is 0. 
+
+### Practice Problem 5.2
+
+We can use elementary algebra to solve this problem.
+
+When `60 + 35n < 136 + 4n`,  `n <= 2` since `n` is an integer. 
+
+Assume `136 + 4n < 157 + 1.25n`, we get `n <= 7`. 
+
+In conclusion, if `n <= 2`, version 1 is the fastest. If `2 < n <= 7`, version 2 is the fastest. If `n > 7`, it is version 3. 

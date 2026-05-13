@@ -1667,3 +1667,39 @@ In conclusion:
 Attention should be paid is that *memory aliasing*, namely two pointers deference the same position in memory. We naturally think that `xp` and `yp` are distinct and overlook the possibility that they might be equal. If they are equal, the result of can be unexpected. See problem 5.1. 
 
 When we write code with ambiguity of memory aliasing, it is difficult for a compiler to optimise. Subsequently, the optimisation is blocked. 
+
+#### 5.2 Expressing Program Performance
+
+1) *cycles per element*
+
+What is element? 
+
+It is an item of element in an array. See page 516 for more details. 
+
+2) What is the difference between `psum1` and `psum2` in Figure 5.1?
+
+There are two computations in the loop of `psum2`, which is that it copies two elements from `a[]` to `p[]` per iteration. This technique is known as *loop unrolling*.
+
+#### 5.3 Program Example
+
+Tips: 
+
+1. "*reference machine*" is a machine with an i7 as its CPU  used by the writer of this book. 
+
+
+
+#### 5.4 Eliminating Loop Inefficiencies
+
+1) Why does it improve performance to move a call out of a loop?
+
+```c
+// A call is in the condition of a loop
+for (i = 0; i < ver_lenght(v); i++) {.. }
+// MOve the call out of the loop.
+long int length = ver_length(v);
+for (i = 0; i < length; i++) {... }
+```
+
+As aforementioned, when a loop is translated a machine-level program, the function `ver_length(v)` is called on every loop because the test condition must be calculated. A new stack is created in the memory for the function and several instructions are being executed, which is a heavy overhead. Since the length of `v` is fixed and the `vec_length()` has no side effect, we can move the call out of the loop to compute the `length` only once. By doing so, the program can achieve better performance. 
+
+This optimisation is called "*code motion*".

@@ -2870,3 +2870,6 @@ make SIM=../seq/ TFLAGS=-l
 make SIM=../seq/ TFLAGS=-il
 ```
 
+##### Part C 
+
+This part involves optimisation of code in Chapter 5. I will do this part once I finish this chapter. 
