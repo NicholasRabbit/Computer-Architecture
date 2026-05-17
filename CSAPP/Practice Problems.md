@@ -1090,3 +1090,28 @@ When `60 + 35n < 136 + 4n`,  `n <= 2` since `n` is an integer.
 Assume `136 + 4n < 157 + 1.25n`, we get `n <= 7`. 
 
 In conclusion, if `n <= 2`, version 1 is the fastest. If `2 < n <= 7`, version 2 is the fastest. If `n > 7`, it is version 3. 
+
+### Practice Problem 5.3
+
+Assume `x = 10` and `y = 100`.
+
+For A, `min` is called only once when `i` is initialised. The condition is `10 < max(x, y)`, which is `10 < 100`. Hence, the condition will be tested 90 times so that the `max()`, `incr()` and `square()` are going to be called 90 times, too.
+
+For B, since `i` is initialised as the result of `max()`, this function is called only once. After that, the condition is `100 >= min(x, y)`, which is equivalent to `100 >= 10`. Consequently,  `min())`, `incr()` and `square()` are called 91 times. 
+
+For C, both `min()` and `max()` are only called once. The condition is `10 < 100`, therefore, `square()` and `incr()` are going to be called 90 times. 
+
+```txt
+Code 	min		max		incr	square
+A		1		90		90		90
+B		91		1		91		91		# This answer for B is wrong.
+C		1		1		90		90
+```
+
+The result of B is wrong because `i = max(x, y) -1 = 99` and the condition is `99 >= min(x, y)`. `min(x,y)` executes one more times than `incr` and `square`, which is the last test when it fails the test. 
+
+```txt
+Code 	min		max		incr	square
+B		91		1		90		90
+```
+

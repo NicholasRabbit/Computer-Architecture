@@ -1700,6 +1700,107 @@ long int length = ver_length(v);
 for (i = 0; i < length; i++) {... }
 ```
 
-As aforementioned, when a loop is translated a machine-level program, the function `ver_length(v)` is called on every loop because the test condition must be calculated. A new stack is created in the memory for the function and several instructions are being executed, which is a heavy overhead. Since the length of `v` is fixed and the `vec_length()` has no side effect, we can move the call out of the loop to compute the `length` only once. By doing so, the program can achieve better performance. 
+1.1) As aforementioned, when a loop is translated a machine-level program, the function `ver_length(v)` is called on every loop because the test condition must be calculated. A new stack is created in the memory for the function and several instructions are being executed, which is a heavy overhead. Since the length of `v` is fixed and the `vec_length()` has no side effect, we can move the call out of the loop to compute the `length` only once. By doing so, the program can achieve better performance. 
 
 This optimisation is called "*code motion*".
+
+1.2) To prove that I write [a simple program](.\code\my_code_examples\chapter_5\strlen_out_loop.c) to compare two loops; one calls a function in the test condition in a loop and the other calls a function out of the loop. In conclusion, when the length of an array increases to 1,000,000, the program in which  a loop has a function call in its test condition. Whereas, the other function which move the call out of the loop runs fast for the array with the same length. 
+
+1.3) Programmers should help compilers to move this kind of function call out of the loop if there is no side effect, because it is difficult to decide whether to move these calls even the most sophisticated compiler. 
+
+#### 5.5 Reducing Procedure Calls
+
+1) The function call in the condition test has been moved in the last section. Whereas, there is another call inside the loop. The function `get_vel_length(...)` is called every loop. We should move it out. 
+
+```c
+// combine2
+void combine2(vec_ptr, data_t *dest)
+{
+    long int i;
+    long int length = ver_length(v);
+    
+    *dest = IDENT;
+    for (i = 0; i < length; i++) {
+        data_t val;
+        get_vec_element(v, i, &val);  // A function call in the loop. 
+        *dest = *dest OP val;
+    }  
+}
+```
+
+```c
+// get_vec_element() in vec.c
+/*
+ * Retrieve vector element and store at dest.
+ * Return 0 (out of bounds) or 1 (successful)
+ */
+int get_vec_element(vec_ptr v, long int index, data_t *dest)
+{
+    if (index < 0 || index >= v->len)
+	return 0;
+    *dest = v->data[index];
+    return 1;
+}
+```
+
+As can be seen, the `get_vec_element` performs checking the boundary and assign value to `data_t *dest`.  Whereas, as the author said, checking boundary is not necessary since the `length` has been already retrieved so that any element from the `data_t *dest` is valid. Hence, the call can be moved out of the loop. The code is optimised as follows: 
+
+```c
+// vec.c
+data_t *get_vec_start(ver_ptr v)
+{
+    return v->data;
+}
+```
+
+```c
+// combine3
+void combine3(vec_ptr, data_t *dest)
+{
+    long int i;
+    long int length = ver_length(v);
+    data_t *data = get_vec_start(v);
+    
+    *dest = IDENT;
+    for (i = 0; i < length; i++) {
+       *dest = *dest OP data[i];
+    }  
+}
+```
+
+#### 5.6 Eliminating Unneeded Memory References
+
+1) In page 528, why the final result is different between `combine3` and `combine4`?
+
+For `v=[2,3,5]`, "we create an alias, *memory aliasing*, between the last element of the vector and the destination for storing the result"; that is the last element, `5`, is pointed both by the last pointer in this `v` and the pointer of the destination for the final result. 
+
+```txt
+Function	Initial
+combine3	[2,3,5]
+combine4	[2,3,5]
+```
+
+The initial element in the vector is the same, but when `*dest IDENT` is executed, the last element becomes `1` for `combine3`.
+
+```txt
+Function	Before loop
+combine3	[2,3,1]		// *dest = IDENT; since IDENT is 1.
+combine4	[2,3,5]
+```
+
+When the first loop is being executed, `i=0` the last element becomes 2. 
+
+```txt
+Function	i = 0
+combine3	[2,3,2]		// *dest = *desp OP data[i]; 2 * 1 = 2, therefore, the last is 2
+combine4	[2,3,5]
+
+Function	i = 1
+combine3	[2,3,6]		// *dest = 2 * 3;
+combine4	[2,3,5]
+.....
+```
+
+Finally, for `combine3`, after 3 loops the last element in `v` is as same as the destination: `[2,3,36]`. The `36` is the result of `6(the last) * 6(the dest)`. 
+
+We can conclude that a compiler will NOT automatically generate the same instructions for `combine3` and `combine4` because it can't guarantee that there is no memory aliasing and won't arbitrarily transform `combine3` to `combine4`.  
