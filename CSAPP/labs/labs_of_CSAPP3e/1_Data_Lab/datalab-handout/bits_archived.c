@@ -143,9 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-
-  return ~(~x & ~y) & ~(x & y);
-
+  return ~(~x & ~y) & ~(x & y);  // my answer
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -155,7 +153,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 2;
+  return 1 << 31;
 
 }
 //2
@@ -167,7 +165,9 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  int map = x + 0x01;
+  int res = ~(map + x);
+  return !res & (!!map);  
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -178,7 +178,12 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  int y = 0xAA + (0xAA << 8);
+  y = y + (y << 16);
+  x = x & y;
+  x = x ^ y;
+  return !x;
+
 }
 /* 
  * negate - return -x 
@@ -188,7 +193,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -201,7 +206,32 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+	/*
+	 * If x - 0x30 >= 0 and 0x39 - x >= 0, x is a ASCII digit.
+	 * Step 1:
+	 * Transfomr  x - 0x30 >= 0 to x + (-0x30), we should negate 0x30 at first.
+	 * */
+	int lowerBound = x + (~0x30 + 1);
+	/*
+	 * Step 2:
+	 * As the trick in the step one used to negate a number, we do the same to x.
+	 * 0x39 -x >= 0
+	 * 0x39 - x => 0x30 + (~x + 1)
+	 * */
+	int higherBound = 0x39 + (~x + 1);
+
+	/*
+	 * If 'x' is ASCII digit it should be bigger than '0x30' therefore 'lowerBound' is 
+	 * a positive number or 0. Then the most significant bit of it is '0'. Thus the 
+	 * result after shifting 31 bits to the right is 0, otherwise it is '1';
+	 * */
+	int r1 = lowerBound >> 31;
+	int r2 = higherBound >> 31;
+	/*
+	 * "return !(r1 & r2)" is wrong when the result is '0&1' which also yields '0'. 
+	 * But '1' indicates that 'x' is not ASCII digit.
+	 * */ 
+	return !r1 & !r2; 
 }
 /* 
  * conditional - same as x ? y : z 
@@ -210,8 +240,19 @@ int isAsciiDigit(int x) {
  *   Max ops: 16
  *   Rating: 3
  */
+/*
+ * Elaboration of the question.
+ * In C any non-zero numbers equal 'true' or 1 so for binary expression 'x ? y : z' when x is not 
+ * zero the result is y, otherwise it is z.
+ *
+ * N.B. The answer is not from me but copy from others, I don't understand the boolean deeply. 
+ * Thus a further investigation is expected.
+ * See the solutions in the tutorials. 
+ *
+ * */
 int conditional(int x, int y, int z) {
-  return 2;
+	x = ~(!x) + 1;
+	return (~x & y) + (x & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -221,7 +262,17 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+	
+	int sign_x = x >> 31 & 1;
+	int sign_y = y >> 31 & 1;
+	int same_sign = !(sign_x ^ sign_y);
+	
+	int res = (~x + 1) + y;
+	res = !(res >> 31);
+
+	res = same_sign & res;
+
+	return res | ((sign_x ^ sign_y) & sign_x);
 }
 //4
 /* 
@@ -233,7 +284,9 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+	int a = (x | (~x + 1));
+	a = a >> 31;
+	return a + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -248,7 +301,26 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+
+	int sign = x >> 31;
+	int abs_x = (sign & ~x) | (~sign & x);
+
+	int b16, b8, b4, b2, b1, b0;
+
+	b16 = !!(abs_x >> 16) << 4;
+	abs_x = abs_x >> b16;
+	b8 = !!(abs_x >> 8) << 3;
+	abs_x = abs_x >> b8;
+	b4 = !!(abs_x >> 4) << 2;
+	abs_x = abs_x >> b4;
+	b2 = !!(abs_x >> 2) << 1;
+	abs_x = abs_x >> b2;
+	b1 = !!(abs_x >> 1);
+	abs_x = abs_x >> b1;
+	b0 = abs_x;
+
+	return b16 + b8 + b4 + b2 + b1 + b0 + 1;
+
 }
 //float
 /* 
@@ -263,7 +335,35 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+	// 1. To extract the sign.
+	unsigned s = uf >> 31;
+	// 2. To slice the exponent.
+	unsigned exp = (uf >> 23) & 0xff;
+	// 3. To retrive the fractional part. 
+	unsigned frac = (uf << 9) >> 9; 
+
+	// NaN
+	if (exp == 0xff)
+		return uf;
+	// Denormalised Values. It is not necessary to add the implicit leading "1"
+	// to the significand.Thus, we only need to multiply the fraction and 2.
+	else if (exp == 0x0) {
+		/*
+		 * Note that if the leading bit of the fraction is 1, the least significant
+		 * bit of the exponent will become 1 after carrying the 1 from "frac << 1".
+		 * Whereas, there is no need to handle this "1" because it will become a normalised
+		 * value and the reslut is correct. Presumably, IEEE has already designed deliberately.
+		 * */
+		frac = frac << 1;
+		return (s << 31) | (exp <<23) | frac;
+	}
+	// Normalised Values
+	else
+		// Implementing 2*f by adding 1 to the exponent.
+		exp += 1; 
+
+	return (s << 31) | (exp <<23) | frac;
+
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -278,7 +378,53 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+
+	unsigned sign, exp, frac;
+	int E, bias, M = 0;
+	bias = 127; // 2^k - 1. k bits of the exponent.
+	
+	sign = (uf >> 31) << 31;
+	
+	exp = (uf << 1) >> 24; // or exp = (uf >> 23) & 0xff;
+	E = exp - bias;
+
+	frac = (uf << 9) >> 9; 
+
+	// 2. If exponent is 0, it is a denormalised value which is always less than 0;
+	// when it is converted to an integer, it is 0;
+	if (exp == 0)
+		return 0;
+	// 3. If exponent equals 0xff, it is either NaN or infinity whatever the fraction is.
+	if (exp == 0xff)
+		return 0x80000000u;
+
+
+	if (exp > 0 && exp < 255) {
+		M = frac | (0x1 << 23);
+		if (E < 0)
+			return 0;
+		if (E <= 23)
+			M = M >> (23 - E);
+		else if (E > 23 && E < 31)
+			M = M << (E - 23);
+		else
+			// E is larger than 31.
+			return 0x80000000u;
+
+	}
+
+
+	if (sign)
+		M = ~M + 1; // To get the negative value of M.
+
+	return M;
+
+
+
+
+
+
+
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -294,5 +440,15 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+
+	// The bit-level representation of 2.0.
+	// 2.0^x is equivalent to 1.0*2^x.
+	
+	if (x < -126)
+		return 0;
+	if (x > 127)
+		return 0x7f800000;  // return infinity.
+
+	return 0x0 | (x + 127) << 23;
+
 }
