@@ -1772,7 +1772,21 @@ void combine3(vec_ptr, data_t *dest)
 
 1) In page 528, why the final result is different between `combine3` and `combine4`?
 
-For `v=[2,3,5]`, "we create an alias, *memory aliasing*, between the last element of the vector and the destination for storing the result"; that is the last element, `5`, is pointed both by the last pointer in this `v` and the pointer of the destination for the final result. 
+1.1) Before answer this question, we should answer another question: why does the second argument of `combine3(v, get_vec_start(v) + 2)` plus 2? 
+
+Here is the `get_vec_start(v)`:
+
+```c
+// It returns a pointer: data. 
+data_t *get_vec_start(vec_ptr v) 
+{
+    return v->data. 
+}
+```
+
+Actually, `get_vec_start(v) + 2` is arithmetic of pointers which computes a pointer of the third element of `v=[2,3,5]`, namely `*dest` is deferencing the last element as the author said. 
+
+1.2) For `v=[2,3,5]`, "we create an alias, *memory aliasing*, between the last element of the vector and the destination for storing the result"; that is the last element, `5`, is pointed both by the last pointer in this `v` and the pointer of the destination for the final result. 
 
 ```txt
 Function	Initial

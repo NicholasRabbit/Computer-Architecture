@@ -16,9 +16,17 @@ Solution:
 yum -y install glibc-devel.i386   # Centos 6/7
 ```
 
-### 2, How to test?
+### 3, Laboratory
+
+Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
+
+### 1) Data Labs
+
+##### **0. How to test?**
 
 In the root directory of `datalab-handout` , run the following commands if you complete the code.
+
+**Note** when you modify `bits.c` you should rerun `make`. 
 
 Step 1:  Read `bits.c` and modify it.
 
@@ -33,17 +41,40 @@ Step 3: Run `make clean`  and `make btest`  to compile the source code.
 
 Step 4: Run `./btest`  test harness to check your functions for correctness.
 
+```shell
+# Test a single function
+./btest -f bitXor
+```
+
 Step 5: Run `./driver.pl` to grade your work automatically.
 
-[datalab: Page 4 and 5.](./labs/L1_Data_Lab/datalab.pdf)
+See more details on [datalab: Page 4 and 5.](.\labs\labs_of_CSAPP3e\1_Data_Lab)
 
-### 3, Laboratory
+##### 1. bitXor
 
-Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
+1) `x ^ y` is represented by the following graph.
 
-### 1) Data Labs
+<img src="note-images/1779263776589.png" alt="1779263776589" style="zoom: 67%;" />
 
-##### 1, tMin
+2) How to get it only with `~ and &`? 
+
+First of all, try to get `x | y`  by only using `~ and &`. 
+
+<img src="note-images/1779264553466.png" alt="1779264553466" style="zoom: 50%;" />
+
+<img src="note-images/1779264900165.png" alt="1779264900165" style="zoom:50%;" />
+
+Finally, `~(~x & ~y)` equals to `x | y`. 
+
+3) How to remove the shade represent `x & y(x = 1, y = 1)`? 
+
+<img src="note-images/1779266223438.png" alt="1779266223438" style="zoom:50%;" />
+
+The answer is `x ^ y = ~(~x & ~y) & ~(x & y);`
+
+
+
+##### 2, tMin
 
 ```shell
 /* 
