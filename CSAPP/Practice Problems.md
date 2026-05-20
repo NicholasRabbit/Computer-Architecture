@@ -1115,3 +1115,10 @@ Code 	min		max		incr	square
 B		91		1		90		90
 ```
 
+### Practice Problem 5.4
+
+A. In the assembly code of `compiled -O2` , the `%xmm0` acts as the sum while in `compiled -O1` it is just a temporary register to store the result computed on every loop. 
+
+B. No, it will not. The reason is that `(%r12)` and `(%rax, %rdx, 4)` may reference the same memory space when there is *memory aliasing*. 
+
+C. The optimised version of assemble code preserved the same behaviour of the source code, because it just omitted the reading instruction for `*dest`,  namely reading `(%rbp)` from memory in `compiled -O1` . We can see that in the optimised assembly code the sum is written to `(%r12)`(`*dest` at it) on every loop. That is still an unneeded memory reference. 
