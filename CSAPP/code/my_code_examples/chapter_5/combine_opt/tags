@@ -1,0 +1,20 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+DATA_NAME	combine.h	3;"	d
+IDENT	combine_test.c	4;"	d	file:
+INT	combine_test.c	6;"	d	file:
+OP	combine_test.c	5;"	d	file:
+combine3	combine_test.c	/^void combine3(vec_ptr v, data_t *dest)$/;"	f
+data	combine_test.c	/^	data_t *data;$/;"	m	struct:__anon1	file:
+data_t	combine.h	/^typedef int data_t;$/;"	t
+get_vec_start	combine_test.c	/^data_t *get_vec_start(vec_ptr v)$/;"	f
+len	combine_test.c	/^	long int len;$/;"	m	struct:__anon1	file:
+main	combine_test.c	/^int main(int argc, char *argv[])$/;"	f
+new_vec	combine_test.c	/^vec_ptr new_vec(long int len) $/;"	f
+vec_length	combine_test.c	/^long int vec_length(vec_ptr v)$/;"	f
+vec_ptr	combine_test.c	/^} vec_rec, *vec_ptr;$/;"	t	typeref:struct:__anon1	file:
+vec_rec	combine_test.c	/^} vec_rec, *vec_ptr;$/;"	t	typeref:struct:__anon1	file:

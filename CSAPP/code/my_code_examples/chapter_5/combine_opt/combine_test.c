@@ -3,7 +3,10 @@
 
 #define IDENT 1
 #define OP *
-#define INT
+//#define INT
+//#define DOUBLE 
+#define FLOAT
+
 
 #include "combine.h"
 
@@ -73,8 +76,22 @@ void combine3(vec_ptr v, data_t *dest)
 	for (i = 0; i < len; i++) {
 		*dest = *dest OP data[i];
 	}
-	
 
+}
+
+
+void combine4(vec_ptr v, data_t *dest)
+{
+	long int i;
+	long int len = vec_length(v);
+	data_t *data = get_vec_start(v);
+
+	data_t acc = IDENT;
+
+	for (i = 0; i < len; i++) {
+		acc = acc OP data[i];
+	}
+	*dest = acc;
 }
 
 
@@ -88,6 +105,7 @@ int main(int argc, char *argv[])
 	v.data = arr;
 
 	combine3(&v, dest);
+	combine4(&v, dest);
 
 	return 0;
 }
