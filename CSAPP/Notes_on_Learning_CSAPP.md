@@ -1818,3 +1818,52 @@ combine4	[2,3,5]
 Finally, for `combine3`, after 3 loops the last element in `v` is as same as the destination: `[2,3,36]`. The `36` is the result of `6(the last) * 6(the dest)`. 
 
 We can conclude that a compiler will NOT automatically generate the same instructions for `combine3` and `combine4` because it can't guarantee that there is no memory aliasing and won't arbitrarily transform `combine3` to `combine4`.  
+
+2) `%xmm`. 
+
+In x86-64 architecture, floating-point data are held in a number of XMM registers from `%xmm1 to 15`. Each of them is 128 bits long. 
+
+3) To verify the assembly code of `combine3` and `combine4`, I write simple version of the C code of the textbook, but it has the same behaviour as that in the textbook. 
+
+Note that the `data_t` is single-precision floating point and the `OP` is `*`
+
+```shell
+# Compile the code with basic optimisation: -Og. Don't use the default optimised level 
+# because the assemble code of "combine3" and "combine4" are almost the same when I 
+# compiled it. 
+gcc -Og -c combine_test.c
+# Disassemble the object file.
+objdump -d combine_test.o > dump_combine.s
+```
+
+Here are some excerpts of the assembly code: 
+
+```assembly
+# combine3
+0000000000000069 <combine3>:
+  89:	ba 00 00 00 00       	mov    $0x0,%edx 	# 
+  8e:	eb 11                	jmp    a1 <combine3+0x38>
+  90:	f3 0f 10 04 90       	movss  (%rax,%rdx,4),%xmm0
+  95:	f3 0f 59 03          	mulss  (%rbx),%xmm0
+  99:	f3 0f 11 03          	movss  %xmm0,(%rbx)
+  9d:	48 83 c2 01          	add    $0x1,%rdx
+  a1:	48 39 ea             	cmp    %rbp,%rdx
+  a4:	7c ea                	jl     90 <combine3+0x27>
+
+# combine4
+00000000000000ab <combine4>:
+  cd:	ba 00 00 00 00       	mov    $0x0,%edx
+  d2:	eb 09                	jmp    dd <combine4+0x32>
+  d4:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+  d9:	48 83 c2 01          	add    $0x1,%rdx
+  dd:	48 39 da             	cmp    %rbx,%rdx
+  e0:	7c f2                	jl     d4 <combine4+0x29>
+  e2:	f3 41 0f 11 04 24    	movss  %xmm0,(%r12)
+```
+
+Although the assembly code  compiled in my machine is not as same as that in the textbook, we can see that in `combine3` there one memory reference at `90` for `data[i]`,  and two unneeded memory references in the address of `95` and `99`. 
+
+Whereas, there is only one line with memory reference at `d4`, which is to read data from the array: `data[i]`. 
+
+In terms of the assembly code, the performance of `combine4` is better than `combine3`.
+
