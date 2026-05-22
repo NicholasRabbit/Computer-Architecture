@@ -943,7 +943,7 @@ In IA 32 and Y86, instructions of conditional moves is executed implicitly. As a
 
 ##### 4.1.5  Y86 Programs
 
-(1) Explanation of Figure 4.7
+**(1) Explanation of Figure 4.7**
 
 1.1) What is the "array" used for in Figure 4.7 ?
 
@@ -955,7 +955,7 @@ It is just a typical and normal array in which each elements have 4 bytes even t
 
 The reason is the `call Sum` will push the address of the following instruction to the stack before transferring control to the `Sum`, therefore, it pushes 2 times and it is `0x8(%ebp)`.
 
-(2) Clarification of Figure 4.8. 
+**(2) Clarification of Figure 4.8.** 
 
 2.1) The first instruction is as follows:
 
@@ -999,7 +999,9 @@ This is Y86 assembly code and it is not for the CPU to read directly, but for th
   5   0x000: 30f400010000 | init:   irmovl Stack, %esp      # Set up stack pointer
 ```
 
+**(3) More about the Y86 program.**
 
+In an object file, such as `asum.yo`, the instructions starts from the address of 0 and the beginning of the stack of it is set to `0x100`. As can be seen in Figure 4.8, the memory from `0xfc(=0x100 - 0x4)` to `0xe8` has been changed, due to the stack grows towards lower address. Since `0xe8` is far away from the last instruction at `0x7c`, the executable code won't be overwritten. 
 
 ##### 4.1.6 Some Y86 Instruction Details
 
