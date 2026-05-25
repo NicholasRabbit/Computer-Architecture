@@ -647,6 +647,99 @@ CF: Carry Flag. It is used to detect overflow for unsigned operations.
 
 For example, when we use `addl` instruction to perform the equivalent of the C code `int t = a + b;`, CF will be set to the result a Boolean expression: `(unsigned) t < (unsigned)a`, which is 1 when it is true and that indicates Unsigned overflow. If overflow doesn't happen, the result of `(unsigned) t < (unsigned)a` is CF=0 indicating no Unsigned overflow.  It is the same with condition codes.
 
+##### 3.6.3 Jump Instructions and Their Encoding 
+
+(0) Explanation of the assembly code in page 225.
+
+```assembly
+sarl %eax
+```
+
+Where there is only one operand for `sarl`, the immediate, `$1`, is omitted by default. Thus, it is equivalent to: 
+
+```assembly
+sarl $1, %eax	# %eax << 1
+```
+
+(1) Direct jump and indirect jump.
+
+Direct jump: The address of target is encoded into an instruction. For example, 
+
+```assembly
+jmp L1. # 
+```
+
+Indirect jump: The address of target is read from a register or a memory location. 
+
+```assembly
+jmp *%eax
+# or 
+# This instruction reads from memory with the address stored in %eax. Then uses the value
+# at the memory address as a target. 
+jmp *(%eax) 
+```
+
+Note that unconditional jump can be either a direct jump or an indirect jump, but conditional jump can only be a direct jump. 
+
+(2) PC relative.
+
+What is "PC relative"? 
+
+The destination of a jump instruction is encoded as the offset plus the address immediately following the jump. To illustrate, `jle` jumps to `0x17` which is the sum of `0x0d + 0xa = 0x17`.  
+
+```assembly
+8: 7e 0d	jle 17	# jle is encoded as "7e". 
+a: 89 d0	mov	%edx, %eax
+...
+17: 89 d0
+```
+
+I reverse the assembly code of `silly.c` in page 225 to verify PC relative. Here is the C and assembly code. 
+
+`silly.c`. Now I know why it is named "silly".
+
+```c
+ 11 int silly(int n)
+ 12 {
+ 13     if (n < 0)
+ 14         return 0;
+ 15     while (n >= 0) {
+ 16         n -= n << 1;
+ 17         n += n * 2;
+ 18     }
+ 19
+ 20     return n;
+ 21 }
+```
+
+Compile the C program with the optimisation level of `-Og`. On `x86` , GCC usually enables PC relative by default. I find that the assembly generated with `-O0`, which is the default level, also has PC relative.
+
+```shell
+gcc -Og -c -m32 silly.c
+objdump -d sill.o > silly_pc_relative.s
+```
+
+The disassembled code is as follows: 
+
+`silly_pc_relative.s`
+
+```assembly
+  7 00000000 <silly>:
+  8    0:   8b 44 24 04             mov    0x4(%esp),%eax
+  9    4:   85 c0                   test   %eax,%eax
+ 10    6:   79 07                   jns    f <silly+0xf>
+ 11    8:   eb 0b                   jmp    15 <silly+0x15>
+ 12    a:   f7 d8                   neg    %eax
+ 13    c:   8d 04 40                lea    (%eax,%eax,2),%eax
+ 14    f:   85 c0                   test   %eax,%eax
+ 15   11:   79 f7                   jns    a <silly+0xa>
+ 16   13:   f3 c3                   repz ret
+ 17   15:   b8 00 00 00 00          mov    $0x0,%eax
+ 18   1a:   c3                      ret
+```
+
+In the line of 11, we can see that the destination of `jmp 15` is equal to `0x0b + 0xa`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+
 ##### 3.6.6 Conditional Move Instructions
 
 (1) `cmovl`  will move data if a specific condition holds. Note that `l`is short for `less` not `long word`.
@@ -1868,4 +1961,14 @@ Although the assembly code  compiled in my machine is not as same as that in the
 Whereas, there is only one line with memory reference at `d4`, which is to read data from the array: `data[i]`. 
 
 In terms of the assembly code, the performance of `combine4` is better than `combine3`.
+
+#### 5.7 Understanding Modern Processors
+
+(1) Instructions of assembly code are usually converted into several primitive operations by the *instruction decoding* in a modern CPU. As an illustration, `addl %eax, 4(%edx)` is decoded as three operations: 
+
+1. Load a value from memory into the processor;
+2. Add the value to `%eax`;
+3. Store the result to `4(%edx)`. 
+
+Whereas, some instructions only involving operations of registers are usually decoded as one operation, such as `addl %eax, %edx`.
 
