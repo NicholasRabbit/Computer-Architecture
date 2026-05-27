@@ -1765,7 +1765,7 @@ When we write code with ambiguity of memory aliasing, it is difficult for a comp
 
 #### 5.2 Expressing Program Performance
 
-1) *cycles per element*
+1) CPE: *cycles per element*
 
 What is element? 
 
@@ -1972,3 +1972,6 @@ In terms of the assembly code, the performance of `combine4` is better than `com
 
 Whereas, some instructions only involving operations of registers are usually decoded as one operation, such as `addl %eax, %edx`.
 
+(2) Register renaming. 
+
+When an operation is going to update the register `r` is decoded, there will be a unique identifier `t` is generated to associate `r`. Then they, the entry `(r, t)` will be put into a table maintained by a processor. If a subsequent instruction needs `r` as its operand, it will send `r` with `t` to the Execution unit. If the first operation update the value of `r`, it will update the entry with the value and the entry becomes `(v, t)`. Then it signals so that other instructions need the value of `r` will immediately retrieve the `v` without wait for it to be written into the register `r`. This is the mechanism in the processor corresponded to the data forwarding as that in a pipeline processor of Y86 which we learned before. 	

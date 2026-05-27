@@ -1122,3 +1122,47 @@ A. In the assembly code of `compiled -O2` , the `%xmm0` acts as the sum while in
 B. No, it will not. The reason is that `(%r12)` and `(%rax, %rdx, 4)` may reference the same memory space when there is *memory aliasing*. 
 
 C. The optimised version of assemble code preserved the same behaviour of the source code, because it just omitted the reading instruction for `*dest`,  namely reading `(%rbp)` from memory in `compiled -O1` . We can see that in the optimised assembly code the sum is written to `(%r12)`(`*dest` at it) on every loop. That is still an unneeded memory reference. 
+
+### Practice Problem 5.5
+
+A. On each loop, it performs 2 multiplications and 1 addition. Hence, there are 2*n multiplications and n additions for degree n. 
+
+```c
+for () {
+    result += a[i] * xpwr; 	// 1 multiplication and 1 addition.
+    xpwr = x * xpwr;		// 1 multiplication.    
+}
+```
+
+B. It is `xpwr = x * xpwr` that limits the performance. The computation can not begin on each iteration until the computation completes of the previous iteration, because it needs the updated value of `xpwr`. 
+
+### Practice Problem 5.6
+
+A. There are 1 multiplication and 1 addition on each loop, therefore, there are n multiplication and n addition for degree n. 
+
+B. As the data dependencies of `xpwr`in problem 5.5, the computation of `x*result` can not begin until the previous iteration for updating `result` completes. 
+
+C. Although there are more multiplication in the `poly(...)` in problem 5.5, the highest CPE is 5.00 for the multiplication of `xpwr = x * xpwr`. The CPE of addition of in `result += a[i] * xpwr;` only needs 5.00 of CPE, which is not the limit of performance. They may run simultaneously in modern processors to achieve high performance. 
+
+ Whereas, for the code in problem 5.6: `result = a[i] + x * result; ` the addition needs the computation of multiplication to complete and that results in the CPE of 8.00. Consequently, the function in Problem 5.5 can run faster than that in this Problem 5.6. 
+
+### Practice Problem 5.7
+
+Before unrolling the loop by a factor of `k=5`, we should assimilate the program `combine5` which unrolls the loop by the factor of 2. What is the value of `limit`? Since `i` is is increased by 2, the factor, on each loop and `i+1` must not exceed the boundary of the array, the first loop it to compute `(acc OP data[0]) OP data[1]`. For normal loop without unrolling, `i < length`, but for unrolling loops, `i < length - (factor -1)` which is `i < length -1` when the `factor` is 2. 
+
+The answer is as follows:
+
+```c
+long int limit = length - 4;
+for (i = 0; i < limit; i+=5) {
+    acc = (acc OP data[i]) OP data[i+1];
+    acc = (acc OP data[i + 2]) OP data[i+3];
+    acc = acc OP data[i + 4];
+}
+
+/* If the length is not a multiple of the factor, compute the rest elements. */
+for (; i < length; i++) {
+    acc = acc OP data[i];
+}
+```
+
