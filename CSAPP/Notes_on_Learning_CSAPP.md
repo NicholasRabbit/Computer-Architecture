@@ -1926,6 +1926,7 @@ Note that the `data_t` is single-precision floating point and the `OP` is `*`
 # Compile the code with basic optimisation: -Og. Don't use the default optimised level 
 # because the assemble code of "combine3" and "combine4" are almost the same when I 
 # compiled it. 
+# The author used "-O1" as the level of optimisation.
 gcc -Og -c combine_test.c
 # Disassemble the object file.
 objdump -d combine_test.o > dump_combine.s
@@ -1975,3 +1976,71 @@ Whereas, some instructions only involving operations of registers are usually de
 (2) Register renaming. 
 
 When an operation is going to update the register `r` is decoded, there will be a unique identifier `t` is generated to associate `r`. Then they, the entry `(r, t)` will be put into a table maintained by a processor. If a subsequent instruction needs `r` as its operand, it will send `r` with `t` to the Execution unit. If the first operation update the value of `r`, it will update the entry with the value and the entry becomes `(v, t)`. Then it signals so that other instructions need the value of `r` will immediately retrieve the `v` without wait for it to be written into the register `r`. This is the mechanism in the processor corresponded to the data forwarding as that in a pipeline processor of Y86 which we learned before. 	
+
+#### 5.8 Loop Unrolling
+
+(1) Loop unrolling doesn't improve performance of floating-point operations: both of floating-point addition and multiplication. 
+
+(2) I verified the unrolling option of a GCC compiler in my machine. The result is as follows: 
+
+The source code is written by me, which is used in chapter 5.6 and is as same as the simplified version of `combine` of the textbook.
+
+(2.1) Generate an object file without loop unrolling and then disassemble it.
+
+```shell
+gcc -Og -c combine_test.c -o test_no_unroll.o
+objdump -d test_no_unroll.o > no_unrolling.s
+```
+
+`no_unrolling.s` is as follows: 
+
+```assembly
+# No loop unrolling
+  82:	f3 0f 59 00          	mulss  (%rax),%xmm0
+  86:	48 83 c0 04          	add    $0x4,%rax
+  8a:	48 39 d0             	cmp    %rdx,%rax
+  8d:	75 f3                	jne    82 <combine4+0x1b>
+```
+
+(2.2) Generate an object file with loop unrolling and then disassemble it.
+
+```shell
+gcc -Og -funroll-loops -c combine_test.c -o test_no_unroll.o
+objdump -d test_no_unroll.o > unrolling.s
+```
+
+`unrolling.s` is as follows: 
+
+```assembly
+# Loop unrolling.
+# The following assembly code is generated without being linked. 
+  96:	75 5d                	jne    f5 <combine4+0x8c>
+  98:	eb 4c                	jmp    e6 <combine4+0x7d>
+  9a:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+  9f:	48 83 c2 01          	add    $0x1,%rdx
+  a3:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+  a8:	48 8d 72 01          	lea    0x1(%rdx),%rsi
+  ac:	f3 0f 59 04 b0       	mulss  (%rax,%rsi,4),%xmm0
+  #....
+  d8:	4c 8d 5a 06          	lea    0x6(%rdx),%r11
+  dc:	f3 42 0f 59 04 98    	mulss  (%rax,%r11,4),%xmm0
+  e2:	48 83 c2 07          	add    $0x7,%rdx
+  e6:	48 39 da             	cmp    %rbx,%rdx
+  e9:	7c af                	jl     9a <combine4+0x31>
+  f5:	48 39 da             	cmp    %rbx,%rdx
+  f8:	7d f1                	jge    eb <combine4+0x82>
+  fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+  ff:	48 83 c2 01          	add    $0x1,%rdx
+ 103:	48 83 f9 01          	cmp    $0x1,%rcx
+ 107:	74 dd                	je     e6 <combine4+0x7d>
+ 109:	48 83 f9 02          	cmp    $0x2,%rcx
+ #....
+ 11b:	48 83 f9 05          	cmp    $0x5,%rcx
+ 11f:	74 18                	je     139 <combine4+0xd0>
+ 121:	48 83 f9 06          	cmp    $0x6,%rcx
+ 125:	74 09                	je     130 <combine4+0xc7>
+
+```
+
+Although there are only three elements in the array, `data_t arr[3]`, the compiler performs loop unrolling with a factor of 6. We can see that there are condition tests for the number of elements. The compiler set the factor of loop unrolling to 6 by default; if the elements are less than 6, the rest of instructions of loop unrolling won't be executed. 
+
