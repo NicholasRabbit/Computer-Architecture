@@ -25,7 +25,7 @@ void lower1(char *s)
 void lower2(char *s)
 {
 	int i;
-	int len = strlen(s);
+	int len = strlen(s);	// Move the call to "strlen" out of the loop. 
 	for (i = 0; i < len; i++) {
 		if (s[i] >= 'A' && s[i] <= 'Z')
 			s[i] = s[i] + ('a' - 'A');
