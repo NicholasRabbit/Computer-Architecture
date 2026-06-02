@@ -1166,3 +1166,32 @@ for (; i < length; i++) {
 }
 ```
 
+### Practice Problem 5.8
+
+See [the attachment of problem 5.8](.\Tutorials\Attachment of Practice Problems\Practice Problem-5.8.xlsx).
+
+(1) `r = ((r * x) * y) * z	 /* A1 */`;
+
+![1780265685483](note-images/1780265685483.png)
+
+For the A1, we can see there is dependency of data between three computations which involves `r` . 
+
+(2) `r = (r * (x * y)) * z;	/* A2 */`
+
+<img src="note-images/1780267526354.png" alt="1780267526354" style="zoom:50%;" />
+
+I forgot an arrow from the first `load` to the first `mul`. The processor reads `x` and `y` from memory. 
+
+There is dependency of data between two consecutive `mulss`es. 
+
+(3)  `r = r * ((x * y) * z)`
+
+![1780442662076](note-images/1780442662076.png)
+
+(4) A4 is almost as same as A3.
+
+(5) `r = (r * x) * (y * z)`
+
+<img src="note-images/1780442683958.png" alt="1780442683958" style="zoom:50%;" />
+
+The graphs in my answer are not different from that in the correct in the textbook. To be reviewed. 

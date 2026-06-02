@@ -1867,6 +1867,22 @@ void combine3(vec_ptr, data_t *dest)
 
 1) In page 528, why the final result is different between `combine3` and `combine4`?
 
+```c
+// combine4
+void combine4(vec_ptr, data_t *dest)
+{
+    long int i;
+    long int length = ver_length(v);
+    data_t *data = get_vec_start(v);
+    data_t acc = INDENT;
+    
+    for (i = 0; i < length; i++) {
+       acc = acc OP data[i];
+    }  
+    dest* = acc;
+}
+```
+
 1.1) Before answer this question, we should answer another question: why does the second argument of `combine3(v, get_vec_start(v) + 2)` plus 2? 
 
 Here is the `get_vec_start(v)`:
@@ -1977,11 +1993,26 @@ Whereas, some instructions only involving operations of registers are usually de
 
 When an operation is going to update the register `r` is decoded, there will be a unique identifier `t` is generated to associate `r`. Then they, the entry `(r, t)` will be put into a table maintained by a processor. If a subsequent instruction needs `r` as its operand, it will send `r` with `t` to the Execution unit. If the first operation update the value of `r`, it will update the entry with the value and the entry becomes `(v, t)`. Then it signals so that other instructions need the value of `r` will immediately retrieve the `v` without wait for it to be written into the register `r`. This is the mechanism in the processor corresponded to the data forwarding as that in a pipeline processor of Y86 which we learned before. 	
 
+(3) Definition of *latency bound* and *throughput bound*. See page 530. 
+
 #### 5.8 Loop Unrolling
 
-(1) Loop unrolling doesn't improve performance of floating-point operations: both of floating-point addition and multiplication. 
+(1) Loop unrolling improves the performance of integer multiplication and addition, but doesn't improve performance of floating-point operations: both of floating-point addition and multiplication. 
 
-(2) I verified the unrolling option of a GCC compiler in my machine. The result is as follows: 
+Write loop unrolling in `combine5`:
+
+```c
+void combine5(vec_ptr v, data_t *dest)
+{
+    for (i = 0; i < limit; i+=2) {
+        acc = (acc OP data[i]) OP data[i];	// Loop unrolling by the factor of 2. 
+    }
+}
+```
+
+(2)  Add `-funroll-loops` to `gcc` to have it perform loop unrolling automatically. 
+
+The source code is `combine4`. I verified the unrolling option of a GCC compiler in my machine.  The result is as follows: 
 
 The source code is written by me, which is used in chapter 5.6 and is as same as the simplified version of `combine` of the textbook.
 
@@ -2002,7 +2033,7 @@ objdump -d test_no_unroll.o > no_unrolling.s
   8d:	75 f3                	jne    82 <combine4+0x1b>
 ```
 
-(2.2) Generate an object file with loop unrolling and then disassemble it.
+(2.2) GCC compiled `combine4` with loop unrolling. Generate an object file with loop unrolling and then disassemble it.
 
 ```shell
 gcc -Og -funroll-loops -c combine_test.c -o test_no_unroll.o
@@ -2044,3 +2075,74 @@ objdump -d test_no_unroll.o > unrolling.s
 
 Although there are only three elements in the array, `data_t arr[3]`, the compiler performs loop unrolling with a factor of 6. We can see that there are condition tests for the number of elements. The compiler set the factor of loop unrolling to 6 by default; if the elements are less than 6, the rest of instructions of loop unrolling won't be executed. 
 
+#### 5.9 Enhancing Parallelism 
+
+##### 5.9.1 Multiple Accumulators
+
+(1) Though `combine4` can be optimised by loop unrolling, it is impossible to break the limits imposed by arithmetic units because the computation of `acc` needs to wait the previous ones to complete to get the result of it. 
+
+Whereas, since the bottleneck is that the computation of `acc`, we can let the processor to compute it with a combination of multiple accumulative values. That is to compute the accumulative sum of even numbers and odd ones separately and then add the results of them. 
+
+Before `acc` is separated, it is 
+$$
+P_n = \prod_{i=0}^{n-1} a_i
+$$
+After `acc` is separated, it is the sum of the following values:
+
+Even numbers:
+$$
+PE_n = \prod_{i=0}^{{n/2}-1} a_{2i}
+$$
+Odd numbers:
+$$
+PO_n = \prod_{i=0}^{{n/2}-1} a_{2i+1}
+$$
+
+(2) Floating-point multiplication and addition are not associative. That is `f1 * f2 ` is not necessarily equals to `f2 * f1` due to overflow or rounding. See page 552 for more details. 
+
+##### 5.9.2 Reassociation Transformation
+
+(1) In `combine7,` we reassociate the computation by rearranging the parentheses of `combine5` .
+
+```c
+// combine5
+void combine5() {
+   	for () {
+    	acc = (acc OP data[i]) OP data[i+1];	
+	} 
+}
+```
+
+Only the combination in the loop of `combine7` differs from that in `combine5`. 
+
+```c
+void combine7() {
+   	for () {
+    	acc = acc OP (data[i] OP data[i+1]);	// reassociation transformation
+	} 
+}
+```
+
+GCC performs reassociation for integer operations, but doesn't result in good performance. It doesn't perform reassociation for floating-point operations, because the result is inconsistent. 
+
+(2) Why does the reassociation in `combine7` achieve higher performance than that in `combine5`? 
+
+From the Figure 5.28 can we see that there is no dependency between two instructions of loading data from memory. Since the values in both `%rax` and `%rdx` are constant on one loop and the sequence to execute these two `movss` doesn't affect the final result, they can be executed by a modern processor simultaneously. Though the destination of these two operations are the same, the  `mulss 4(%rax, %rdx, 4), %xmm0` can wait `movss (%rax, %rdx, 4), %xmm0` and the limit can only be the CPE of `movss`.
+
+```assembly
+# These two instructions execute in one loop and the value of %rdx is the same. 
+movss (%rax, %rdx, 4), %xmm0
+mulss 4(%rax, %rdx, 4), %xmm0
+```
+
+<img src="note-images/1780261835337.png" alt="1780261835337" style="zoom:50%;" />
+
+<img src="note-images/1780261885698.png" alt="1780261885698" style="zoom:50%;" />
+
+We can see that the there is no dependency of data between tow  *load* in Figure 2.59(b).
+
+**SIMD (Webaside in page 557)**
+
+What is SIMD?	
+
+SIMD is an acronym for "Single Instruction, Multiple Data". Typically, a processor can perform one instruction for one data, since registers like`%eax` can only hold 4 bytes, which is the length of integer, single-precision floating-point numbers and others. A processor which adapts SIMD  has registers with the length of 16 bytes, such as `%xmm0`. They can hold 4 integers or single-precision floating-point numbers, four instructions can be executed simultaneously. 
