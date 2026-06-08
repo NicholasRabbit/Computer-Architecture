@@ -749,15 +749,21 @@ To illustrate, `cmovl %edx, %eax` moves the content in `%edx` to `%eax` if `%edx
 **N.B.** Conditional instructions don't compare the source and destination; they use flags from previous comparison(conditional code). As an illustration, 
 
 ```assembly
-comp %edx, %ecx
-cmovl %eax, %ebx  # move %eax to %ebx only if %ecx < %edx. Don't compare %eax with %ebx.
+cmpl %edx, %ecx
+# move %eax to %ebx only if the previous "cmpl": %ecx < %edx. 
+# Don't compare %eax with %ebx.
+cmovl %eax, %ebx  
 ```
+
+"Conditional data transfer" is implemented by conditional moves, such as `cmovl` , by a GCC compiler. 
 
 (2) Why does the code based on "conditional data transfer" can outperform the code based on "conditional control transfer"?
 
 See Figure 3.16 and its illustration. 
 
 The reason is modern processors achieve high performance through pipelining. See the assembly code in Figure 3.16(c), the compiler generates all the possible outcomes of a conditional branch. The processor achieves high performance by overlapping the steps of successive instructions. As can be seen in the assembly in Figure 3.16(c), the every stage of a pipeline processor is full of instructions, it doesn't have to always predict. If a processor doesn't predict correctly in a "conditional control transfer", there will be serious penalty up to 20 to 40 clocks and, presumably, much clock cycles are wasted. 
+
+<img src="note-images/1780521082229.png" alt="1780521082229" style="zoom:50%;" />
 
 (3) Why the the assembly code is invalid implementation of `cread(...)`(Page 245)?
 
@@ -2146,3 +2152,33 @@ We can see that the there is no dependency of data between tow  *load* in Figure
 What is SIMD?	
 
 SIMD is an acronym for "Single Instruction, Multiple Data". Typically, a processor can perform one instruction for one data, since registers like`%eax` can only hold 4 bytes, which is the length of integer, single-precision floating-point numbers and others. A processor which adapts SIMD  has registers with the length of 16 bytes, such as `%xmm0`. They can hold 4 integers or single-precision floating-point numbers, four instructions can be executed simultaneously. 
+
+#### 5.11 Some Limiting Factors
+
+##### 5.11.1 Register Spilling 
+
+(1) What is register spilling? 
+
+spill [vi. vt.]: to flow over the edge of a container by accident; to make liquid to do this.  
+
+In an IA 32 machine, there are only 8 registers in the processor. If the processor performs loop unrolling to some degree over the number of registers, the compiler will resort to spilling, which is to move data to stack (in memory). That results in the performance dropping steeply. 
+
+#####  5.11.2 Branch Prediction and Misprediction Penalties
+
+**Write Code Suitable for Implementation with Conditional Moves**
+
+See my code in `CSAPP\code\my_code_examples\Chapter_5\conditional_moves`.
+
+#### 5.12 Understanding Memory Performance
+
+##### 5.12.2 Store Performance
+
+(1) Why is the location is set to `n-1` when `cnt =  n` in page 568? 
+
+The reason is that the initial value of `val` is 0, after `n-1` loops it is increased to `n-1`.
+
+(2) Elaboration of Figure 5.34
+
+<img src="note-images/1780529249324.png" alt="1780529249324" style="zoom: 67%;" />
+
+For the store operation, namely write, the processor maintains a "Store buffer" which consist of a table of entries with `Address` and `Data`. As an illustration, an instruction which involves store operation like `movl %eax, (%ecx)` is interpreted two operations: one is `s_addr`, which creates an entry and sets the address field in it; the other is `s_data`, which sets the data filed in this entry. When the address of a read instruction in the "Load unit" matches one in the "Store buffer", it will load the data from it instead of retrieve from the "Data cache". These two computations of `s_addr` and `s_data` perform independently to achieve high performance. 

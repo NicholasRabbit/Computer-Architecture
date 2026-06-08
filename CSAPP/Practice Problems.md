@@ -1195,3 +1195,59 @@ There is dependency of data between two consecutive `mulss`es.
 <img src="note-images/1780442683958.png" alt="1780442683958" style="zoom:50%;" />
 
 The graphs in my answer are not different from that in the correct in the textbook. To be reviewed. 
+
+### Practice Problem 5.8
+
+My answer is: 
+
+```c
+while (i1 < n && i2 < n) {
+    int min = src1[i1++] < src2[i2++] ? src1[i1++] : src2[i1++];
+    dest[id++] == min;
+}
+```
+
+It is wrong, because if any of `src1` or `src2` is not taken, its index should not be incremented by 1. 
+
+Here is a correct answer: 
+
+```c
+while (i1 < n && i2 < n) {
+    int take1 = src1[i1] < src2[i2];	// take1 is either 1 or 0.
+    int min = take1 ? src1[i1] : src2[i2];
+    dest[id++] = min;
+    i1 += take1; // If take1 is 1, increase i1.
+    i2 += (1 - take1); 	// If take1 is 0, increase i2. 
+}
+```
+
+### Practice Problem 5.9
+
+```c
+void copy_array(int *src, int *dest, int n)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        dest[i] = src[i];
+}
+```
+
+Note that `a[i]` is initialised as `i`. 
+
+A. `a+1` is the `src` and `a` is the `dest`. Here is the diagram describing the copying process: 
+
+<img src="note-images/1780891660509.png" alt="1780891660509" style="zoom:50%;" />
+
+Apparently, there is not any dependency of data except for that each of elements of `src` should be read before it is overwritten. I think a compiler can perform *loop unrolling* for the loop.
+
+The effect is that `a[i]` is set to `a[i+1]` for `0<= i <= 998`.
+
+B. When `a` is the `src` and `a+1` is the `dest`, there will be dependency of data between successive iterations. The reason is that `a+1` will not be loaded until `a` is written into it; `a+2` won't be loaded until `a+1` is written into it. That dependency of data blocks that a compiler performs `loop` unrolling or parallelism. 
+
+<img src="note-images/1780892927369.png" alt="1780892927369" style="zoom:50%;" />
+
+The effect of passing this pair of parameters is that `a[i]` is set to 0, because the first element `a[0]=0`. 
+
+C. See the explanation of B and C. 
+
+D. If both `src` and `dest` are `a`, I think it will achieve high performance because there is no dependency of data between loops. As a result, loop unrolling can be performed, so does the parallelism. 
