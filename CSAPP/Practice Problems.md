@@ -1251,3 +1251,89 @@ The effect of passing this pair of parameters is that `a[i]` is set to 0, becaus
 C. See the explanation of B and C. 
 
 D. If both `src` and `dest` are `a`, I think it will achieve high performance because there is no dependency of data between loops. As a result, loop unrolling can be performed, so does the parallelism. 
+
+### Practice Problem 5.10
+
+**The code in Figure 5.1**
+
+```c
+/* Compute prefix sum of vector a */
+void psum1(float a[], float p[], long int n)
+{
+    long int i;
+    p[0] = a[0];
+    for (i = 1; i < n; i++) {
+        p[i] = p[i-1] + a[i];
+    }
+}
+
+void psum2(float a[], float p[], long int n)
+{
+    long int i;
+    p[0] = a[0];
+    for (i = 1; i < n-1; i+=2) {
+        float mid_val = p[i-1] + a[i];
+        p[i]   = mid_val;
+        p[i+1] = mid_val + a[i+1];
+    }
+    /* For odd n, finish remaining element */
+    if (i < n) {
+        p[i] = p[i-1] + a[i];
+    }
+}
+```
+
+>  **Figure 5.1 Prefix-sum functions.** These provide examples for how we express program performance. 
+
+**Here is the code of `combine4` in Figure 5.10.**
+
+```c
+/* Accumulate result in local variable */
+void combine4(vec_ptr v, data_t *dest)
+{
+    long int i;
+    long int length = vec_length(v);
+    data_t *data = get_vec_start(v);
+    data_t acc = IDENT;
+
+    for (i = 0; i < length; i++) {
+        acc = acc OP data[i];
+    }
+    *dest = acc;
+}
+```
+
+>  **Figure 5.10 Accumulating result in temporary.** Holding the accumulated value in local variable acc (short for "accumulator") eliminates the need to retrieve it from memory and write back the updated value on every loop iteration.   
+
+The assembly code of `combine4`.
+
+```assembly
+# combine4: data_t = float, OP = *
+# i in %rdx, data in %rax, limit in %rbp, acc in %xmm0
+1  .L488:                              loop:
+2      mulss   (%rax,%rdx,4), %xmm0        Multiply acc by data[i]
+3      addq    $1, %rdx                    Increment i
+4      cmpq    %rdx, %rbp                  Compare limit:i
+5      jg      .L488                       If >, goto loop
+```
+
+**Answer:** 
+
+We can see that the `p[i]` on the current iteration is the `p[i-1]` on the next. 
+
+### Practice Problem 5.11
+
+```c
+void psum1_opt(float a[], float p[], long int n)
+{
+    long int i;
+    p[0] = a[0];
+    int acc = p[0];
+    for (i = 1; i < n; i++) {
+        acc = acc + a[i];
+    }
+    p[i-1] = acc; 
+}
+```
+
+My answer is different from that in the textbook, but it is correct. 
