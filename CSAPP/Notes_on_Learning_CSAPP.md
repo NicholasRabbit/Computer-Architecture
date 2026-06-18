@@ -2182,3 +2182,35 @@ The reason is that the initial value of `val` is 0, after `n-1` loops it is incr
 <img src="note-images/1780529249324.png" alt="1780529249324" style="zoom: 67%;" />
 
 For the store operation, namely write, the processor maintains a "Store buffer" which consist of a table of entries with `Address` and `Data`. As an illustration, an instruction which involves store operation like `movl %eax, (%ecx)` is interpreted two operations: one is `s_addr`, which creates an entry and sets the address field in it; the other is `s_data`, which sets the data filed in this entry. When the address of a read instruction in the "Load unit" matches one in the "Store buffer", it will load the data from it instead of retrieve from the "Data cache". These two computations of `s_addr` and `s_data` perform independently to achieve high performance. 
+
+##### 5.14.2 Using a Profiler to Guide Optimisation
+
+(1) What is the n-gram frequency counting program? 
+
+It is a program which consists of parts to count the occurrences of all the words in a text. For example, for `n = 1`, it creates a hash table to store every single word and its occurrences and the sort them in descending order. 
+
+The program has 4 parts (See page 576): 
+
+1. Converting words to lower case with `lower1(...)`(Figure 5.7). Note that the `strlen(...)` is called on every loop. 
+
+2. Then it uses a hash table to store distinct n-gram words. The initial version had 1,021 buckets, which the largest prime below 1,024. A hash function summed the value of all the ASCII codes(characters) of every n-gram word and modulate the summed value with 1,021; the result is the number of the buckets and the word is stored to the matched bucket. 
+
+   For an instance, the sum of `I am`  is `sum = 'i' + 'a' + 'm'`.  `I` has been converted to `i` in step 1. Compute the number of bucket: `int bucket = sum % 1021`. 
+
+3. Each has bucket is organised as a linked list. The program finds the matched bucket and scans it. If it finds a matched n-gram words, the frequency will be incremented by 1. If not, the new words will be added to the  end of the list. 
+
+4. After all the words are stored in the hash table, the program sorts them with descending order of frequencies. The initial algorithm for sorting is *insertion sort*.
+
+The complexity increases dramatically and exponentially when `n = 2`, because it needs to every two words. As an illustration, there are `I am` and `am Jack` for `I am Jack`. The number of combination is $C{^2_n}$. 
+
+
+
+(2) Elaboration of Figure 5.38. 
+
+<img src="note-images/1781732734796.png" alt="1781732734796" style="zoom:60%;" />
+
+These names in (a), `Initial`, `Quicksort`, `Iter first` and so forth, are different versions of the program. As it said in the book, they start from the simple algorithms. The labels on the right side, `Sort`, `List` and so on, indicate the span of time in each version of the program. 
+
+For example, the `Initial` version of  the program uses *Insertions Sort*  for the initial version as it said in the book. We can see that the consumption of time is significantly high for the `Sort` function. 
+
+"(b)" shows a larger version of scale from `Quicksort` to `Linear lower` to show the graph more clearly. See the "CPU seconds" of the vertical axis. The number is scaled from 20 to 1 of each unit. It is used for further optimisation. 
