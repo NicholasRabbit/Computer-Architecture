@@ -1337,3 +1337,9 @@ void psum1_opt(float a[], float p[], long int n)
 ```
 
 My answer is different from that in the textbook, but it is correct. 
+
+### Practice Problem 5.13
+
+B. If the speedup is $5\over3$, the time should be the $3\over5$ of the old one. 
+
+$25 \times {3\over5} = 15$. Since there are 1000 km where the speed limit is still 100 km/h, it needs 1000 / 100 = 10 hours. Thus, there are only 5 hours for the 1500 km of road, which means the speed is 1500 / 5 = 300 km/h. It is pretty fast for a truck. 

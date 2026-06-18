@@ -788,6 +788,14 @@ cmove (%edx), %eax
 
 #### 3.7 Procedures 
 
+##### 3.7.1 Stack Frame Structure
+
+In a stack of a program, 
+
+`%ebp` serves as the frame pointer.
+
+`%esp` serves as the stack pointer. 
+
 ##### 3.7.2 Transferring Control
 
 1,  The following instructions support procedure calls and returns. (Page 255)
@@ -806,7 +814,7 @@ See the sequence of stages of `call` and `ret` in page 406 and Practice Problem 
 # Hence, the first arugment passed to "Sum" is at "0x8(%ebp)", not "0x4(%ebp)".
 0x00c	rrmovl %eax, %ebx 
 
-Sum:	pushl %ebp			# Save the caller's frame pointer
+Sum:	 	pushl %ebp			# Save the caller's frame pointer
 			rrmovl %esp, %ebp	
 			xorl %eax, %eax			# val = 0
 32.         mrmovl 0x8(%ebp), %ecx		# get *list_ptr
@@ -1361,7 +1369,7 @@ $valE \leftarrow 21-9=12$
 
 **Write Back:** In the stage of write back, the results of "Execute" will write back to registers.
 
-$R[\%ebx] \leftarrow valE=12$ 
+`R[%ebx] <- valE = 12`. 
 
 **PC update:** Upte the program counter. Since there are two bytes in this instruction, so the program counter  is incremented by 2, which is `0x00e`
 
@@ -2183,6 +2191,8 @@ The reason is that the initial value of `val` is 0, after `n-1` loops it is incr
 
 For the store operation, namely write, the processor maintains a "Store buffer" which consist of a table of entries with `Address` and `Data`. As an illustration, an instruction which involves store operation like `movl %eax, (%ecx)` is interpreted two operations: one is `s_addr`, which creates an entry and sets the address field in it; the other is `s_data`, which sets the data filed in this entry. When the address of a read instruction in the "Load unit" matches one in the "Store buffer", it will load the data from it instead of retrieve from the "Data cache". These two computations of `s_addr` and `s_data` perform independently to achieve high performance. 
 
+#### 5.14  Identifying and Eliminating Performance Bottlenecks
+
 ##### 5.14.2 Using a Profiler to Guide Optimisation
 
 (1) What is the n-gram frequency counting program? 
@@ -2214,3 +2224,7 @@ These names in (a), `Initial`, `Quicksort`, `Iter first` and so forth, are diffe
 For example, the `Initial` version of  the program uses *Insertions Sort*  for the initial version as it said in the book. We can see that the consumption of time is significantly high for the `Sort` function. 
 
 "(b)" shows a larger version of scale from `Quicksort` to `Linear lower` to show the graph more clearly. See the "CPU seconds" of the vertical axis. The number is scaled from 20 to 1 of each unit. It is used for further optimisation. 
+
+#### 5.15 Summary 
+
+VTUNE  and VALGRIND are more sophisticated profilers besides GPROF. 

@@ -2114,7 +2114,7 @@ How to do it?
 
 1) In `sim/misc`, write a Y86 assembly code, such as `sum.ys`, by imitating that in Figure 4.7.
 
-2) Compile it with the YAS assembler with `make sum.yo `. This command will locate `sum.ys` with the suffix of `.ys`  automatically and assemble it. In fact, `./yas  sum.ys` is executed. 
+2) Compile it with the YAS assembler by `make sum.yo `. This command will locate `sum.ys` with the suffix of `.ys`  automatically and assemble it. In fact,  it is `./yas  sum.ys` that is executed. 
 
 3) Then we can test the `sum.yo` with SEQ simulator:  `./seq/ssim`.
 
@@ -2142,7 +2142,7 @@ int sum_list(list_ptr ls) {
 }
 ```
 
-We should the the linked list as shown in the Y86 assembly code.
+We should use the linked list as shown in the Y86 assembly code.
 
 ```assembly
 # Sample linked list
@@ -2158,7 +2158,7 @@ ele3:
     .long 0
 ```
 
-1.1) The first question is: when writing Y86 assembly code, how to deference another structure with the second element in a structure? 
+1.1) Here is the first question: how to deference another structure in a structure? 
 
 Use pointer arithmetic. As an illustration, if we use `0x4(%esp)` to deference `struct ELE ele1 = {0x00a, xxx}` and `0x4(%esp)` also points to the first element: `val`, we use `0x8(%esp)` to deference `ele2`, because the length of each element is 4 bytes. 
 
@@ -2166,7 +2166,7 @@ The reason is that all the addresses of arrays, structures, and other data in Y8
 
 1.2) Let's start writing a Y86 assembly code for `sum_list`.
 
-1.2.1) Initiate the stack and the linked list, which is represented by structures.
+1.2.1) Initiate the stack and the linked list, which is implemented by structures.
 
 `misc/sum.ys`
 
@@ -2221,7 +2221,7 @@ Assemble it with `make sum.yo`  to generate the following Y86 object code.
  17   0x100:              | Stack:
 ```
 
-We can find that from the address of `0x00c` to `0x20`, a linked list have been generated from the assembly code of sample linked list. 
+As can be seen, from the address of `0x00c` to `0x20`, a linked list have been generated from the assembly code. 
 
 1.2.2) Write assembly code for`Main` and `Sum`
 
@@ -2278,7 +2278,7 @@ Stack:
 
 ```
 
-Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call Sum`. 
+Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call Sum`. Thus, when a new stack is established for `sum`, the offset from the 
 
 1.2.3) Then generate an object model of `sum.ys` by `make sum.yo`, note that the suffix is `.yo`, not `.ys`. Run it in the SEQ simulator. 
 
@@ -2537,21 +2537,24 @@ For `iaddl`, we should refer to the descriptions of `OPL` and `irmovl` in Figure
 2) We can know that `iaddl` is interpreted to `c0` in problem 4.48 and it has been added after `POPL` in `seq-full.hcl`, therefore, we don't have to do it. Presumably, the instruction is encoded as `c0` since `POPL` is `b0`.  It is not allowed to modify "Symbolic representation of Y86 Instruction Codes". 
 
 ```txt
-C 0 F rB 0 0 0 0
+C 0 F rB 0 0 0 0	// All numeric values are shown in hexadecimal. 
 ```
 
+The`IIADDL 'I_IADDL'`  has been already added to "Symbolic representation of Y86 Instruction Codes". See "Figure 4.26 Constant Values Used in HCL Descriptions". 
+
 ```hcl
+# sim/seq-full.hcl
  41 # Instruction code for iaddl instruction
  42 intsig IIADDL   'I_IADDL'
 ```
 
 Note it is `IIADDL` with double `I`. 
 
-**Modify the HCL code stage by stage.** 
+**Modify the HCL code in `seq-full.hcl`stage by stage.** 
 
 Write the computations of each stage by referring to `irmovl` and `OPL`.
 
-```txt
+```shell
 # iaddl V, rB
 # c 0 f rB 0 0 0 0
 
@@ -2566,6 +2569,7 @@ valB <- R[rB]	# It needs rB only.
 
 Execute
 valE <- valB + valC
+Set CC	# Update condition codes. 
 
 Memory	# No computation in memory stage.
 
@@ -2664,7 +2668,7 @@ From the Hardware structure of SEQ in Figure 4.23, we can see that `aluA` should
 170 ];
 ```
 
-We don't have to ALU function, because it is `ALUADD` by default. 
+We don't have to  add a new function ALU, because it is `ALUADD` by default. 
 
 ```hcl
 # No modifiction for `alufun`
@@ -2692,7 +2696,7 @@ Write back to `rB`: `R[rB] <- valE`.
 
 `dstE` has been set in Decode Stage. So there is no logic of "Write Back" in `sel-full.hcl`.
 
-############ 
+=====================
 
 **Test `iiaddl`**
 
