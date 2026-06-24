@@ -2599,8 +2599,6 @@ Apparently, `iaddl` needs register IDs, so add it
 115 bool need_regids =
 116     icode in { IRRMOVL, IOPL, IPUSHL, IPOPL,
 117              IIRMOVL, IRMMOVL, IMRMOVL,IIADDL };
-118
-
 ```
 
 It needs `valC`, too. 
@@ -2613,7 +2611,7 @@ It needs `valC`, too.
 
 **Decode Stage:**
 
-`iaddl` doesn't need `rA`, but uses `rB` as the destination register ID, therefore add it to the code for `srcB`.
+`iaddl` doesn't need `rA`, but uses `rB` as the destination register ID, therefore, add it to the code for `srcB`.
 
 ```hcl
 132 ## What register should be used as the B source?
@@ -2653,7 +2651,6 @@ From the Hardware structure of SEQ in Figure 4.23, we can see that `aluA` should
 160     icode in { IRET, IPOPL } : 4;
 161     # Other instructions don't need ALU
 162 ];
-};
 ```
 
 `valB` is needed, too. 
@@ -2668,7 +2665,7 @@ From the Hardware structure of SEQ in Figure 4.23, we can see that `aluA` should
 170 ];
 ```
 
-We don't have to  add a new function ALU, because it is `ALUADD` by default. 
+We don't need other function in the ALU, because it is `ALUADD` by default. 
 
 ```hcl
 # No modifiction for `alufun`
@@ -2679,7 +2676,7 @@ We don't have to  add a new function ALU, because it is `ALUADD` by default.
 176 ];
 ```
 
-But condition code should be set as it is an operation. 
+Note that condition code should be set as it is an operation. 
 
 ```hcl
 178 ## Should the condition codes be updated?
@@ -2694,15 +2691,17 @@ No code to modify.
 
 Write back to `rB`: `R[rB] <- valE`.
 
-`dstE` has been set in Decode Stage. So there is no logic of "Write Back" in `sel-full.hcl`.
+`dstE` has been set in Decode Stage. So there is no logic of "Write Back" in `seq-full.hcl`.
 
 =====================
 
 **Test `iiaddl`**
 
 ```shell
+# In sim/
 make clean
 make VERSION=full
+# In sim/seq/
 ./ssim -t ../y86-code/asumi.yo
 ```
 
@@ -2876,8 +2875,10 @@ Update PC with the `valP` in the Fetch Stage.
 **Test  `ileave`**
 
 ```shell
+# In sim/
 make clean
 make VERSION=full
+# In sim/seq/
 ./ssim -t ../y86-code/asuml.yo
 ```
 
@@ -2907,4 +2908,163 @@ make SIM=../seq/ TFLAGS=-il
 
 ##### Part C 
 
-This part involves optimisation of code in Chapter 5. I will do this part once I finish this chapter. 
+This part involves optimisation of code in Chapter 5. I will do this part once I finish that chapter. 
+
+(0) How to test this part? 
+
+```shell
+# In sim/pipe
+make drivers
+
+```
+
+
+
+(1) What the task of this part? 
+
+As it said in the introduction, we need to modify `pipe-full.hcl` and `ncopy.ys` to make the `ncopy.ys` run as fast as possible. 
+
+(2) What is `ncopy.ys`?
+
+2.1) It copies elements in an integer array, `src` with the length of `len`, to another non-overlapping `dst`. Meanwhile, it counts the number of positive integers in `src`. 
+
+2.2) Analyse `ncopy.ys`. 
+
+First of all, we shouldn't modify them until we understand all the instructions in `ncopy.ys`. Let's analyse it. 
+
+Since the prologue and epilogue of the function are not allowed to modified and they just initialise a stack, pass arguments and reset a caller's stack, we don't need to analyse them. 
+
+```assembly
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax		# count = 0;
+	andl %edx,%edx		# len <= 0?
+	jle Done		# if so, goto Done:
+
+Loop:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	irmovl $1, %edi
+	addl %edi, %eax		# count++
+Npos:	irmovl $1, %edi
+	subl %edi, %edx		# len--
+	irmovl $4, %edi
+	addl %edi, %ebx		# src++
+	addl %edi, %ecx		# dst++
+	andl %edx,%edx		# len > 0?
+	jg Loop			# if so, goto Loop:
+```
+
+2.2.1) First of all, the first three instructions initialise the count and test the case. Apparently, there is no room to optimise since all the computation is done with registers and none of them can be omitted or replaced with simple instructions. 
+
+2.2.2) Then we encounter the two instructions involving reading and writing memory at the beginning of the loop. 
+
+```assembly
+Loop:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+```
+
+`(%ebx)` is increased by 1 at the end of every loop, therefore, it can't be read until the addition in the previous is completed. So is the `(%ecx)`. There are data dependencies between loops; there is a critical path. As it hinted in the question, we may use loop unrolling to improve performance. 
+
+2.2.3) The following four instructions check whether the value of each element in `src` is positive or not. If it is negative, jump to `Npos` to execute. 
+
+```assembly
+andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+```
+
+If it is positive, the next two instructions increase `%eax` by 1. Although, the Y86 PIPE processor will perform data forwarding for `addl` at the decode stage, these are two instructions. Presumably, adding `iaddl` the PIPE and replacing these two with one will improve the performance. 
+
+```assembly
+	irmovl $1, %edi
+	addl %edi, %eax		# count++
+```
+
+2.2.4) The subtraction and addition in the following instructions can also be replaced by `iaddl`.
+
+```assembly
+Npos:	irmovl $1, %edi
+	subl %edi, %edx		# len--
+	irmovl $4, %edi
+	addl %edi, %ebx		# src++
+	addl %edi, %ecx		# dst++
+```
+
+2.2.5) There is no need to optimise the last two instructions.
+
+```assembly
+andl %edx,%edx		# len > 0?
+jg Loop			# if so, goto Loop:
+```
+
+(3) How to do the lab? 
+
+As we analysed, it is necessary to add `iaddl` to PIPE; loop unrolling can improve the performance of `ncopy.ys`
+
+3.1) Add `iaddl` to PIPE. 
+
+3.1.1) The byte sequence of `iaddl` is as same as that in SEQ. 
+
+```txt
+c 0 F rB 0 0 0 0 	// All numeric values are shown in hexadecimal. 
+```
+
+So is the computation. 
+
+```shell
+Stage		iaddl V, rB
+
+Fetch		icode:ifun <- M1[PC]
+			rA:rB <- M1[PC+1]
+			valC <- M4[PC+2]
+			valP <- PC + 6
+
+Decode 		valB <- R[rB]			# Only valB is needed. 
+
+Execute		valE <- valB + valC		# Add the immediate and the ValB.	
+			Set CC					# It is an operation, CC must be updated. 
+
+Memory								# No operation
+
+Write Back	R[rB] <- valE
+
+PC update 	PC <- valP 
+```
+
+3.1.2) Since `iaddl V, rB` involves the register `rB`, we can refer to `irmovl` in PIPE to know  about "Forwarding" of `rB`. 
+
+*Fetch Stage:* 
+
+We don't need to modify the control logic of `f_pc`, `f_icode`,  `f_ifun` and `f_stat`, because `iaddl` is like `irmovl` and `OPL`. 
+
+Whereas, we should add `IIADDL`  to the definition of `instr_valid` as it is a valid instruction now.
+
+```hcl
+161 # Is instruction valid?
+162 bool instr_valid = f_icode in
+163     { INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
+164       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
+```
+
+It needs register `rB`. 
+
+```hcl
+174 # Does fetched instruction require a regid byte?
+175 bool need_regids =
+176     f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL,
+177              IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+```
+
+It also needs `valC`. 
+
+```hcl
+179 # Does fetched instruction require a constant word?
+180 bool need_valC =
+181     f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+```
+
+
+
+
+

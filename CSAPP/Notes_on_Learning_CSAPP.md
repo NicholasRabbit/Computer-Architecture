@@ -1548,6 +1548,25 @@ Tips:
 2. "*Branch prediction*" is nearly used by nearly all processors. 
 3. Review 3.6.6, especially the penalty of misprediction. 
 
+How does a processor know the correct address for the next instruction if it is midpredicted, namely the correct PC? 
+
+As an illustration, in the following code, the branch is always taken by the PIPE processor so that the  `mrmovl (%ecx), %esi` will step into the Fetch Stage when `jne Loop` moves to the Decode Stage. 
+
+Whereas, the processor doesn't realise that it is predicted until the Execute Stage of `addl %ebx, %edx` , which will set the CC for `jne Loop` to test.  The mispredicted branch is the address in `valC` for `jne Loop(valC)` and the correct branch is `valP`, which is address of `End`. See Figure 4.21 for the computation of `jXX`.
+
+The PIPE processor will take `valP` as the new value of PC. The `mrmovl (%ecx), %esi` will be discarded from the first stages from the pipeline. 
+
+```assembly
+Loop:	mrmovl (%ecx),%esi	# get *Start
+	addl %esi,%eax          # add to sum
+	irmovl $4,%ebx          # 
+	addl %ebx,%ecx          # Start++
+	irmovl $-1,%ebx	        # 
+	addl %ebx,%edx          # Count--
+	jne    Loop             # Stop when 0
+End:	rrmovl %ebp,%esp
+```
+
 
 
 ##### 4.5.5  Pipeline Hazards
@@ -1615,7 +1634,7 @@ In `0x18: mrmovl 0(%edx), %eax`, when clock rises in cycle 7, it is in the "Exec
 
 ##### 4.5.10 Pipeline Stage Implementations 
 
-**Decode and Write-Back Stage**
+###### Decode and Write-Back Stage
 
 1) Implementation of the  forwarding`valA`  and use it in the "Decode Stage".  
 
@@ -1623,13 +1642,31 @@ What we are discussing is to forward `valA` for an instruction in the "Decode St
 
 1.1) First of all, `D_valP` is merged with `D_valA` to reduce the amount the state in the pipeline register for the later stage. Since only `call` or `jXX` need `valP` in the PC update stage, it is easy to add logic to implement that. 
 
-As can be seen in Figure 4.56, `valP` in the pipeline register D is merged with `valA ` and other forwarding values into the `Sel+Fwd A` logic. 
+Note that the `valP` is the address of the next instruction. We are dealing with the `valP` for the next instruction, but not the `f_predPC` in the Fetch Stage. This `valP` will be forwarded by the next instruction in its Fetch Stage. See the HCL  code for `f_predPC` below: 
+
+```hcl
+################ Fetch Stage     ###################################
+
+## What address should instruction be fetched at
+int f_pc = [
+	# Mispredicted branch.  Fetch at incremented PC
+	M_icode == IJXX && !M_Cnd : M_valA;
+	# Completion of RET instruction.
+	W_icode == IRET : W_valM;
+	# Default: Use predicted value of PC
+	1 : F_predPC;
+];
+```
+
+We can see that if the `M_icode`(`icode` in pipeline register M) is `IJxx` and `!M_Cnd`(condition doesn't hold), `f_pc` will take `M_valA`, which is actually `valP` from the preceded instruction. See "4.5.4 Next PC Prediction" to know how to get the correct PC when misprediction occurs. 
+
+ As can be seen in Figure 4.56, `valP` in the pipeline register D is merged with `valA ` and other forwarding values into the `Sel+Fwd A` logic. 
 
 2.2) The HCL description of the `d_valA`  for the next pipeline is as follows: 
 
 ```assembly
 int d_valA = [
-    D_icode in {ICALL, IJXX} : D_valP;  # Use increment PC
+    D_icode in {ICALL, IJXX} : D_valP;  # Use incremented PC
   	d_srcA == e_dstE : e_valE; 	#Forward valE from execute stages of previous instruction
   	d_srcA == M_dstM : m_valM; 	#Forware valM from memory
   	d_srcA == M_dstE : M_valE; 	#Forware valE from memory
@@ -2026,7 +2063,7 @@ void combine5(vec_ptr v, data_t *dest)
 
 (2)  Add `-funroll-loops` to `gcc` to have it perform loop unrolling automatically. 
 
-The source code is `combine4`. I verified the unrolling option of a GCC compiler in my machine.  The result is as follows: 
+The source code is `combine4`. I verified the unrolling option of a GCC compiler in my machine with the similar code in `combine_test.c`.  The result is as follows: 
 
 The source code is written by me, which is used in chapter 5.6 and is as same as the simplified version of `combine` of the textbook.
 
@@ -2066,12 +2103,24 @@ objdump -d test_no_unroll.o > unrolling.s
   a3:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
   a8:	48 8d 72 01          	lea    0x1(%rdx),%rsi
   ac:	f3 0f 59 04 b0       	mulss  (%rax,%rsi,4),%xmm0
-  #....
+  b1:	48 8d 7a 02          	lea    0x2(%rdx),%rdi
+  b5:	f3 0f 59 04 b8       	mulss  (%rax,%rdi,4),%xmm0
+  ba:	4c 8d 42 03          	lea    0x3(%rdx),%r8
+  be:	f3 42 0f 59 04 80    	mulss  (%rax,%r8,4),%xmm0
+  c4:	4c 8d 4a 04          	lea    0x4(%rdx),%r9
+  c8:	f3 42 0f 59 04 88    	mulss  (%rax,%r9,4),%xmm0
+  ce:	4c 8d 52 05          	lea    0x5(%rdx),%r10
+  d2:	f3 42 0f 59 04 90    	mulss  (%rax,%r10,4),%xmm0
   d8:	4c 8d 5a 06          	lea    0x6(%rdx),%r11
   dc:	f3 42 0f 59 04 98    	mulss  (%rax,%r11,4),%xmm0
   e2:	48 83 c2 07          	add    $0x7,%rdx
   e6:	48 39 da             	cmp    %rbx,%rdx
   e9:	7c af                	jl     9a <combine4+0x31>
+  eb:	f3 0f 11 45 00       	movss  %xmm0,0x0(%rbp)
+  f0:	5b                   	pop    %rbx
+  f1:	5d                   	pop    %rbp
+  f2:	41 5c                	pop    %r12
+  f4:	c3                   	retq   
   f5:	48 39 da             	cmp    %rbx,%rdx
   f8:	7d f1                	jge    eb <combine4+0x82>
   fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
@@ -2079,11 +2128,28 @@ objdump -d test_no_unroll.o > unrolling.s
  103:	48 83 f9 01          	cmp    $0x1,%rcx
  107:	74 dd                	je     e6 <combine4+0x7d>
  109:	48 83 f9 02          	cmp    $0x2,%rcx
- #....
+ 10d:	74 45                	je     154 <combine4+0xeb>
+ 10f:	48 83 f9 03          	cmp    $0x3,%rcx
+ 113:	74 36                	je     14b <combine4+0xe2>
+ 115:	48 83 f9 04          	cmp    $0x4,%rcx
+ 119:	74 27                	je     142 <combine4+0xd9>
  11b:	48 83 f9 05          	cmp    $0x5,%rcx
  11f:	74 18                	je     139 <combine4+0xd0>
  121:	48 83 f9 06          	cmp    $0x6,%rcx
  125:	74 09                	je     130 <combine4+0xc7>
+ 127:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 12c:	48 83 c2 01          	add    $0x1,%rdx
+ 130:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 135:	48 83 c2 01          	add    $0x1,%rdx
+ 139:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 13e:	48 83 c2 01          	add    $0x1,%rdx
+ 142:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 147:	48 83 c2 01          	add    $0x1,%rdx
+ 14b:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 150:	48 83 c2 01          	add    $0x1,%rdx
+ 154:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 159:	48 83 c2 01          	add    $0x1,%rdx
+ 15d:	eb 87                	jmp    e6 <combine4+0x7d>
 
 ```
 

@@ -629,7 +629,7 @@ See `CASPP/code/pratice_problems`
    >
    > R[rA] $\leftarrow$ valM
 
-   As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM) indicates the incremented valued is overwritten by valM. 
+   As we test `pushl %esp` in Practice Problem 4.7, `popl %esp` will move `(%esp)` to `%esp`; in this stage, R[%esp]  $\leftarrow$ valE is executed first and is incremented by 4. Then, R[rA] $\leftarrow$ valM (R[%esp] $\leftarrow$ valM)  indicates that the incremented valued  in `%esp` is overwritten by `valM`. 
 
    See practice problem 4.7 and 4.14. 
 
@@ -808,7 +808,7 @@ Why does the solution of problem 4.28 say that "we cannot yet determine whether 
 The reason is that in a pipelined processor the previous stage is the decode stage when the current instruction is in the fetch stage. It doesn't like that in a SEQ in which the next instruction is going to be executed only if the whole stages, including the memory and write back stage, are completed.  Thus, it said "we cannot yet determine..."
 
 ```txt
-int f_stac = [
+int f_stat = [
 	!instr_valid : SINS 	 # Note that there is a `!` prefixing "instr_valid". Valid!
 	icode == IHALT : SHLT
 	imem_error : SADR
@@ -841,7 +841,7 @@ Paraphrase the question and answer it:
 5 rrmovl %esp,%eax
 ```
 
-It asks us to reverse the third and fourth cases in the in the HCL description for forwarding `d_valA`. What does it happen to the `rrmovl %esp, %eax` instruction in line 5. 
+It asks us to reverse the third and fourth cases in the in the HCL description for forwarding `d_valA`. What does it happen to the `rrmovl %esp, %eax` instruction in line 5? 
 
 ```assembly
 int d_valA = [
