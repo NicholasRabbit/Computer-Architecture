@@ -1634,6 +1634,10 @@ In `0x18: mrmovl 0(%edx), %eax`, when clock rises in cycle 7, it is in the "Exec
 
 ##### 4.5.10 Pipeline Stage Implementations 
 
+**Terminology:**
+
+1. Labels in the PIPE with capital letters as prefixes, such as `D_icode, and E_icode`, represent the variables in pipeline registers, while `d_srcA, and e_srcB` indicates that they are from the logic of stages of a PIPE processor. 
+
 ###### Decode and Write-Back Stage
 
 1) Implementation of the  forwarding`valA`  and use it in the "Decode Stage".  
@@ -1692,7 +1696,7 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 ##### 4.5.11 Pipeline Control Logic
 
-**N.B.** There is one pipeline where a sequence of instructions is in different stages. See Figure 4.60 below, when the first instruction at `0x000` is executing, it will enter into the "Fetch Stage". Then it enters into the "Decode stage" in the next cycle. Don't be confused by the squares which are all blue in a row, an instruction can NOT be at all stages simultaneously. It depicted different stages. 
+**N.B.** There is only one pipeline where a sequence of instructions is in different stages. See Figure 4.60 below, when the first instruction at `0x000` is executing, it will enter into the "Fetch Stage". Then it enters into the "Decode stage" in the next cycle. Don't be confused by the squares which are all blue in a row, an instruction can NOT be at all stages simultaneously. It just depicts different stages. 
 
 **Desired Handling of Special Control Cases**
 
@@ -1700,7 +1704,7 @@ In the decode stage of the instruction at `0x00c`, it needs to forward the value
 
 <img src="note-images/1776201339547.png" alt="1776201339547" style="zoom: 67%;" />
 
-1.1) For the "Processing `ret`", we can see that when `D_icode, E_icode or M_code` equals to `IRET`, three bubbles are injected in Figure 4.60. Once the `ret` enter into the write back stage, the following instructions continue. 
+1.1) For the "Processing `ret`", we can see that when `D_icode, E_icode or M_code` equals to `IRET`, three bubbles are injected in Figure 4.60. Once the `ret` enter into the write back stage, the following instructions continue, because the processor doesn't know the return address until the `ret` reaches the write back stage after`valM <- M4[valA]` has been executed. See Figure 4.21 for the computation of `ret`. 
 
 <img src="note-images/1776201625216.png" alt="1776201625216" style="zoom: 50%;" />
 
@@ -1778,6 +1782,44 @@ Combiantion		stall	bubble	bubble	normal	normal
 ```
 
 As a result, the mispredicted branch, `ret` which is at the decode stage, is replaced with a bubble. Whereas, the instruction of the `ret` has already been  in the "Fetch stage". It is stalled, now. Whereas, the `valP` of `jXX` is `PC + 5` by default if the condition doesn't hold, so the `ret` will be replaced by the instruction at `PC+5`. In conclusion, our pipeline processor handles it correctly without being altered or adding extra logic. 
+
+**Control Logic Implementation**
+
+(1) The control logic of `F_stall` and `D_Stall`.
+
+```hcl
+bool F_stall =
+     # Conditions for a load/use hazard
+     E_icode in { IMRMOVL, IPOPL } &&
+      E_dstM in { d_srcA, d_srcB } ||
+     # Stalling at fetch while ret passes through pipeline
+     IRET in { D_icode, E_icode, M_icode };
+```
+
+When `F_stall` is true(non-zero), the Fetch Stage must be stalled. Since `IMRMOVL`  is `mrmovl D(rB), rA`, the  `dstM` is `srcA`, it is going to update the `dstM`. Thus, any of following instructions must be stall at the Fetch Stage and if `d_srcA and d_srcB` in the Decode Stage is as same as the `dtsM` of `IMRMOVL and IPOPL`. The Decode Stage of the next instruction is stalled, too.
+
+```hcl
+# Should I stall or inject a bubble into Pipeline Register D?
+# At most one of these can be true.
+bool D_stall =
+    # Conditions for a load/use hazard
+    E_icode in { IMRMOVL, IPOPL } &&
+    E_dstM in { d_srcA, d_srcB };
+```
+
+(2) `D_bubble`: 
+
+```hcl
+bool D_bubble =
+    # Mispredicted branch
+    (E_icode == IJXX && !e_Cnd) ||
+    # Stalling at fetch while ret passes through pipeline
+    # but not condition for a load/use hazard
+    !(E_icode in { IMRMOVL, IPOPL } && E_dstM in { d_srcA, d_srcB }) &&
+      IRET in { D_icode, E_icode, M_icode };
+```
+
+
 
 
 

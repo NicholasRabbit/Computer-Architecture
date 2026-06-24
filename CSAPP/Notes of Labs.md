@@ -2952,21 +2952,11 @@ make SIM=../seq/ TFLAGS=-il
 
 This part involves optimisation of code in Chapter 5. I will do this part once I finish that chapter. 
 
-(0) How to test this part? 
-
-```shell
-# In sim/pipe
-make drivers
-
-```
-
-
-
-(1) What the task of this part? 
+###### (1) What the task of this part? 
 
 As it said in the introduction, we need to modify `pipe-full.hcl` and `ncopy.ys` to make the `ncopy.ys` run as fast as possible. 
 
-(2) What is `ncopy.ys`?
+###### (2) What is `ncopy.ys`?
 
 2.1) It copies elements in an integer array, `src` with the length of `len`, to another non-overlapping `dst`. Meanwhile, it counts the number of positive integers in `src`. 
 
@@ -3040,11 +3030,11 @@ andl %edx,%edx		# len > 0?
 jg Loop			# if so, goto Loop:
 ```
 
-(3) How to do the lab? 
+###### **(3) How to do the lab?** 
 
 As we analysed, it is necessary to add `iaddl` to PIPE; loop unrolling can improve the performance of `ncopy.ys`
 
-3.1) Add `iaddl` to PIPE. 
+**3.1) Add `iaddl` to PIPE.** 
 
 3.1.1) The byte sequence of `iaddl` is as same as that in SEQ. 
 
@@ -3076,7 +3066,7 @@ PC update 	PC <- valP
 
 3.1.2) Since `iaddl V, rB` involves the register `rB`, we can refer to `irmovl` in PIPE to know  about "Forwarding" of `rB`. 
 
-*Fetch Stage:* 
+**Fetch Stage:** 
 
 We don't need to modify the control logic of `f_pc`, `f_icode`,  `f_ifun` and `f_stat`, because `iaddl` is like `irmovl` and `OPL`. 
 
@@ -3086,7 +3076,7 @@ Whereas, we should add `IIADDL`  to the definition of `instr_valid` as it is a v
 161 # Is instruction valid?
 162 bool instr_valid = f_icode in
 163     { INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-164       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
+164       IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };		# IIADDL
 ```
 
 It needs register `rB`. 
@@ -3095,7 +3085,7 @@ It needs register `rB`.
 174 # Does fetched instruction require a regid byte?
 175 bool need_regids =
 176     f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL,
-177              IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+177              IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };	# IIADDL
 ```
 
 It also needs `valC`. 
@@ -3103,10 +3093,130 @@ It also needs `valC`.
 ```hcl
 179 # Does fetched instruction require a constant word?
 180 bool need_valC =
-181     f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+181     f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };  # IIADDL
+```
+
+**Decode Stage:**
+
+It needs `rB` as the  B source: `srcB`. 
+
+```hcl
+199 ## What register should be used as the B source?
+200 int d_srcB = [
+201     D_icode in { IOPL, IRMMOVL, IMRMOVL, IIADDL  } : D_rB;	# IIADDL
+202     D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+203     1 : RNONE;  # Don't need register
+204 ];
+```
+
+The result of addition is stored into `rB`, too. Thus, it is `dstE`.
+
+```hcl
+206 ## What register should be used as the E destination?
+207 int d_dstE = [
+208     D_icode in { IRRMOVL, IIRMOVL, IOPL, IIADDL } : D_rB;	# IIADDL
+209     D_icode in { IPUSHL, IPOPL, ICALL, IRET } : RESP;
+210     1 : RNONE;  # Don't write any register
+211 ];
+```
+
+We don't need to modify the forwarding logic for `d_valB`, because it is forwarded as in `irmovl`. The difference between `iaddl` and `irmovl` is in the Execute Stage. 
+
+**Execute Stage:**
+
+As in the Execute Stage of SEQ, `valC` is the `aluA` and `valB` is the `aluB` of ALU. 
+
+```hcl
+242 ## Select input A to ALU
+243 int aluA = [
+244     E_icode in { IRRMOVL, IOPL } : E_valA;
+245     E_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IIADDL } : E_valC;  # IIADDL
+246     E_icode in { ICALL, IPUSHL } : -4;
+247     E_icode in { IRET, IPOPL } : 4;
+248     # Other instructions don't need ALU
+249 ];
+250
+251 ## Select input B to ALU
+252 int aluB = [
+253     E_icode in { IRMMOVL, IMRMOVL, IOPL, ICALL,
+254              IPUSHL, IRET, IPOPL, IIADDL } : E_valB;    # IIADDL
+255     E_icode in { IRRMOVL, IIRMOVL } : 0;
+256     # Other instructions don't need ALU
+257 ];
+```
+
+We don't need to modify the logic for `alufun` since it is `ALUADD` by default. Whereas, `set_cc` should be changed since it is an addition. 
+
+```hcl
+265 ## Should the condition codes be updated?
+266 bool set_cc = E_icode in { IOPL, IIADDL } &&	#  Replace "E_icode == IIADDL". 
+267     # State changes only during normal operation
+268     !m_stat in { SADR, SINS, SHLT } && !W_stat in { SADR, SINS, SHLT };
+269
+```
+
+**Memory Stage:**
+
+There is no need to modify the logic in memory stage. 
+
+**Write Back:** 
+
+`dstE` has been set in the decode stage. 
+
+**PC update:** 
+
+The program counter is updated as usual. 
+
+**Pipeline Register Control**
+
+There is "Pipeline Register Control" in the PIPE besides these stages. Since the load/use hazards always occur when an instruction involves memory and there is no specific control logic for `irmovl` or `OPL`, I conclude that I don't need to modify this part for `iaddl`. 
+
+**3.2) Modify `ncopy.ys`**. 
+
+Replace `irmovl` and `rrmovl` with `iaddl`. 
+
+```assembly
+ 23 # You can modify this portion
+ 24     # Loop header
+ 25     xorl %eax,%eax      # count = 0;
+ 26     andl %edx,%edx      # len <= 0?
+ 27     jle Done        # if so, goto Done:
+ 28
+ 29 Loop:   mrmovl (%ebx), %esi # read val from src...
+ 30     rmmovl %esi, (%ecx) # ...and store it to dst
+ 31     andl %esi, %esi     # val <= 0?
+ 32     jle Npos        # if so, goto Npos:
+ 33     iaddl $1, %eax      # count++
+ 34 Npos:   iaddl $-1, %edx     # len--
+ 35     iaddl $4, %ebx      # src++
+ 36     iaddl $4, %ecx      # dst++
+ 37     andl %edx,%edx      # len > 0?
+ 38     jg Loop         # if so, goto Loop:
 ```
 
 
 
+###### (4) Test 
 
+```shell
+# In "sim/pipe/"
+# 1. Generate "drivers" to test "ncopy.ys"
+# Note that we should run it each time we update "ncopy.ys". 
+make drivers 
+# 2. Build the PIPE simulator
+# We also need to run the following command each time the "pipe-full.hcl" is updated. 
+make psim VERSION=full
+# 3. Test my solution in TTY or GUI mode.
+./psim -t sdriver.yo	
+./psim -g sdriver.yo
+
+./psim -t ldriver.yo	
+./psim -g ldriver.yo
+```
+
+If the value in `%eax`  is `0x2` after running `sdriver`, the solution is correct. 
+
+If the value in `%eax`  is `0x1f` after running `ldriver`, the solution is correct. 
+
+Great! After adding `iaddl`, my answer is correct. Let's do the loop unrolling next. 
 
