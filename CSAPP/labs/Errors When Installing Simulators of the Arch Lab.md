@@ -37,7 +37,7 @@ Note that the Linux distribution where the following errors occur is "CentOS 7.9
 "Error in startup script: couldn't read file "seq.tcl": no such file or directory"
 ```
 
-Whereas, there isn't any problem when it is running in `./sim/seq/` where the program `ssim` is.
+Whereas, there isn't any problem when it is running in  the directory of `./sim/seq/` where the program `ssim` is.
 
 ```shell
 # In ./sim/seq/

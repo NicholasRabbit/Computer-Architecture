@@ -2,7 +2,7 @@
 
 [Preparation for the laboratories](https://blog.csdn.net/qq_45677541/article/details/123955438)
 
-**Solution of errors**
+**Solution of errors in the Data Labs**
 
 (1) "fatal error gnu/stubs-32.h no such file or directory "
 
@@ -16,11 +16,39 @@ Solution:
 yum -y install glibc-devel.i386   # Centos 6/7
 ```
 
-### 3, Laboratory
+If it is a CentOS 9, run the following command.
+
+```shell
+yum -y install glibc-devel.i686 glibc-devel
+```
+
+
+
+### 2, Laboratory
 
 Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
 
 ### 1) Data Labs
+
+##### **Solution of errors in the Data Labs**
+
+(1) `fatal error gnu/stubs-32.h no such file or directory `
+
+Running `make btest` on a machine of 64-bit representation of integers may cause an error(`fatal error gnu/stubs-32.h no such file or directory `).  The solution is given as follows.
+
+Solution:
+
+```shell
+# You need install the glibc-devel.i386 package because the labs need machine of 32-bit 
+# representations of integers.
+yum -y install glibc-devel.i386   # Centos 6/7
+```
+
+If it is a CentOS 9, run the following command.
+
+```shell
+yum -y install glibc-devel.i686 glibc-devel
+```
 
 ##### **0. How to test?**
 
