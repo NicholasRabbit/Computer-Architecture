@@ -2308,11 +2308,25 @@ Stack:
 
 Note that in line 32 it is to move `0x8(%ebp)`  where the address of the linked list is stored, not `0x4(%ebp)`, because there is an implicit pushing for the address of the following instruction after `call Sum`. Thus, when a new stack is established for `sum`, the offset from the 
 
-1.2.3) Then generate an object model of `sum.ys` by `make sum.yo`, note that the suffix is `.yo`, not `.ys`. Run it in the SEQ simulator. 
+1.2.3) Then generate an object model of `sum.ys` by `make sum.yo`, note that the suffix is `.yo`, not `.ys`. 
 
 ```shell
-# In `sim/seq`
-./ssim -t -g ../misc/sum.yo
+# Be sure to make the whole project before testing "sum.yo".
+# In "sim"
+cd sim
+make clean
+make
+
+# Then test "sum.yo" in "sim/misc", 
+make sum.yo
+```
+
+Run it in the SEQ simulator to test it. 
+
+```shell
+# In `sim/seq`, 
+./ssim -t -g ../misc/sum.yo		# GUI mode
+./ssim -t ../misc/sum.yo		# TTY mode
 ```
 
 The content in `%eax` is `0xcba`, therefore, my Y86 assembly code is correct. 
