@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define N 1000000
+#define N 100000
 
+// Create an array of characters with the size of N.
 void create_str(int n, char *s) 
 {
 	int i;
@@ -41,8 +42,8 @@ int main(int argc, char *argv[])
 	 * When N is 1,000,000, this lower1() needs quite a few seconds to complete.
 	 * Whereas, lower2 executes immediately.
 	 * */ 
-	//lower1(s);	
-	lower2(s);
-	printf("%s\n", s); 
+	lower1(s);	
+	//lower2(s);
+	//printf("%s\n", s); 
 	return 0;
 }
