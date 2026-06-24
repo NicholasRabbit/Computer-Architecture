@@ -161,7 +161,7 @@ int f_ifun = [
 # Is instruction valid?
 bool instr_valid = f_icode in 
 	{ INOP, IHALT, IRRMOVL, IIRMOVL, IRMMOVL, IMRMOVL,
-	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL, IIADDL };
+	  IOPL, IJXX, ICALL, IRET, IPUSHL, IPOPL };
 
 # Determine status code for fetched instruction
 int f_stat = [
@@ -174,11 +174,11 @@ int f_stat = [
 # Does fetched instruction require a regid byte?
 bool need_regids =
 	f_icode in { IRRMOVL, IOPL, IPUSHL, IPOPL, 
-		     IIRMOVL, IRMMOVL, IMRMOVL, IIADDL };
+		     IIRMOVL, IRMMOVL, IMRMOVL };
 
 # Does fetched instruction require a constant word?
 bool need_valC =
-	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL, IIADDL };
+	f_icode in { IIRMOVL, IRMMOVL, IMRMOVL, IJXX, ICALL };
 
 # Predict next value of PC
 int f_predPC = [

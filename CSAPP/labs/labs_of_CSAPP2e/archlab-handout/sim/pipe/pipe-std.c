@@ -1,4 +1,4 @@
-char simname[] = "Y86 Processor: pipe-full.hcl";
+char simname[] = "Y86 Processor: pipe-std.hcl";
 #include <stdio.h>
 #include "isa.h"
 #include "pipeline.h"
