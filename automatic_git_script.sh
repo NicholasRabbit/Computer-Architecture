@@ -4,6 +4,8 @@
 # REPO_URL="master"
 BRANCH="master"  # or "master" depending on your default branch
 
+	git pull
+
 # Function to add, commit, and push changes
 
 push_to_github() {
