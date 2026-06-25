@@ -2988,7 +2988,7 @@ Npos:	irmovl $1, %edi
 	jg Loop			# if so, goto Loop:
 ```
 
-2.2.1) First of all, the first three instructions initialise the count and test the case. Apparently, there is no room to optimise since all the computation is done with registers and none of them can be omitted or replaced with simple instructions. 
+2.2.1) First of all, the first three instructions initialise the count and test the case. Apparently, there is no room to optimise since all the computation is performed within registers and none of them can be omitted or replaced with simple instructions. 
 
 2.2.2) Then we encounter the two instructions involving reading and writing memory at the beginning of the loop. 
 
@@ -2997,7 +2997,7 @@ Loop:	mrmovl (%ebx), %esi	# read val from src...
 	rmmovl %esi, (%ecx)	# ...and store it to dst
 ```
 
-`(%ebx)` is increased by 1 at the end of every loop, therefore, it can't be read until the addition in the previous is completed. So is the `(%ecx)`. There are data dependencies between loops; there is a critical path. As it hinted in the question, we may use loop unrolling to improve performance. 
+`(%ebx)` is increased by 4 at the end of every loop, therefore, it can't be read until the addition on the previous loop is completed. So is the `(%ecx)`. There are data dependencies between loops; it is a critical path. As it hinted in the question, we may use loop unrolling to improve the performance. 
 
 2.2.3) The following four instructions check whether the value of each element in `src` is positive or not. If it is negative, jump to `Npos` to execute. 
 

@@ -2129,15 +2129,22 @@ objdump -d test_no_unroll.o > no_unrolling.s
 (2.2) GCC compiled `combine4` with loop unrolling. Generate an object file with loop unrolling and then disassemble it.
 
 ```shell
-gcc -Og -funroll-loops -c combine_test.c -o test_no_unroll.o
-objdump -d test_no_unroll.o > unrolling.s
+# Add "-funroll-loops" to have a gcc compiler to perform loop unrolling and 
+# generate x86 assembly code. 
+gcc -Og -funroll-loops -c combine_test.c -o unrolling_x86.o
+objdump -d unrolling_x86.o > unrolling_x86_64.s
 ```
 
-`unrolling.s` is as follows: 
+`unrolling_x86_64.s` is as follows: 
 
 ```assembly
 # Loop unrolling.
 # The following assembly code is generated without being linked. 
+# "i" is in %edx, "len" in %rbx
+  8b:	ba 00 00 00 00       	mov    $0x0,%edx
+  90:	48 89 d9             	mov    %rbx,%rcx	# len is in %rcx, too.
+  # Compare the "len" with 7, if they don't equal, jump to 0xf5.
+  93:	83 e1 07             	and    $0x7,%ecx
   96:	75 5d                	jne    f5 <combine4+0x8c>
   98:	eb 4c                	jmp    e6 <combine4+0x7d>
   9a:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
@@ -2163,8 +2170,11 @@ objdump -d test_no_unroll.o > unrolling.s
   f1:	5d                   	pop    %rbp
   f2:	41 5c                	pop    %r12
   f4:	c3                   	retq   
-  f5:	48 39 da             	cmp    %rbx,%rdx
-  f8:	7d f1                	jge    eb <combine4+0x82>
+  # 
+  f5:	48 39 da             	cmp    %rbx,%rdx	# i - len = ? 
+  f8:	7d f1                	jge    eb <combine4+0x82> # If i >= len, jump to 0xeb. 
+   # Perform at least one multiplication when i < len. 
+   # There are 7 "mulss" below, which is to compute the remaining elements. 
   fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
   ff:	48 83 c2 01          	add    $0x1,%rdx
  103:	48 83 f9 01          	cmp    $0x1,%rcx
@@ -2192,10 +2202,9 @@ objdump -d test_no_unroll.o > unrolling.s
  154:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
  159:	48 83 c2 01          	add    $0x1,%rdx
  15d:	eb 87                	jmp    e6 <combine4+0x7d>
-
 ```
 
-Although there are only three elements in the array, `data_t arr[3]`, the compiler performs loop unrolling with a factor of 6. We can see that there are condition tests for the number of elements. The compiler set the factor of loop unrolling to 6 by default; if the elements are less than 6, the rest of instructions of loop unrolling won't be executed. 
+We can see that the compiler performs loop unrolling with the factor of 8. How does it deal with an array with less than 8 elements? 
 
 #### 5.9 Enhancing Parallelism 
 
