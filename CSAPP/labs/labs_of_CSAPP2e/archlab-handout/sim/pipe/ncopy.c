@@ -9,29 +9,29 @@ int src[8], dst[8];
  */
 int ncopy(int *src, int *dst, int len)
 {
-    int count = 0;
-    int val;
+	int count = 0;
+	int val;
 
-    while (len > 0) {
-	val = *src++;
-	*dst++ = val;
-	if (val > 0)
-	    count++;
-	len--;
-    }
-    return count;
+	while (len > 0) {
+		val = *src++;
+		*dst++ = val;
+		if (val > 0)
+			count++;
+		len--;
+	}
+	return count;
 }
 /* $end ncopy */
 
 int main()
 {
-    int i, count;
+	int i, count;
 
-    for (i=0; i<8; i++)
-	src[i]= i+1;
-    count = ncopy(src, dst, 8);
-    printf ("count=%d\n", count);
-    exit(0);
+	for (i=0; i<8; i++)
+		src[i]= i+1;
+	count = ncopy(src, dst, 8);
+	printf ("count=%d\n", count);
+	exit(0);
 }
 
 
