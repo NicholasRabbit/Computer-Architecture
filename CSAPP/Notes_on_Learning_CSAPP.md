@@ -2105,7 +2105,18 @@ void combine5(vec_ptr v, data_t *dest)
 
 (2)  Add `-funroll-loops` to `gcc` to have it perform loop unrolling automatically. 
 
-The source code is `combine4`. I verified the unrolling option of a GCC compiler in my machine with the similar code in `combine_test.c`.  The result is as follows: 
+The source code is `combine4`. I verified the unrolling option of a GCC compiler in my machine with the similar code in `combine_test.c`.  Note that there is no loop unrolling the C code of `combine4`. 
+
+```c
+void combine4(vec_ptr v, data_t *dest)
+{
+    for (i = 0; i < length; i+=2) {
+        acc = acc OP data[i];
+    }
+}
+```
+
+The result is as follows: 
 
 The source code is written by me, which is used in chapter 5.6 and is as same as the simplified version of `combine` of the textbook.
 
@@ -2140,10 +2151,10 @@ objdump -d unrolling_x86.o > unrolling_x86_64.s
 ```assembly
 # Loop unrolling.
 # The following assembly code is generated without being linked. 
-# "i" is in %edx, "len" in %rbx
+# "i" is in %edx, "length" in %rbx
   8b:	ba 00 00 00 00       	mov    $0x0,%edx
-  90:	48 89 d9             	mov    %rbx,%rcx	# len is in %rcx, too.
-  # Compare the "len" with 7, if they don't equal, jump to 0xf5.
+  90:	48 89 d9             	mov    %rbx,%rcx	# length is moved to %rcx.
+  # Compare the "length" with 7, if they don't equal, jump to 0xf5.
   93:	83 e1 07             	and    $0x7,%ecx
   96:	75 5d                	jne    f5 <combine4+0x8c>
   98:	eb 4c                	jmp    e6 <combine4+0x7d>
@@ -2171,9 +2182,10 @@ objdump -d unrolling_x86.o > unrolling_x86_64.s
   f2:	41 5c                	pop    %r12
   f4:	c3                   	retq   
   # 
-  f5:	48 39 da             	cmp    %rbx,%rdx	# i - len = ? 
+  f5:	48 39 da             	cmp    %rbx,%rdx	# Compare i - length = ? 
   f8:	7d f1                	jge    eb <combine4+0x82> # If i >= len, jump to 0xeb. 
-   # Perform at least one multiplication when i < len. 
+   # If i < length, fall through. 
+   # Perform at least one multiplication when i < length. 
    # There are 7 "mulss" below, which is to compute the remaining elements. 
   fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
   ff:	48 83 c2 01          	add    $0x1,%rdx
@@ -2204,7 +2216,72 @@ objdump -d unrolling_x86.o > unrolling_x86_64.s
  15d:	eb 87                	jmp    e6 <combine4+0x7d>
 ```
 
-We can see that the compiler performs loop unrolling with the factor of 8. How does it deal with an array with less than 8 elements? 
+(2.3) We guess that the compiler performs loop unrolling with the factor of 8 since there are 8 `mulss` in the first section. How to prove that? How does it deal with an array with less than 8 elements? 
+
+(2.3.1) First of all, we assume that there are 10 elements to know how the compiler performs loop unrolling with a factor of 8. Let's start. 
+
+```assembly
+  # "i" is in %edx, "length" in %rbx
+  8b:	ba 00 00 00 00       	mov    $0x0,%edx
+  90:	48 89 d9             	mov    %rbx,%rcx	# length is moved to %rcx.
+  # Compare the "length" with 7, if they don't equal, jump to 0xf5.
+  93:	83 e1 07             	and    $0x7,%ecx
+  96:	75 5d                	jne    f5 <combine4+0x8c>
+```
+
+It is easy to understand the first two instructions. Now `%rcx` holds the length: 10.  
+
+What is the third instruction used for? 
+
+```assembly
+93:	83 e1 07             	and    $0x7,%ecx
+```
+
+It is used to modulate the `length` by `8`, but the operation is `&` instead of `%`. `and` computes `7 & %ecx` and then move the result to `%ecx`.  See  `AND S, D:  D <- S&D` in Figure 3.7. Since `10 & 7 = 2` which is not 0, `jne` at `0x96` will jump to `0xf5`. 
+
+```C
+0 & 7 = 0	// 0 % 8 = 0	
+1 & 7 = 1	// 1 % 8 = 1
+2 & 7 = 2
+3 & 7 = 3
+4 & 7 = 4
+5 & 7 = 5
+6 & 7 = 6
+7 & 7 = 7
+8 & 7 = 0
+9 & 7 = 1
+10 & 7 = 2	// 10 % 8 = 2
+11 & 7 = 3
+12 & 7 = 4
+13 & 7 = 5
+14 & 7 = 6
+15 & 7 = 7
+16 & 7 = 0	// 16 % 8 = 0
+```
+
+(2.3.2) Compare `i` and `length`. If `i >= lenth`, jump to `0xeb`. `i ` is 0 and `length` is 10, so it falls through. 
+
+```assembly
+  f5:	48 39 da             	cmp    %rbx,%rdx	# Compare i - length = ? 
+  f8:	7d f1                	jge    eb <combine4+0x82> # If i >= lenth, jump to 0xeb.
+  # Fall through and perform the first multiplication. 
+  fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+  ff:	48 83 c2 01          	add    $0x1,%rdx
+ 103:	48 83 f9 01          	cmp    $0x1,%rcx
+ 107:	74 dd                	je     e6 <combine4+0x7d>
+  # ...
+  eb:	f3 0f 11 45 00       	movss  %xmm0,0x0(%rbp)
+  f0:	5b                   	pop    %rbx
+  f1:	5d                   	pop    %rbp
+  f2:	41 5c                	pop    %r12
+  f4:	c3                   	retq   
+```
+
+
+
+
+
+
 
 #### 5.9 Enhancing Parallelism 
 
