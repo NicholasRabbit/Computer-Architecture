@@ -2216,15 +2216,17 @@ objdump -d unrolling_x86.o > unrolling_x86_64.s
  15d:	eb 87                	jmp    e6 <combine4+0x7d>
 ```
 
-(2.3) We guess that the compiler performs loop unrolling with the factor of 8 since there are 8 `mulss` in the first section. How to prove that? How does it deal with an array with less than 8 elements? 
+(2.3) Analyses of loop unrolling perform by a GCC compiler. 
 
-(2.3.1) First of all, we assume that there are 10 elements to know how the compiler performs loop unrolling with a factor of 8. Let's start. 
+I guess that the compiler performs loop unrolling with the factor of 8 since there are 8 `mulss` in the first section. How to prove that? How does it deal with an array with less than 8 elements? 
+
+(2.3.1) First of all, I assume that there are 10 elements to know how the compiler performs loop unrolling with a factor of 8. Let's start. 
 
 ```assembly
   # "i" is in %edx, "length" in %rbx
   8b:	ba 00 00 00 00       	mov    $0x0,%edx
   90:	48 89 d9             	mov    %rbx,%rcx	# length is moved to %rcx.
-  # Compare the "length" with 7, if they don't equal, jump to 0xf5.
+  # Perform modulation of 8 by using `x & 7`. See explanation below. 
   93:	83 e1 07             	and    $0x7,%ecx
   96:	75 5d                	jne    f5 <combine4+0x8c>
 ```
@@ -2250,7 +2252,7 @@ It is used to modulate the `length` by `8`, but the operation is `&` instead of 
 7 & 7 = 7
 8 & 7 = 0
 9 & 7 = 1
-10 & 7 = 2	// 10 % 8 = 2
+10 & 7 = 2	// 10 % 8 = 2	%ecx is 2
 11 & 7 = 3
 12 & 7 = 4
 13 & 7 = 5
@@ -2259,25 +2261,45 @@ It is used to modulate the `length` by `8`, but the operation is `&` instead of 
 16 & 7 = 0	// 16 % 8 = 0
 ```
 
-(2.3.2) Compare `i` and `length`. If `i >= lenth`, jump to `0xeb`. `i ` is 0 and `length` is 10, so it falls through. 
+(2.3.2) Compare `i` and `length`. If `i >= lenth`, jump to `0xeb`. Since `i ` is 0 and `length` is 10, it falls through. 
 
 ```assembly
   f5:	48 39 da             	cmp    %rbx,%rdx	# Compare i - length = ? 
-  f8:	7d f1                	jge    eb <combine4+0x82> # If i >= lenth, jump to 0xeb.
-  # Fall through and perform the first multiplication. 
+  # If i >= lenth, jump to 0xeb to return. 
+  f8:	7d f1                	jge    eb <combine4+0x82> 
+  # Falling through and perform the first multiplication. 
   fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
-  ff:	48 83 c2 01          	add    $0x1,%rdx
- 103:	48 83 f9 01          	cmp    $0x1,%rcx
+  ff:	48 83 c2 01          	add    $0x1,%rdx	# 0 + 1 -> %rdx
+  
+  # 10 & 7 = 2, %rcx is 2. 2 - 1 > 0. It falls through. 
+ 103:	48 83 f9 01          	cmp    $0x1,%rcx	
  107:	74 dd                	je     e6 <combine4+0x7d>
-  # ...
+ # Compare: %rcx - 2 = 2 - 2 = 0. So jump to 0x154. 
+ 109:	48 83 f9 02          	cmp    $0x2,%rcx
+ 10d:	74 45                	je     154 <combine4+0xeb>
+ 
+ # ....
+ # Since %rdx has been already incremented by 1, it multiplies the second element here. 
+ 154:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
+ 159:	48 83 c2 01          	add    $0x1,%rdx
+ 15d:	eb 87                	jmp    e6 <combine4+0x7d> 
+```
+
+We can see that there is a unconditional jump to `0xe6` at `0x15d` after the multiplication of the second element. Let's what happens at `0xe6`. 
+
+```assembly
+  # Recall that "length" is 10 in %rbx, and "i"(%rdx) is 2 now after being incremented 
+  # by 1 twice. Compare %rdx and %rbx: %rdx - %rbx = 2 - 10 < 0. It jumps to 0x9a. 
+  e6:	48 39 da             	cmp    %rbx,%rdx
+  e9:	7c af                	jl     9a <combine4+0x31>
   eb:	f3 0f 11 45 00       	movss  %xmm0,0x0(%rbp)
   f0:	5b                   	pop    %rbx
   f1:	5d                   	pop    %rbp
   f2:	41 5c                	pop    %r12
-  f4:	c3                   	retq   
+  f4:	c3                   	retq 
 ```
 
-
+Now we know how the GCC compiler deals with an array with elements less than the factor 8. If `%rdx - %rbx < 0`, it will fall through and will move the result to the stack, then return. If the condition holds, it will jump to `0x9a` to perform the multiplication of the remaining 8 elements. 
 
 
 

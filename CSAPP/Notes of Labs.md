@@ -3171,9 +3171,7 @@ The program counter is updated as usual.
 
 There is "Pipeline Register Control" in the PIPE besides these stages. Since the load/use hazards always occur when an instruction involves memory and there is no specific control logic for `irmovl` or `OPL`, I conclude that I don't need to modify this part for `iaddl`. 
 
-**3.2) Modify `ncopy.ys`**. 
-
-Replace `irmovl` and `rrmovl` with `iaddl`. 
+**3.2) Replace `irmovl` and `rrmovl` with `iaddl` in`ncopy.ys`**. 
 
 ```assembly
  23 # You can modify this portion
@@ -3194,9 +3192,15 @@ Replace `irmovl` and `rrmovl` with `iaddl`.
  38     jg Loop         # if so, goto Loop:
 ```
 
+Test if the `iaddl` works or not before further optimisation.  See 4.1) Test `iaddl`. 
+
+3.3) Add loop unrolling to the `ncopy.s`. 
+
 
 
 ###### (4) Test 
+
+4.1) Test `iaddl`. 
 
 ```shell
 # In "sim/pipe/"
