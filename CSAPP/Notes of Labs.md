@@ -3204,9 +3204,12 @@ Test if the `iaddl` works or not before further optimisation.  See 4.1) Test `ia
 
 ```shell
 # In "sim/pipe/"
-# 1. Generate "drivers" to test "ncopy.ys"
-# Note that we should run it each time we update "ncopy.ys". 
+# 1. Generate "drivers" to test "ncopy.ys". The "ncopy.ys" will be integrated with
+# "sdirver.ys" and "ldriver.ys". 
+# Note that we should run it each time after we update "ncopy.ys". 
 make drivers 
+
+
 # 2. Build the PIPE simulator
 # We also need to run the following command each time the "pipe-full.hcl" is updated. 
 make psim VERSION=full

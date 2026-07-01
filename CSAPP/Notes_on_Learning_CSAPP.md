@@ -2271,7 +2271,7 @@ It is used to modulate the `length` by `8`, but the operation is `&` instead of 
   fa:	f3 0f 59 04 90       	mulss  (%rax,%rdx,4),%xmm0
   ff:	48 83 c2 01          	add    $0x1,%rdx	# 0 + 1 -> %rdx
   
-  # 10 & 7 = 2, %rcx is 2. 2 - 1 > 0. It falls through. 
+  # 10 & 7 = 2, %rcx is 2. 2 - 1 > 0. It doesn't "je" to "-xe6", but falls through. 
  103:	48 83 f9 01          	cmp    $0x1,%rcx	
  107:	74 dd                	je     e6 <combine4+0x7d>
  # Compare: %rcx - 2 = 2 - 2 = 0. So jump to 0x154. 
