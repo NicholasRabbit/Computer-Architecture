@@ -26,48 +26,16 @@ ncopy:	pushl %ebp		# Save old frame pointer
 	andl %edx,%edx		# len <= 0?
 	jle Done		# if so, goto Done:
 
-    # Unroll the loop with the factor of 2.
-	irmovl $1, %ecx
-	andl %edx, %ecx	# len & 1 = len % 2. The factor is 2. 
-	jne Remainder	# Compute the remaining elements first. 
-
 Loop:	mrmovl (%ebx), %esi	# read val from src...
 	rmmovl %esi, (%ecx)	# ...and store it to dst
 	andl %esi, %esi		# val <= 0?
 	jle Npos		# if so, goto Npos:
 	iaddl $1, %eax		# count++
-
-    # Move the second element on each loop
-	mrmovl 4(%ebx), %edi
-	rmmovl %edi, 4(%ecx)	
-	andl %edi, %edi
-	jle Npos
-	iaddl $1, %eax
-
-
 Npos:	iaddl $-1, %edx		# len--
 	iaddl $4, %ebx		# src++
 	iaddl $4, %ecx		# dst++
 	andl %edx,%edx		# len > 0?
 	jg Loop			# if so, goto Loop:
-
-# Finish any remaining elements. Since the factor is 2, there is only one element left.
-# Just copy the instructions in the loop.
-Remainder:	mrmovl (%ebx), %esi	# read val from src... 
-	rmmovl %esi, (%ecx)	# ...and store it to dst
-	andl %esi, %esi		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	iaddl $1, %eax		# count++
-	# Decrement len and increment src and dst.
-	iaddl $-1, %edx		# len--
-	iaddl $4, %ebx		# src++
-	iaddl $4, %ecx		# dst++
-	andl %edx,%edx		# len > 0?
-	jg Loop			# if so, goto Loop:
-
-
-
-	
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
