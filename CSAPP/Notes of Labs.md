@@ -3273,6 +3273,18 @@ After debugging with the GUI simulator of Y86, I found some bugs in my first sol
 
 Ah! It's correct! The value in `%eax` is `0x2`  for `sdriver.yo`and `0x1f` for `ldriver.yo`. Well done!
 
+N.B. Some additional tests have not been passed yet.
+
+```shell
+# In "sim/pipe"
+unix> make drivers
+unix> ../misc/yis sdriver.yo	# passed
+ ./correctness.pl	# Failed
+ 
+```
+
+
+
 ###### (4) Test 
 
 4.0) Before running a benchmark program or performing regression test, build a new simulator with `pipe-full.hcl` by `make VERSION=full`. The previous simulator is built on `pipe/pipe-std.hcl`, if we run  only `make`. 
