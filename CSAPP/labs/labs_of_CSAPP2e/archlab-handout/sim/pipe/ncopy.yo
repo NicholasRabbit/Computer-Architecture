@@ -1,0 +1,84 @@
+                      | #/* $begin ncopy-ys */
+                      | ##################################################################
+                      | # ncopy.ys - Copy a src block of len ints to dst.
+                      | # Return the number of positive ints (>0) contained in src.
+                      | #
+                      | # Include your name and ID here.
+                      | #
+                      | # Describe how and why you modified the baseline code.
+                      | #
+                      | ##################################################################
+                      | # Do not modify this portion
+                      | # Function prologue.
+  0x000: a05f         | ncopy:	pushl %ebp		# Save old frame pointer
+  0x002: 2045         | 	rrmovl %esp,%ebp	# Set up new frame pointer
+  0x004: a06f         | 	pushl %esi		# Save callee-save regs
+  0x006: a03f         | 	pushl %ebx
+  0x008: a07f         | 	pushl %edi
+  0x00a: 503508000000 | 	mrmovl 8(%ebp),%ebx	# src
+  0x010: 502510000000 | 	mrmovl 16(%ebp),%edx	# len
+  0x016: 50150c000000 | 	mrmovl 12(%ebp),%ecx	# dst
+                      | 
+                      | ##################################################################
+                      | # You can modify this portion
+                      | 	# Loop header
+  0x01c: 6300         | 	xorl %eax,%eax		# count = 0;
+  0x01e: 6222         | 	andl %edx,%edx		# len <= 0?
+  0x020: 71af000000   | 	jle Done		# if so, goto Done:
+                      | 
+                      |     # Unroll the loop with the factor of 2.
+  0x025: 30f101000000 | 	irmovl $1, %ecx
+  0x02b: 6221         | 	andl %edx, %ecx	# len & 1 = len % 2. The factor is 2. 
+  0x02d: 747d000000   | 	jne Remainder	# Compute the remaining elements first. 
+                      | 
+  0x032: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+  0x038: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x03e: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x040: 7164000000   | 	jle Npos		# if so, goto Npos:
+  0x045: c0f001000000 | 	iaddl $1, %eax		# count++
+                      | 
+                      |     # Move the second element on each loop
+  0x04b: 507304000000 | 	mrmovl 4(%ebx), %edi
+  0x051: 407104000000 | 	rmmovl %edi, 4(%ecx)	
+  0x057: 6277         | 	andl %edi, %edi
+  0x059: 7164000000   | 	jle Npos
+  0x05e: c0f001000000 | 	iaddl $1, %eax
+                      | 
+                      | 
+  0x064: c0f2ffffffff | Npos:	iaddl $-1, %edx		# len--
+  0x06a: c0f304000000 | 	iaddl $4, %ebx		# src++
+  0x070: c0f104000000 | 	iaddl $4, %ecx		# dst++
+  0x076: 6222         | 	andl %edx,%edx		# len > 0?
+  0x078: 7632000000   | 	jg Loop			# if so, goto Loop:
+                      | 
+                      | # Finish any remaining elements. Since the factor is 2, there is only one element left.
+                      | # Just copy the instructions in the loop.
+  0x07d: 506300000000 | Remainder:	mrmovl (%ebx), %esi	# read val from src... 
+  0x083: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x089: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x08b: 7164000000   | 	jle Npos		# if so, goto Npos:
+  0x090: c0f001000000 | 	iaddl $1, %eax		# count++
+                      | 	# Decrement len and increment src and dst.
+  0x096: c0f2ffffffff | 	iaddl $-1, %edx		# len--
+  0x09c: c0f304000000 | 	iaddl $4, %ebx		# src++
+  0x0a2: c0f104000000 | 	iaddl $4, %ecx		# dst++
+  0x0a8: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0aa: 7632000000   | 	jg Loop			# if so, goto Loop:
+                      | 
+                      | 
+                      | 
+                      | 	
+                      | ##################################################################
+                      | # Do not modify the following section of code
+                      | # Function epilogue.
+  0x0af:              | Done:
+  0x0af: b07f         | 	popl %edi               # Restore callee-save registers
+  0x0b1: b03f         | 	popl %ebx
+  0x0b3: b06f         | 	popl %esi
+  0x0b5: 2054         | 	rrmovl %ebp, %esp
+  0x0b7: b05f         | 	popl %ebp
+  0x0b9: 90           | 	ret
+                      | ##################################################################
+                      | # Keep the following label at the end of your function
+  0x0ba:              | End:
+                      | #/* $end ncopy-ys */

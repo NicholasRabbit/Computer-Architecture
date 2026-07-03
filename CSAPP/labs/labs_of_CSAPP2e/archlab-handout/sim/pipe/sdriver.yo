@@ -10,7 +10,7 @@
   0x012: a00f         | 	pushl %eax
   0x014: 30f004010000 | 	irmovl dest, %eax	# dst array
   0x01a: a00f         | 	pushl %eax
-  0x01c: 30f0e4000000 | 	irmovl src, %eax	# src array
+  0x01c: 30f0e0000000 | 	irmovl src, %eax	# src array
   0x022: a00f         | 	pushl %eax
   0x024: 802a000000   | 	call ncopy		 
   0x029: 00           | 	halt			# should halt with num nonzeros in %eax
@@ -41,46 +41,49 @@
                       | 	# Loop header
   0x046: 6300         | 	xorl %eax,%eax		# count = 0;
   0x048: 6222         | 	andl %edx,%edx		# len <= 0?
-  0x04a: 71d9000000   | 	jle Done		# if so, goto Done:
+  0x04a: 71d4000000   | 	jle Done		# if so, goto Done:
                       | 
                       |     # Unroll the loop with the factor of 2.
-  0x04f: 30f101000000 | 	irmovl $1, %ecx
-  0x055: 6221         | 	andl %edx, %ecx	# len & 1 = len % 2. The factor is 2. 
-  0x057: 74a7000000   | 	jne Remainder	# Compute the remaining elements first. 
+  0x04f: 30f701000000 | 	irmovl $1, %edi
+  0x055: 6227         | 	andl %edx, %edi	# len & 1 = len % 2. The factor is 2. 
+  0x057: 7389000000   | 	je Loop	# if the remainder is 0, jump to Loop.
                       | 
-  0x05c: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
-  0x062: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
-  0x068: 6266         | 	andl %esi, %esi		# val <= 0?
-  0x06a: 718e000000   | 	jle Npos		# if so, goto Npos:
-  0x06f: c0f001000000 | 	iaddl $1, %eax		# count++
-                      | 
-                      |     # Move the second element on each loop
-  0x075: 507304000000 | 	mrmovl 4(%ebx), %edi
-  0x07b: 407104000000 | 	rmmovl %edi, 4(%ecx)	
-  0x081: 6277         | 	andl %edi, %edi
-  0x083: 718e000000   | 	jle Npos
-  0x088: c0f001000000 | 	iaddl $1, %eax
-                      | 
-                      | 
-  0x08e: c0f2ffffffff | Npos:	iaddl $-1, %edx		# len--
-  0x094: c0f304000000 | 	iaddl $4, %ebx		# src++
-  0x09a: c0f104000000 | 	iaddl $4, %ecx		# dst++
-  0x0a0: 6222         | 	andl %edx,%edx		# len > 0?
-  0x0a2: 765c000000   | 	jg Loop			# if so, goto Loop:
                       | 
                       | # Finish any remaining elements. Since the factor is 2, there is only one element left.
                       | # Just copy the instructions in the loop.
-  0x0a7: 506300000000 | Remainder:	mrmovl (%ebx), %esi	# read val from src... 
-  0x0ad: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
-  0x0b3: 6266         | 	andl %esi, %esi		# val <= 0?
-  0x0b5: 718e000000   | 	jle Npos		# if so, goto Npos:
-  0x0ba: c0f001000000 | 	iaddl $1, %eax		# count++
+  0x05c: 506300000000 | Remainder:	mrmovl (%ebx), %esi	# read val from src... 
+  0x062: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+  0x068: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x06a: 71bb000000   | 	jle Npos		# if so, goto Npos:
+  0x06f: c0f001000000 | 	iaddl $1, %eax		# count++
                       | 	# Decrement len and increment src and dst.
-  0x0c0: c0f2ffffffff | 	iaddl $-1, %edx		# len--
-  0x0c6: c0f304000000 | 	iaddl $4, %ebx		# src++
-  0x0cc: c0f104000000 | 	iaddl $4, %ecx		# dst++
-  0x0d2: 6222         | 	andl %edx,%edx		# len > 0?
-  0x0d4: 765c000000   | 	jg Loop			# if so, goto Loop:
+  0x075: c0f2ffffffff | 	iaddl $-1, %edx		# len--
+  0x07b: c0f304000000 | 	iaddl $4, %ebx		# src++
+  0x081: c0f104000000 | 	iaddl $4, %ecx		# dst++
+  0x087: 6222         | 	andl %edx,%edx		# len > 0?
+                      | 
+  0x089: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+  0x08f: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+                      | 
+                      |     # Move the second element on each loop
+  0x095: 507304000000 | 	mrmovl 4(%ebx), %edi
+  0x09b: 407104000000 | 	rmmovl %edi, 4(%ecx)	
+                      | 
+                      | 
+  0x0a1: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x0a3: 71ae000000   | 	jle Adds		# if so, goto "Adds:" to test the second value
+  0x0a8: c0f001000000 | 	iaddl $1, %eax		# count++
+  0x0ae: 6277         | Adds:	andl %edi, %edi
+  0x0b0: 71bb000000   | 	jle Npos
+  0x0b5: c0f001000000 | 	iaddl $1, %eax
+                      | 
+                      | 
+  0x0bb: c0f2feffffff | Npos:	iaddl $-2, %edx		# len--
+  0x0c1: c0f308000000 | 	iaddl $8, %ebx		# src++
+  0x0c7: c0f108000000 | 	iaddl $8, %ecx		# dst++
+  0x0cd: 6222         | 	andl %edx,%edx		# len > 0?
+  0x0cf: 7689000000   | 	jg Loop			# if so, goto Loop:
+                      | 
                       | 
                       | 
                       | 
@@ -88,29 +91,29 @@
                       | ##################################################################
                       | # Do not modify the following section of code
                       | # Function epilogue.
-  0x0d9:              | Done:
-  0x0d9: b07f         | 	popl %edi               # Restore callee-save registers
-  0x0db: b03f         | 	popl %ebx
-  0x0dd: b06f         | 	popl %esi
-  0x0df: 2054         | 	rrmovl %ebp, %esp
-  0x0e1: b05f         | 	popl %ebp
-  0x0e3: 90           | 	ret
+  0x0d4:              | Done:
+  0x0d4: b07f         | 	popl %edi               # Restore callee-save registers
+  0x0d6: b03f         | 	popl %ebx
+  0x0d8: b06f         | 	popl %esi
+  0x0da: 2054         | 	rrmovl %ebp, %esp
+  0x0dc: b05f         | 	popl %ebp
+  0x0de: 90           | 	ret
                       | ##################################################################
                       | # Keep the following label at the end of your function
-  0x0e4:              | End:
+  0x0df:              | End:
                       | #/* $end ncopy-ys */
-  0x0e4:              | EndFun:
+  0x0df:              | EndFun:
                       | 
                       | ###############################
                       | # Source and destination blocks 
                       | ###############################
-  0x0e4:              | 	.align 4
-  0x0e4:              | src:
-  0x0e4: 01000000     | 	.long 1
-  0x0e8: feffffff     | 	.long -2
-  0x0ec: fdffffff     | 	.long -3
-  0x0f0: 04000000     | 	.long 4
-  0x0f4: fadebc00     | 	.long 0xbcdefa # This shouldn't get moved
+  0x0e0:              | 	.align 4
+  0x0e0:              | src:
+  0x0e0: 01000000     | 	.long 1
+  0x0e4: 02000000     | 	.long 2
+  0x0e8: fdffffff     | 	.long -3
+  0x0ec: fcffffff     | 	.long -4
+  0x0f0: fadebc00     | 	.long 0xbcdefa # This shouldn't get moved
                       | 
   0x100:              | 	.align 16
   0x100:              | Predest:
