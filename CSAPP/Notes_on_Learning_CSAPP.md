@@ -1550,11 +1550,11 @@ Tips:
 
 How does a processor know the correct address for the next instruction if it is midpredicted, namely the correct PC? 
 
-As an illustration, in the following code, the branch is always taken by the PIPE processor so that the  `mrmovl (%ecx), %esi` will step into the Fetch Stage when `jne Loop` moves to the Decode Stage. 
+As an illustration, in the following code, the branch is always taken by convention of prediction by the PIPE processor,  so that the  `mrmovl (%ecx), %esi` will step into the Fetch Stage when `jne Loop` moves to the Decode Stage. 
 
-Whereas, the processor doesn't realise that it is predicted until the Execute Stage of `addl %ebx, %edx` , which will set the CC for `jne Loop` to test.  The mispredicted branch is the address in `valC` for `jne Loop(valC)` and the correct branch is `valP`, which is address of `End`. See Figure 4.21 for the computation of `jXX`.
+Whereas, the processor doesn't realise that it is predicted until the Execute Stage of `addl %ebx, %edx` ,  when the CC will be set for `jne Loop` to test.  The mispredicted branch is the address in `valC` for `jne Loop(valC)` and the correct branch is `valP`, which is address of `End`. See Figure 4.21 for the computation of `jXX`.
 
-The PIPE processor will take `valP` as the new value of PC. The `mrmovl (%ecx), %esi` will be discarded from the first stages from the pipeline. 
+The PIPE processor will take `valP` as the new value of PC. The `mrmovl (%ecx), %esi` will be discarded from the stages from the pipeline. 
 
 ```assembly
 Loop:	mrmovl (%ecx),%esi	# get *Start

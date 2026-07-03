@@ -2414,7 +2414,7 @@ So I replace the code in line 42 with the following code:
 42. mrmovl (%ebx), %ecx
 ```
 
-The result in `%eax` is `0xcb0` now, it is not correct but closed. We should find out why `0x00a` is not added. 
+The result in `%eax` is `0xcb0` now, it is not correct but close. I should find out why `0x00a` is not added. 
 
 To be analysed. 
 
@@ -2914,7 +2914,7 @@ Update PC with the `valP` in the Fetch Stage.
 
 ##############
 
-**Test  `ileave`**
+###### (3) Test  `ileave`
 
 ```shell
 # In sim/
@@ -2926,10 +2926,18 @@ make VERSION=full
 
 **Note of test: **
 
+0) Before running a benchmark program or performing regression test, build a new simulator with `seq-full.hcl` by `make VERSION=full`. The previous simulator is built on `seq/seq-std.hcl`, if we run  only `make`. 
+
+```shell
+# In "sim"
+make clean
+make VERSION=full	
+```
+
 1) Run benchmark program to make sure the added code not inject error to the original instructions
 
 ```shell
-# In sim/y86-code
+# In "sim/y86-code".
 make testssim
 ```
 
@@ -2939,14 +2947,17 @@ make testssim
 # In the directory of "sim/ptest".
 cd ../ptest
 # Test every instructions except for "iaddl" and "leave".
-make SIM=../seq/
+make SIM=../seq/	# Wrong!!!
+make SIM=../seq/ssim
 # Test "iaddl"
-make SIM=../seq/ TFLAGS=-i
+make SIM=../seq/ssim TFLAGS=-i
 # Test "leave"
-make SIM=../seq/ TFLAGS=-l
+make SIM=../seq/ssim TFLAGS=-l
 # Test both of them.
-make SIM=../seq/ TFLAGS=-il
+make SIM=../seq/ssim TFLAGS=-il
 ```
+
+NB the value of `SIM` is `../seq/ssim`, NOT `../seq/`. 
 
 ##### Part C 
 
@@ -3196,19 +3207,94 @@ Test if the `iaddl` works or not before further optimisation.  See 4.1) Test `ia
 
 3.3) Add loop unrolling to the `ncopy.s`. 
 
+```assembly
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax		# count = 0;
+	andl %edx,%edx		# len <= 0?
+	jle Done		# if so, goto Done:
 
+    # Unroll the loop with the factor of 2.
+    irmovl $1, %ecx	# BUG 1.
+	andl %edx, %ecx	# len & 1 = len % 2. The factor is 2. 
+	jne Remainder	# Compute the remaining elements first. 
+
+Loop:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos. 	BUG 3. 
+	iaddl $1, %eax		# count++
+
+    # Move the second element on each loop
+	mrmovl 4(%ebx), %edi
+	rmmovl %edi, 4(%ecx)	
+	andl %edi, %edi
+	jle Npos
+	iaddl $1, %eax
+
+
+Npos:	iaddl $-1, %edx		# len--	# BUG 2
+	iaddl $4, %ebx		# src++		# BUG 4
+	iaddl $4, %ecx		# dst++
+	andl %edx,%edx		# len > 0?
+	jg Loop			# if so, goto Loop:
+
+# Finish any remaining elements. Since the factor is 2, there is only one element left.
+# Just copy the instructions in the loop.
+Remainder:	mrmovl (%ebx), %esi	# read val from src...  # BUG 5
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	iaddl $1, %eax		# count++
+	# Decrement len and increment src and dst.
+	iaddl $-1, %edx		# len--
+	iaddl $4, %ebx		# src++
+	iaddl $4, %ecx		# dst++
+	andl %edx,%edx		# len > 0?
+	jg Loop			# if so, goto Loop:
+```
+
+My solution is incorrect because the value in `%eax` after executing `sdriver.yo` is 4. It should be 2. 
+
+After debugging with the GUI simulator of Y86, I found some bugs in my first solution: 
+
+1. BUG 1: `%ecx` should not be used to hold the remainder, because it accommodates the the address of  `dst`.
+
+2. BUG 2: `len` should be incremented by 2 since the factor is 2. 
+
+3. BUG 3: If an element is less than or equals 0, the processor jumps to `Npos` and ignore the following loop unrolling. The second element will be move to `dst` only if the first is a positive number. That is wrong.
+
+4. BUG 4: The factor of loop unrolling is 2, why do I increment the index 4 every time? Wrong!
+
+   The value in `%eax` is 3 when `sdriver.yo` is being executed. Keep on debugging. 
+
+5. BUG 5: When loop is terminated, it falls through to the instructions `Remainder:` and execute them again. Thus, I should move the `Remainder:` before the `Loop:`.
+
+Ah! It's correct! The value in `%eax` is `0x2`  for `sdriver.yo`and `0x1f` for `ldriver.yo`. Well done!
 
 ###### (4) Test 
+
+4.0) Before running a benchmark program or performing regression test, build a new simulator with `pipe-full.hcl` by `make VERSION=full`. The previous simulator is built on `pipe/pipe-std.hcl`, if we run  only `make`. 
+
+```shell
+# In "sim"
+make clean
+make VERSION=full	
+```
 
 4.1) Test `iaddl`. 
 
 ```shell
 # In "sim/pipe/"
+# 0. Check the length of "ncopy.yo". The length should not be more than 1000 bytes. 
+make ncopy.yo	# Compile ncopy.yo first.
+./check-len.pl	< ncopy.yo
+
 # 1. Generate "drivers" to test "ncopy.ys". The "ncopy.ys" will be integrated with
 # "sdirver.ys" and "ldriver.ys". 
 # Note that we should run it each time after we update "ncopy.ys". 
 make drivers 
-
 
 # 2. Build the PIPE simulator
 # We also need to run the following command each time the "pipe-full.hcl" is updated. 
