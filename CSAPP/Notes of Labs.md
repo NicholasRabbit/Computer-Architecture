@@ -2961,7 +2961,8 @@ NB the value of `SIM` is `../seq/ssim`, NOT `../seq/`.
 
 ##### Part C 
 
-This part involves optimisation of code in Chapter 5. I will do this part once I finish that chapter. 
+- [x] This part involves optimising program which is in Chapter 5. I will do this part once I finish that chapter. 
+
 
 ###### (1) What the task of this part? 
 
@@ -2973,9 +2974,9 @@ As it said in the introduction, we need to modify `pipe-full.hcl` and `ncopy.ys`
 
 2.2) Analyse `ncopy.ys`. 
 
-First of all, we shouldn't modify them until we understand all the instructions in `ncopy.ys`. Let's analyse it. 
+First of all, I shouldn't modify them until I understand all the instructions in `ncopy.ys`. Let me analyse it. 
 
-Since the prologue and epilogue of the function are not allowed to modified and they just initialise a stack, pass arguments and reset a caller's stack, we don't need to analyse them. 
+Since the prologue and epilogue of the function are not allowed to modified and they just initialise a stack, pass arguments and reset a caller's stack. 
 
 ```assembly
 # You can modify this portion
@@ -2999,9 +3000,9 @@ Npos:	irmovl $1, %edi
 	jg Loop			# if so, goto Loop:
 ```
 
-2.2.1) First of all, the first three instructions initialise the count and test the case. Apparently, there is no room to optimise since all the computation is performed within registers and none of them can be omitted or replaced with simple instructions. 
+2.2.1) First of all, the first three instructions initialise the count and test the length. Apparently, there is no room to optimise since all the computation is performed within registers and none of them can be omitted or replaced with simple instructions. 
 
-2.2.2) Then we encounter the two instructions involving reading and writing memory at the beginning of the loop. 
+2.2.2) The following two instructions read and write memory at the beginning of the loop. 
 
 ```assembly
 Loop:	mrmovl (%ebx), %esi	# read val from src...
@@ -3017,7 +3018,7 @@ andl %esi, %esi		# val <= 0?
 	jle Npos		# if so, goto Npos:
 ```
 
-If it is positive, the next two instructions increase `%eax` by 1. Although, the Y86 PIPE processor will perform data forwarding for `addl` at the decode stage, these are two instructions. Presumably, adding `iaddl` the PIPE and replacing these two with one will improve the performance. 
+If it is positive, the next two instructions increase `%eax` by 1. Although, the Y86 PIPE processor will perform data forwarding for `addl` at the decode stage. After all, these are two instructions. Presumably, adding `iaddl` the PIPE and replacing these two with one will improve the performance. 
 
 ```assembly
 	irmovl $1, %edi
@@ -3043,7 +3044,7 @@ jg Loop			# if so, goto Loop:
 
 ###### **(3) How to do the lab?** 
 
-As we analysed, it is necessary to add `iaddl` to PIPE; loop unrolling can improve the performance of `ncopy.ys`
+As aforementioned, it is necessary to add `iaddl` to PIPE and add loop unrolling to improve the performance of `ncopy.ys`.
 
 **3.1) Add `iaddl` to PIPE.** 
 
@@ -3269,7 +3270,7 @@ After debugging with the GUI simulator of Y86, I found some bugs in my first sol
 
    The value in `%eax` is 3 when `sdriver.yo` is being executed. Keep on debugging. 
 
-5. BUG 5: When loop is terminated, it falls through to the instructions `Remainder:` and execute them again. Thus, I should move the `Remainder:` before the `Loop:`.
+5. BUG 5: When loop is terminated, it falls through to the instructions `Remainder` and execute them again. Thus, I should move the `Remainder` before the `Loop`.
 
 Ah! It's correct! The value in `%eax` is `0x2`  for `sdriver.yo`and `0x1f` for `ldriver.yo`. Well done!
 
@@ -3279,10 +3280,56 @@ unix> make drivers
 unix> ../misc/yis sdriver.yo	# passed 
 ```
 
-N.B. Some stringent tests have not been passed yet.
+Here is the latest corrected program, but it doesn't pass the stringent test. See the testing result at (4.2).  
 
-```shell
-./correctness.pl	# Failed
+```assembly
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax		# count = 0;
+	andl %edx,%edx		# len <= 0?
+	jle Done		# if so, goto Done:
+
+    # Unroll the loop with the factor of 2.
+	irmovl $1, %edi
+	andl %edx, %edi	# len & 1 = len % 2. The factor is 2. 
+	je Loop	# if the remainder is 0, jump to Loop.
+	
+# Finish any remaining elements. Since the factor is 2, there is only one element left.
+# Just copy the instructions in the loop.
+Remainder:	mrmovl (%ebx), %esi	# read val from src... 
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	iaddl $1, %eax		# count++
+	# Decrement len and increment src and dst.
+	iaddl $-1, %edx		# len--
+	iaddl $4, %ebx		# src++
+44	iaddl $4, %ecx		# dst++
+45	andl %edx,%edx		# len > 0? 
+# Bug 1: there is no conditional jump after a test. 
+
+Loop:	mrmovl (%ebx), %esi	# read val from src...
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+
+    # Move the second element on each loop
+	mrmovl 4(%ebx), %edi
+	rmmovl %edi, 4(%ecx)	
+
+	andl %esi, %esi		# val <= 0?
+	jle Adds		# if so, goto "Adds:" to test the second value
+	iaddl $1, %eax		# count++
+Adds:	andl %edi, %edi
+	jle Npos
+	iaddl $1, %eax
+
+
+Npos:	iaddl $-2, %edx		# len--
+	iaddl $8, %ebx		# src++
+	iaddl $8, %ecx		# dst++
+	andl %edx,%edx		# len > 0?
+	jg Loop			# if so, goto Loop:
+##################################################################
 ```
 
 
@@ -3292,7 +3339,7 @@ N.B. Some stringent tests have not been passed yet.
 4.0) Before running a benchmark program or performing regression test, build a new simulator with `pipe-full.hcl` by `make VERSION=full`. The previous simulator is built on `pipe/pipe-std.hcl`, if we run  only `make`. 
 
 ```shell
-# In "sim"
+# In "sim/"
 make clean
 make VERSION=full	
 ```
@@ -3326,4 +3373,61 @@ If the value in `%eax`  is `0x2` after running `sdriver`, the solution is correc
 If the value in `%eax`  is `0x1f` after running `ldriver`, the solution is correct. 
 
 Great! After adding `iaddl`, my answer is correct. Let's do the loop unrolling next. 
+
+4.2) N.B. Some stringent tests have not been passed yet.
+
+```shell
+./correctness.pl	# Failed
+```
+
+If the result of the length of K is incorrect, we can generate a driver file which consists of checking code for it. Note that the result varies randomly when running `correctness.pl`, for example, the result for `1` is correct sometimes. The result is also random when I run `./gen-driver.pl -f  ...` to generate a driver file. Attention should be paid is that  `correctness.pl` and `gen-driver.pl` generate different programs to test. The results are not related. 
+
+The `correctness.pl` is used to perform an overall test while the `gen-driver.pl` is for a test of a specific length. As an illustration, I ran `./correctness.pl` and found that the result is not always correct for the length of 1. Then I generate a driver file for this length of 1; if the result is correct, I generate another driver file until I get an incorrect result. The `driver.yo` which causes incorrect result should be used to debug with the Y86 simulator. 
+
+```shell
+# In "sim/pipe/"
+# Generate driver file randomly every time it is running. 
+./gen-driver.pl -f ncopy.ys -n K -rc > driver.ys 
+
+# Compile it. 
+make driver.yo
+
+# Run the Y86 assembly code to test. 
+../misc/yis driver.yo  # or ./psim -t driver.yo
+```
+
+4.2.1) The test for the length of 1 fails sometimes. I generate a driver file to test it. 
+
+```shell
+./gen-driver.pl -f ncopy.ys -n 1 -rc > driver_len_1.ys 
+./make driver_len_1.yo
+# If the result is correct, re-generate "driver_len_1.ys" until it is incorrect. 
+./psim -t driver_len_1.yo	
+```
+
+The result is `0xbbbb`, which is "Incorrect count" . 
+
+The bug is that there is no conditional jump after a test. 
+
+```assembly
+Remainder:	mrmovl (%ebx), %esi	# read val from src... 
+	rmmovl %esi, (%ecx)	# ...and store it to dst
+	andl %esi, %esi		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	iaddl $1, %eax		# count++
+	# Decrement len and increment src and dst.
+	iaddl $-1, %edx		# len--
+	iaddl $4, %ebx		# src++
+44	iaddl $4, %ecx		# dst++
+45	andl %edx,%edx		# len > 0? 
+# Bug 1: there is no conditional jump after a test of length. 
+```
+
+Add a conditional jump. 
+
+```assembly
+46	jle Done 	# If len <= 0, jump to Done. 
+```
+
+The test result of the length of 1 is correct after I generate multiple driver files. Whereas, there are still incorrect results. 
 
