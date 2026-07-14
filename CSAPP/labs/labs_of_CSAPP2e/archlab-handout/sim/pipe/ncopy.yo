@@ -27,46 +27,42 @@
   0x020: 71af000000   | 	jle Done		# if so, goto Done:
                       | 
                       |     # Unroll the loop with the factor of 2.
-  0x025: 30f101000000 | 	irmovl $1, %ecx
-  0x02b: 6221         | 	andl %edx, %ecx	# len & 1 = len % 2. The factor is 2. 
-  0x02d: 747d000000   | 	jne Remainder	# Compute the remaining elements first. 
+  0x025: 30f701000000 | 	irmovl $1, %edi
+  0x02b: 6227         | 	andl %edx, %edi	# len & 1 = len % 2. The factor is 2. 
+  0x02d: 7364000000   | 	je Loop	# if the remainder is 0, jump to Loop. If the remainder is not 0, fall through.
                       | 
-  0x032: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+                      | # Finish any remaining elements. Since the factor is 2, there is only one remainder: 1.
+                      | # Just copy the instructions in the loop.
+  0x032: 506300000000 | Remainder:	mrmovl (%ebx), %esi	# read val from src... 
   0x038: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
   0x03e: 6266         | 	andl %esi, %esi		# val <= 0?
-  0x040: 7164000000   | 	jle Npos		# if so, goto Npos:
+  0x040: 7196000000   | 	jle Npos		# if so, goto Npos:
   0x045: c0f001000000 | 	iaddl $1, %eax		# count++
-                      | 
-                      |     # Move the second element on each loop
-  0x04b: 507304000000 | 	mrmovl 4(%ebx), %edi
-  0x051: 407104000000 | 	rmmovl %edi, 4(%ecx)	
-  0x057: 6277         | 	andl %edi, %edi
-  0x059: 7164000000   | 	jle Npos
-  0x05e: c0f001000000 | 	iaddl $1, %eax
-                      | 
-                      | 
-  0x064: c0f2ffffffff | Npos:	iaddl $-1, %edx		# len--
-  0x06a: c0f304000000 | 	iaddl $4, %ebx		# src++
-  0x070: c0f104000000 | 	iaddl $4, %ecx		# dst++
-  0x076: 6222         | 	andl %edx,%edx		# len > 0?
-  0x078: 7632000000   | 	jg Loop			# if so, goto Loop:
-                      | 
-                      | # Finish any remaining elements. Since the factor is 2, there is only one element left.
-                      | # Just copy the instructions in the loop.
-  0x07d: 506300000000 | Remainder:	mrmovl (%ebx), %esi	# read val from src... 
-  0x083: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
-  0x089: 6266         | 	andl %esi, %esi		# val <= 0?
-  0x08b: 7164000000   | 	jle Npos		# if so, goto Npos:
-  0x090: c0f001000000 | 	iaddl $1, %eax		# count++
                       | 	# Decrement len and increment src and dst.
-  0x096: c0f2ffffffff | 	iaddl $-1, %edx		# len--
-  0x09c: c0f304000000 | 	iaddl $4, %ebx		# src++
-  0x0a2: c0f104000000 | 	iaddl $4, %ecx		# dst++
+  0x04b: c0f2ffffffff | 	iaddl $-1, %edx		# len--
+  0x051: c0f304000000 | 	iaddl $4, %ebx		# src++
+  0x057: c0f104000000 | 	iaddl $4, %ecx		# dst++
+  0x05d: 6222         | 	andl %edx,%edx		# len > 0?
+  0x05f: 71af000000   | 	jle Done
+                      | 
+  0x064: 506300000000 | Loop:	mrmovl (%ebx), %esi	# read val from src...
+  0x06a: 406100000000 | 	rmmovl %esi, (%ecx)	# ...and store it to dst
+                      |     # Move the second element on each loop
+  0x070: 507304000000 | 	mrmovl 4(%ebx), %edi
+  0x076: 407104000000 | 	rmmovl %edi, 4(%ecx)	
+                      | 
+  0x07c: 6266         | 	andl %esi, %esi		# val <= 0?
+  0x07e: 7189000000   | 	jle Adds		# if so, goto "Adds:" to test the second value
+  0x083: c0f001000000 | 	iaddl $1, %eax		# count++
+  0x089: 6277         | Adds:	andl %edi, %edi
+  0x08b: 7196000000   | 	jle Npos
+  0x090: c0f001000000 | 	iaddl $1, %eax
+                      | 
+  0x096: c0f2feffffff | Npos:	iaddl $-2, %edx		# len--
+  0x09c: c0f308000000 | 	iaddl $8, %ebx		# src++
+  0x0a2: c0f108000000 | 	iaddl $8, %ecx		# dst++
   0x0a8: 6222         | 	andl %edx,%edx		# len > 0?
-  0x0aa: 7632000000   | 	jg Loop			# if so, goto Loop:
-                      | 
-                      | 
-                      | 
+  0x0aa: 7664000000   | 	jg Loop			# if so, goto Loop:
                       | 	
                       | ##################################################################
                       | # Do not modify the following section of code
