@@ -2444,3 +2444,29 @@ For example, the `Initial` version of  the program uses *Insertions Sort*  for t
 #### 5.15 Summary 
 
 VTUNE  and VALGRIND are more sophisticated profilers besides GPROF. 
+
+### 6 The Memory Hierarchy
+
+(1) In real world, a memory system is a hierarchy of storage devices with different capacities, costs, and access times. To illustrate, it takes zero cycle to access registers in a  CPU, 1 to 30 cycles to access a cache near a CPU, 50 to 200 cycles to access memory, and millions of cycles to access a disk. 
+
+#### 6.1 Storage Technologies
+
+##### Conventional DRAMs
+
+**(1) Supercell and cell:** 
+
+1.1) As an illustration, Figure 6.3 is a 16 x 8 DRAM chip, which consists of 16 "supercells" and each supercell has 8 bits. Namely, the small square represents 8 bits. There are 4 columns and 4 rows in each supercell. 
+
+![1784839787894](note-images/1784839787894.png)
+
+1.2) Why does it need two times to read one cell in a supercell of 16 x 8? 
+
+`addr` has two pins, one bit per pin, which ranges from `00` to `11`, 0 to 3. Thus, it can only read one row one time and read one column next time. 
+
+1.3) Output
+
+`data` has 8 pins, one bit per pin. Once a supercell is read, such as supercell(2, 1), the 8 bits in this cell will be transmitted through the 8 pins to the "Memory controller". 
+
+1.4) Why does it say that it needs 4 pins if the supercell is a linear array of 16? 
+
+The reason is we need at least 4 bits to represent 16: `0000` to `1111`. 
