@@ -2455,7 +2455,7 @@ VTUNE  and VALGRIND are more sophisticated profilers besides GPROF.
 
 **(1) Supercell and cell:** 
 
-1.1) As an illustration, Figure 6.3 is a 16 x 8 DRAM chip, which consists of 16 "supercells" and each supercell has 8 bits. Namely, the small square represents 8 bits. There are 4 columns and 4 rows in each supercell. 
+1.1) As an illustration, Figure 6.3 is a 16 x 8 DRAM chip, which consists of 16 "supercells" and each supercell has 8 bits. Namely, each of the smallest square represents 8 bits. 
 
 ![1784839787894](note-images/1784839787894.png)
 

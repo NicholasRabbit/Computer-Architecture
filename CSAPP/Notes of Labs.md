@@ -122,7 +122,7 @@ int tmin(void) {
 
 1, `x ? y : z`  equals $F =xy + \overline xz$. 
 
-In the equation $xy$ is  Boolean  operation yields the same result as of $x\&y$ and the plus $+$ means $OR(|)$. 
+In the equation $xy$ is  Boolean  operation yields the same result as of `x & y` and the plus $+$ means $OR(|)$. 
 
  ```c
 int conditional(int x, int y, int z) {
@@ -545,7 +545,7 @@ unsigned floatPower2(int x) {
 
 ##### **How to do the bomb lab?**
 
-(1) It is suggested that we should disassemble the binary file, `bomb`, and analyse the machine code step by step to defuse bombs. There are many phases and one bomb is in each of them. 
+(1) It is suggested that we should disassemble the binary file, `bomb`, and analyse the machine code step by step to defuse bombs. There are many phases and each of them has one bomb. 
 
 (2) Since the bomb ignores blank lines of input, we can save our solutions of first bombs in a file named, for example, `psol.txt` so that we don't have to input when we are trying to defuse the next bomb.
 
@@ -622,7 +622,7 @@ Now we read its assembly code thoroughly and find that `$0x402400` is moved to `
 0x402400:       "Border relations with Canada have never been better."
 ```
 
-Great! We have found it. Whereas, we had better not stop but to verify it by analysing the rest of assembly code. 
+Great! We have found it. Whereas, we had better not stop but verify it by analysing the rest of assembly code. 
 
 ##### Phase 2 
 
