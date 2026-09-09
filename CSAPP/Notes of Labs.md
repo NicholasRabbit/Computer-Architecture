@@ -1,12 +1,10 @@
-### 1, Preparation for the labs 
+### 1, Preparing for the labs 
 
-[Preparation for the laboratories](https://blog.csdn.net/qq_45677541/article/details/123955438)
-
-**Solution of errors in the Data Labs**
+**Fixing errors in the Data Labs**
 
 (1) "fatal error gnu/stubs-32.h no such file or directory "
 
-Running `make btest` on a machine of 64-bit representation of integers may cause an error(`fatal error gnu/stubs-32.h no such file or directory `).  The solution is given as follows.
+Running `make btest` on a machine of 64-bit representation of integers may cause an error(`fatal error gnu/stubs-32.h no such file or directory `).  The solution is as follows.
 
 Solution:
 
@@ -576,9 +574,9 @@ unsigned floatPower2(int x) {
 
 Since only the source code of `main` is provided and it is implausible to step into the function `phase_1(input)`, we should disassemble it. 
 
-Note that in x86_64, `%rdi` and `%rsi` are the first and the second argument, respectively. See Figure 3.35.
+Note that, by convention, a x86_64 machine uses `%rdi` and `%rsi` as the first and the second argument, respectively. See Figure 3.35.
 
-(1) First of all, run `gdb bomb` and set a break point at the function `phase_1(input)`. We input "abc" to test.
+(1) First of all, run `gdb bomb` and set a break point at the function `phase_1(input)`. We input `abc` to test.
 
 (2) After disassembling the current function to find where `phase_1(...)`  is called, we can see at the address of `0x400e37` that it moves the value in `%rax` to `%rdi` after calling `read_line`.
 
@@ -588,16 +586,17 @@ Note that in x86_64, `%rdi` and `%rsi` are the first and the second argument, re
   400e3a:	e8 a1 00 00 00       	callq  400ee0 <phase_1>
 ```
 
-Apparently, "abc" is stored in `%rax` and then is moved to `%rdi`. To verify that, enter `x/s $rax`  to examine the string stored at `$rax`. It is "abc" and we find it. 
+I guess that `abc` is stored in `%rax` and then is moved to `%rdi`. To verify that, enter `x/s $rax`  to examine the string stored at `$rax`. It is "abc" and we find it. 
 
 ```shell
 (gdb)x/s $rax
 0x603780 <input_strings>:       "abc"
 ```
 
-(3) There isn't any source code of `phase_1(...)`, of course, therefore, we can't use `step` to enter into it. Otherwise, we can't see anything and the bomb is detonated. We can use `stepi` to execute an instruction in assembly code. 
+(3) There isn't any source code of `phase_1(...)`, of course Thus, we can't use `step` to enter into it. However, we can use `stepi` to execute an instruction in assembly code. 
 
 ```shell
+# At 0x400e3a
 (gdb)stepi
 ```
 
@@ -622,7 +621,52 @@ Now we read its assembly code thoroughly and find that `$0x402400` is moved to `
 0x402400:       "Border relations with Canada have never been better."
 ```
 
-Great! We have found it. Whereas, we had better not stop but verify it by analysing the rest of assembly code. 
+Great! We have found it. Whereas, we had better not stop and should verify it by analysing the rest of assembly code. Let's step into the `strings_not_equal` to see what it does. 
+
+```shell
+# At 0x400ee9
+(gdb) stepi
+```
+
+Here is assembly code of `strings_not_equal`: 
+
+```assembly
+0000000000401338 <strings_not_equal>:
+  401338:	41 54                	push   %r12
+  40133a:	55                   	push   %rbp
+  40133b:	53                   	push   %rbx
+  40133c:	48 89 fb             	mov    %rdi,%rbx
+  40133f:	48 89 f5             	mov    %rsi,%rbp
+  401342:	e8 d4 ff ff ff       	callq  40131b <string_length>
+  401347:	41 89 c4             	mov    %eax,%r12d
+  # ...
+```
+
+We can see that callee-saved registers, `%r12`, `%rbp`(the frame pointer), and `%rbx` are pushed into the stack. Let's delve into `string_length` to see what happens in it. 
+
+```assembly
+000000000040131b <string_length>:
+  # (1) It compares the first character of `(%rdi)`, which is "abc\0" input by me. 
+  # If it is null('\0'), its decimal value is exactly 0. The next `je` holds. 
+  # The processor jumps to 0x401332 and then returns. 
+  40131b:	80 3f 00             	cmpb   $0x0,(%rdi)
+  40131e:	74 12                	je     401332 <string_length+0x17>
+  # (2) If is not 0, the address is moved to %rdx and added by 1. 
+  # The value in %rdi is 0x603780. 
+  401320:	48 89 fa             	mov    %rdi,%rdx
+  # The value in %rdx is 0x603781 after adding 1. 
+  401323:	48 83 c2 01          	add    $0x1,%rdx
+  # (3) Move %edx(0x603781) to %eax, and subtract it by %edi(0x603780) to get the length. 
+  401327:	89 d0                	mov    %edx,%eax
+  401329:	29 f8                	sub    %edi,%eax
+  40132b:	80 3a 00             	cmpb   $0x0,(%rdx)
+  40132e:	75 f3                	jne    401323 <string_length+0x8>
+  401330:	f3 c3                	repz retq 
+  401332:	b8 00 00 00 00       	mov    $0x0,%eax
+  401337:	c3                   	retq   
+```
+
+
 
 ##### Phase 2 
 
