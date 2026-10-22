@@ -22,13 +22,13 @@ yum -y install glibc-devel.i686 glibc-devel
 
 
 
-### 2, Laboratory
+### 2, Labs
 
 Although I read the second edition of CSAPP, the labs I'm doing are from the third edition. 
 
-### 1) Data Labs
+### 1) Data Lab
 
-##### **Solution of errors in the Data Labs**
+##### **Fixing errors in the Data Labs**
 
 (1) `fatal error gnu/stubs-32.h no such file or directory `
 
@@ -3388,6 +3388,8 @@ make clean
 make VERSION=full	
 ```
 
+**Correctness**
+
 4.1) Test `iaddl`. 
 
 ```shell
@@ -3474,4 +3476,13 @@ Add a conditional jump.
 ```
 
 The test result of the length of 1 is correct after I generate multiple driver files. Whereas, there are still incorrect results. 
+
+**Benchmark: CPE**
+
+Unfortunately, the average CPE is only 11.90. See `sim/pipe/benchmark_CPE.txt`. 
+
+```txt
+Average CPE	11.90
+Score	14.3/60.0
+```
 

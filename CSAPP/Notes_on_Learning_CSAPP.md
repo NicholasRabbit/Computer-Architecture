@@ -2451,7 +2451,11 @@ VTUNE  and VALGRIND are more sophisticated profilers besides GPROF.
 
 #### 6.1 Storage Technologies
 
-##### Conventional DRAMs
+##### 6.1.1 Random-Access Memory
+
+RAM(Random-Access Memory) is categorised as Static RAM and Dynamic RAM. The former is used in cache and the latter is used in main memory and frame buffer of graphic system. See Figure 6.2. 
+
+###### Conventional DRAMs
 
 **(1) Supercell and cell:** 
 
@@ -2469,4 +2473,4 @@ VTUNE  and VALGRIND are more sophisticated profilers besides GPROF.
 
 1.4) Why does it say that it needs 4 pins if the supercell is a linear array of 16? 
 
-The reason is we need at least 4 bits to represent 16: `0000` to `1111`. 
+The reason is that we need at least 4 bits to represent 16: `0000` to `1111`. 
